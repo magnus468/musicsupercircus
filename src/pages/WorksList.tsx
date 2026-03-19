@@ -21,9 +21,18 @@ const WorksList = () => {
   const deleteWork = useDeleteWork();
   const [editWork, setEditWork] = useState<Work | null>(null);
 
-  // Build a map of client full name (lowercase) -> client id for linking
-  const clientMap = new Map<string, string>();
-  clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
+  // Build maps: full name and last name (lowercase) -> client id
+  const clientMapFull = new Map<string, string>();
+  const clientMapLast = new Map<string, string>();
+  clients?.forEach((c) => {
+    const full = `${c.first_name} ${c.last_name}`.trim().toLowerCase();
+    if (full) clientMapFull.set(full, c.id);
+    if (c.last_name) clientMapLast.set(c.last_name.toLowerCase(), c.id);
+  });
+  const findClientId = (name: string) => {
+    const lower = name.toLowerCase();
+    return clientMapFull.get(lower) ?? clientMapLast.get(lower);
+  };
 
   const filtered = works?.filter((w) => {
     if (typeFilter !== "all" && w.publishing_type !== typeFilter) return false;
@@ -114,7 +123,7 @@ const WorksList = () => {
                 <TableCell className="max-w-[200px]">
                   {work.creators.split(/[,/]/).map((c, i, arr) => {
                     const name = c.trim();
-                    const clientId = clientMap.get(name.toLowerCase());
+                    const clientId = findClientId(name);
                     return (
                       <span key={i}>
                         {clientId ? (
