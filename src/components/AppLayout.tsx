@@ -10,6 +10,7 @@ const navItems = [
   { to: "/works", label: "Verklista", icon: List },
   { to: "/works/new", label: "Nytt verk", icon: Plus },
   { to: "/clients", label: "Klienter", icon: Users },
+  { to: "/agreements", label: "Förlagsavtal", icon: FileText },
 ];
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
