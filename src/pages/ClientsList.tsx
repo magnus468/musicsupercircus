@@ -157,16 +157,8 @@ const ClientsList = () => {
           <TableBody>
             {clients?.map((client) => (
               <TableRow key={client.id}>
-                <TableCell>
-                  <Link to={`/clients/${client.id}`} className="hover:underline">
-                    {(client as any)["first_name"] || "—"}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Link to={`/clients/${client.id}`} className="hover:underline">
-                    {(client as any)["last_name"] || "—"}
-                  </Link>
-                </TableCell>
+                <TableCell>{renderCell(client, "first_name")}</TableCell>
+                <TableCell>{renderCell(client, "last_name")}</TableCell>
                 <TableCell>{renderCell(client, "email")}</TableCell>
                 <TableCell>{renderCell(client, "phone")}</TableCell>
                 <TableCell>{renderCell(client, "organization")}</TableCell>
