@@ -495,18 +495,7 @@ const AgreementsList = () => {
             )}
 
             {!pdfLoading && pdfViewerUrl && !pdfError && (
-              <object
-                data={pdfViewerUrl}
-                type="application/pdf"
-                className="h-full w-full"
-                aria-label="PDF-förhandsgranskning"
-              >
-                <iframe
-                  src={pdfViewerUrl}
-                  title="PDF-förhandsgranskning"
-                  className="h-full w-full border-0"
-                />
-              </object>
+              <AgreementPdfPreview fileUrl={pdfViewerUrl} />
             )}
           </div>
         </DialogContent>
