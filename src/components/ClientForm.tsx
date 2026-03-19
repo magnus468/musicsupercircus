@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { User, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ClientFormProps {
@@ -12,6 +14,7 @@ interface ClientFormProps {
 }
 
 const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
+  const [clientType, setClientType] = useState<string>(client?.client_type ?? "person");
   const [firstName, setFirstName] = useState(client?.first_name ?? "");
   const [lastName, setLastName] = useState(client?.last_name ?? "");
   const [email, setEmail] = useState(client?.email ?? "");
@@ -31,15 +34,17 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
   const isEdit = !!client;
+  const isCompany = clientType === "company";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data: ClientInsert = {
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
+      client_type: clientType,
+      first_name: isCompany ? (organization.trim() || firstName.trim()) : firstName.trim(),
+      last_name: isCompany ? "" : lastName.trim(),
       email: email.trim() || null,
       phone: phone.trim() || null,
-      organization: organization.trim() || null,
+      organization: isCompany ? organization.trim() || null : organization.trim() || null,
       ipi_number: ipiNumber.trim() || null,
       country: country.trim() || null,
       city: city.trim() || null,
@@ -69,16 +74,41 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">Förnamn *</Label>
-          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="lastName">Efternamn</Label>
-          <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        </div>
+      <div className="space-y-2">
+        <Label>Typ</Label>
+        <ToggleGroup
+          type="single"
+          value={clientType}
+          onValueChange={(v) => { if (v) setClientType(v); }}
+          className="justify-start"
+        >
+          <ToggleGroupItem value="person" className="gap-2">
+            <User className="h-4 w-4" /> Person
+          </ToggleGroupItem>
+          <ToggleGroupItem value="company" className="gap-2">
+            <Building2 className="h-4 w-4" /> Företag
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
+
+      {isCompany ? (
+        <div className="space-y-2">
+          <Label htmlFor="organization">Företagsnamn *</Label>
+          <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} required />
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">Förnamn *</Label>
+            <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Efternamn</Label>
+            <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="email">E-post</Label>
@@ -89,24 +119,39 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
           <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
       </div>
+
+      {isCompany ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="vatNumber">Momsnummer</Label>
+            <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. SE123456789001" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ipiNumber">IPI-nummer</Label>
+            <Input id="ipiNumber" value={ipiNumber} onChange={(e) => setIpiNumber(e.target.value)} placeholder="t.ex. 00123456789" />
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="organization">Organisation</Label>
+            <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ipiNumber">IPI-nummer</Label>
+            <Input id="ipiNumber" value={ipiNumber} onChange={(e) => setIpiNumber(e.target.value)} placeholder="t.ex. 00123456789" />
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="organization">Organisation</Label>
-          <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ipiNumber">IPI-nummer</Label>
-          <Input id="ipiNumber" value={ipiNumber} onChange={(e) => setIpiNumber(e.target.value)} placeholder="t.ex. 00123456789" />
-        </div>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="vatNumber">Momsnummer</Label>
-          <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. SE123456789001" />
-        </div>
         <div className="space-y-2">
           <Label htmlFor="country">Land</Label>
           <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="city">Stad</Label>
+          <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
         </div>
       </div>
       <div className="space-y-2">
@@ -118,10 +163,12 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
           <Label htmlFor="postalCode">Postnummer</Label>
           <Input id="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="city">Stad</Label>
-          <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
-        </div>
+        {!isCompany && (
+          <div className="space-y-2">
+            <Label htmlFor="vatNumber">Momsnummer</Label>
+            <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. SE123456789001" />
+          </div>
+        )}
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
