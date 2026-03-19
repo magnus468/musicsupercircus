@@ -11,6 +11,7 @@ import WorksList from "@/pages/WorksList";
 import NewWork from "@/pages/NewWork";
 import ClientsList from "@/pages/ClientsList";
 import ClientDetail from "@/pages/ClientDetail";
+import AgreementsList from "@/pages/AgreementsList";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
