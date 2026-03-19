@@ -146,6 +146,7 @@ const AgreementsList = () => {
               <TableHead>Förfaller</TableHead>
               
               <TableHead>LoC</TableHead>
+              <TableHead>Retention</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dokument</TableHead>
               <TableHead className="w-16"></TableHead>
