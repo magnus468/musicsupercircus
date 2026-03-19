@@ -68,7 +68,7 @@ const AgreementsList = () => {
       return;
     }
     try {
-      await createAgreement.mutateAsync({
+      const result = await createAgreement.mutateAsync({
         client_id: clientId,
         agreement_type: agreementType,
         agreement_date: agreementDate,
