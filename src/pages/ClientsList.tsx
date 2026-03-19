@@ -1,20 +1,86 @@
-import { useState } from "react";
-import { useClients, useDeleteClient, type Client } from "@/hooks/useClients";
+import { useState, useRef, useEffect } from "react";
+import { useClients, useDeleteClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Pencil, Trash2, Plus, Eye } from "lucide-react";
+import { Search, Trash2, Plus, Eye, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ClientForm from "@/components/ClientForm";
 
+type EditableField = "first_name" | "last_name" | "email" | "phone" | "organization" | "ipi_number";
+
+interface EditingCell {
+  clientId: string;
+  field: EditableField;
+}
+
+const InlineEdit = ({
+  value,
+  isEditing,
+  onStartEdit,
+  onSave,
+  onCancel,
+  mono,
+}: {
+  value: string;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onSave: (val: string) => void;
+  onCancel: () => void;
+  mono?: boolean;
+}) => {
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      setDraft(value);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [isEditing, value]);
+
+  if (!isEditing) {
+    return (
+      <span
+        className={`cursor-pointer rounded px-1 py-0.5 -mx-1 hover:bg-accent transition-colors ${mono ? "font-mono text-xs" : ""} ${!value ? "text-muted-foreground" : ""}`}
+        onClick={onStartEdit}
+        title="Klicka för att redigera"
+      >
+        {value || "—"}
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        ref={inputRef}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") onSave(draft);
+          if (e.key === "Escape") onCancel();
+        }}
+        className={`h-7 text-sm px-1.5 min-w-0 ${mono ? "font-mono text-xs" : ""}`}
+      />
+      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => onSave(draft)}>
+        <Check className="h-3 w-3" />
+      </Button>
+      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={onCancel}>
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+};
+
 const ClientsList = () => {
   const [search, setSearch] = useState("");
   const { data: clients, isLoading } = useClients(search);
-  const fullName = (c: Client) => `${c.first_name} ${c.last_name}`.trim();
   const deleteClient = useDeleteClient();
-  const [editClient, setEditClient] = useState<Client | null>(null);
+  const updateClient = useUpdateClient();
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [showNew, setShowNew] = useState(false);
 
   const handleDelete = async (id: string) => {
@@ -26,6 +92,25 @@ const ClientsList = () => {
       toast.error("Kunde inte ta bort klienten");
     }
   };
+
+  const handleSave = async (client: Client, field: EditableField, value: string) => {
+    const trimmed = value.trim();
+    const current = client[field] ?? "";
+    if (trimmed === current) {
+      setEditingCell(null);
+      return;
+    }
+    try {
+      await updateClient.mutateAsync({ id: client.id, [field]: trimmed || null });
+      toast.success("Uppdaterad");
+    } catch {
+      toast.error("Kunde inte spara");
+    }
+    setEditingCell(null);
+  };
+
+  const isEditing = (clientId: string, field: EditableField) =>
+    editingCell?.clientId === clientId && editingCell?.field === field;
 
   return (
     <div className="space-y-4">
@@ -53,26 +138,71 @@ const ClientsList = () => {
               <TableHead>Telefon</TableHead>
               <TableHead>Organisation</TableHead>
               <TableHead>IPI-nummer</TableHead>
-              <TableHead className="w-28"></TableHead>
-
+              <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {clients?.map((client) => (
               <TableRow key={client.id}>
-                <TableCell className="font-medium">{client.first_name}</TableCell>
-                <TableCell className="font-medium">{client.last_name}</TableCell>
-                <TableCell className="text-muted-foreground">{client.email || "—"}</TableCell>
-                <TableCell className="text-muted-foreground">{client.phone || "—"}</TableCell>
-                <TableCell className="text-muted-foreground">{client.organization || "—"}</TableCell>
-                <TableCell className="text-muted-foreground font-mono text-xs">{client.ipi_number || "—"}</TableCell>
+                <TableCell>
+                  <InlineEdit
+                    value={client.first_name}
+                    isEditing={isEditing(client.id, "first_name")}
+                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "first_name" })}
+                    onSave={(v) => handleSave(client, "first_name", v)}
+                    onCancel={() => setEditingCell(null)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEdit
+                    value={client.last_name}
+                    isEditing={isEditing(client.id, "last_name")}
+                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "last_name" })}
+                    onSave={(v) => handleSave(client, "last_name", v)}
+                    onCancel={() => setEditingCell(null)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEdit
+                    value={client.email || ""}
+                    isEditing={isEditing(client.id, "email")}
+                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "email" })}
+                    onSave={(v) => handleSave(client, "email", v)}
+                    onCancel={() => setEditingCell(null)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEdit
+                    value={client.phone || ""}
+                    isEditing={isEditing(client.id, "phone")}
+                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "phone" })}
+                    onSave={(v) => handleSave(client, "phone", v)}
+                    onCancel={() => setEditingCell(null)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEdit
+                    value={client.organization || ""}
+                    isEditing={isEditing(client.id, "organization")}
+                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "organization" })}
+                    onSave={(v) => handleSave(client, "organization", v)}
+                    onCancel={() => setEditingCell(null)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEdit
+                    value={client.ipi_number || ""}
+                    isEditing={isEditing(client.id, "ipi_number")}
+                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "ipi_number" })}
+                    onSave={(v) => handleSave(client, "ipi_number", v)}
+                    onCancel={() => setEditingCell(null)}
+                    mono
+                  />
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                       <Link to={`/clients/${client.id}`}><Eye className="h-3.5 w-3.5" /></Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditClient(client)}>
-                      <Pencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(client.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
@@ -97,14 +227,6 @@ const ClientsList = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Ny klient</DialogTitle></DialogHeader>
           <ClientForm onSuccess={() => setShowNew(false)} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit dialog */}
-      <Dialog open={!!editClient} onOpenChange={(open) => !open && setEditClient(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Redigera klient</DialogTitle></DialogHeader>
-          {editClient && <ClientForm client={editClient} onSuccess={() => setEditClient(null)} />}
         </DialogContent>
       </Dialog>
     </div>
