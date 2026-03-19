@@ -20,6 +20,7 @@ export type Database = {
           bic_swift: string | null
           city: string | null
           client_type: string
+          contact_person: string | null
           country: string | null
           created_at: string
           email: string | null
@@ -41,6 +42,7 @@ export type Database = {
           bic_swift?: string | null
           city?: string | null
           client_type?: string
+          contact_person?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
@@ -62,6 +64,7 @@ export type Database = {
           bic_swift?: string | null
           city?: string | null
           client_type?: string
+          contact_person?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
