@@ -84,6 +84,31 @@ export const useCreateAgreement = () => {
   });
 };
 
+export const useUpdateAgreement = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, workIds, ...updates }: Partial<AgreementInsert> & { id: string; workIds?: string[] }) => {
+      const { data, error } = await supabase.from("agreements").update(updates).eq("id", id).select().single();
+      if (error) throw error;
+      if (workIds !== undefined) {
+        // Delete existing links, then re-insert
+        await supabase.from("agreement_works").delete().eq("agreement_id", id);
+        if (workIds.length) {
+          const { error: linkError } = await supabase.from("agreement_works").insert(
+            workIds.map((work_id) => ({ agreement_id: id, work_id }))
+          );
+          if (linkError) throw linkError;
+        }
+      }
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agreements"] });
+      qc.invalidateQueries({ queryKey: ["agreement-works"] });
+    },
+  });
+};
+
 export const useDeleteAgreement = () => {
   const qc = useQueryClient();
   return useMutation({
