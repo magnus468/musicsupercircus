@@ -50,6 +50,7 @@ const emptyForm: FormState = {
   lifeOfCopyright: "yes",
   retentionDate: "",
   selectedWorkIds: [],
+  workSearch: "",
   pdfFile: null,
 };
 
