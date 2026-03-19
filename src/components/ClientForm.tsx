@@ -123,6 +123,20 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
           <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
         </div>
       </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="bankName">Bank</Label>
+          <Input id="bankName" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="iban">IBAN</Label>
+          <Input id="iban" value={iban} onChange={(e) => setIban(e.target.value)} placeholder="t.ex. SE1234567890" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bicSwift">BIC/SWIFT</Label>
+          <Input id="bicSwift" value={bicSwift} onChange={(e) => setBicSwift(e.target.value)} placeholder="t.ex. NDEASESS" />
+        </div>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="notes">Anteckningar</Label>
         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
