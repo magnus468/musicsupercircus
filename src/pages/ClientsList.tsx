@@ -12,6 +12,7 @@ import ClientForm from "@/components/ClientForm";
 const ClientsList = () => {
   const [search, setSearch] = useState("");
   const { data: clients, isLoading } = useClients(search);
+  const fullName = (c: Client) => `${c.first_name} ${c.last_name}`.trim();
   const deleteClient = useDeleteClient();
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -46,18 +47,21 @@ const ClientsList = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Namn</TableHead>
+              <TableHead>Förnamn</TableHead>
+              <TableHead>Efternamn</TableHead>
               <TableHead>E-post</TableHead>
               <TableHead>Telefon</TableHead>
               <TableHead>Organisation</TableHead>
               <TableHead>IPI-nummer</TableHead>
               <TableHead className="w-28"></TableHead>
+
             </TableRow>
           </TableHeader>
           <TableBody>
             {clients?.map((client) => (
               <TableRow key={client.id}>
-                <TableCell className="font-medium">{client.name}</TableCell>
+                <TableCell className="font-medium">{client.first_name}</TableCell>
+                <TableCell className="font-medium">{client.last_name}</TableCell>
                 <TableCell className="text-muted-foreground">{client.email || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{client.phone || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{client.organization || "—"}</TableCell>
@@ -79,7 +83,7 @@ const ClientsList = () => {
             ))}
             {!isLoading && clients?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Inga klienter hittades
                 </TableCell>
               </TableRow>

@@ -12,9 +12,9 @@ const ClientDetail = () => {
   const { data: client, isLoading: loadingClient } = useClient(id);
   const { data: allWorks, isLoading: loadingWorks } = useWorks();
 
-  // Filter works where this client appears in creators
+  const fullName = client ? `${client.first_name} ${client.last_name}`.trim() : "";
   const clientWorks = allWorks?.filter((w) =>
-    client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === client.name.toLowerCase())
+    client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === fullName.toLowerCase())
   ) ?? [];
 
   if (loadingClient) return <p className="text-muted-foreground">Laddar...</p>;
@@ -28,7 +28,7 @@ const ClientDetail = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>{client.name}</CardTitle>
+          <CardTitle>{fullName}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-3 sm:grid-cols-2 text-sm">
