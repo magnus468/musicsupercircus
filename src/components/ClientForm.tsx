@@ -18,6 +18,11 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
   const [phone, setPhone] = useState(client?.phone ?? "");
   const [organization, setOrganization] = useState(client?.organization ?? "");
   const [ipiNumber, setIpiNumber] = useState(client?.ipi_number ?? "");
+  const [country, setCountry] = useState(client?.country ?? "");
+  const [city, setCity] = useState(client?.city ?? "");
+  const [postalCode, setPostalCode] = useState(client?.postal_code ?? "");
+  const [streetAddress, setStreetAddress] = useState(client?.street_address ?? "");
+  const [vatNumber, setVatNumber] = useState(client?.vat_number ?? "");
   const [notes, setNotes] = useState(client?.notes ?? "");
 
   const createClient = useCreateClient();
@@ -33,6 +38,11 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       phone: phone.trim() || null,
       organization: organization.trim() || null,
       ipi_number: ipiNumber.trim() || null,
+      country: country.trim() || null,
+      city: city.trim() || null,
+      postal_code: postalCode.trim() || null,
+      street_address: streetAddress.trim() || null,
+      vat_number: vatNumber.trim() || null,
       notes: notes.trim() || null,
     };
 
@@ -43,7 +53,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       } else {
         await createClient.mutateAsync(data);
         toast.success("Klient tillagd");
-        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setNotes("");
+        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setCountry(""); setCity(""); setPostalCode(""); setStreetAddress(""); setVatNumber(""); setNotes("");
       }
       onSuccess?.();
     } catch {
@@ -81,6 +91,30 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
         <div className="space-y-2">
           <Label htmlFor="ipiNumber">IPI-nummer</Label>
           <Input id="ipiNumber" value={ipiNumber} onChange={(e) => setIpiNumber(e.target.value)} placeholder="t.ex. 00123456789" />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="vatNumber">Momsnummer</Label>
+          <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. SE123456789001" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="country">Land</Label>
+          <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="streetAddress">Gatuadress</Label>
+        <Input id="streetAddress" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="postalCode">Postnummer</Label>
+          <Input id="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="city">Stad</Label>
+          <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
         </div>
       </div>
       <div className="space-y-2">

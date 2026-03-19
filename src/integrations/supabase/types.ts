@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          city: string | null
+          country: string | null
           created_at: string
           email: string | null
           first_name: string
@@ -25,9 +27,14 @@ export type Database = {
           notes: string | null
           organization: string | null
           phone: string | null
+          postal_code: string | null
+          street_address: string | null
           updated_at: string
+          vat_number: string | null
         }
         Insert: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           first_name: string
@@ -37,9 +44,14 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone?: string | null
+          postal_code?: string | null
+          street_address?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Update: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
@@ -49,7 +61,10 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone?: string | null
+          postal_code?: string | null
+          street_address?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Relationships: []
       }

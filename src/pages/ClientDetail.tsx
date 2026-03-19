@@ -4,7 +4,7 @@ import { useWorks } from "@/hooks/useWorks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ClientDetail = () => {
@@ -19,6 +19,8 @@ const ClientDetail = () => {
 
   if (loadingClient) return <p className="text-muted-foreground">Laddar...</p>;
   if (!client) return <p className="text-muted-foreground">Klienten hittades inte.</p>;
+
+  const addressParts = [client.street_address, client.postal_code, client.city, client.country].filter(Boolean);
 
   return (
     <div className="space-y-6">
@@ -36,7 +38,14 @@ const ClientDetail = () => {
             {client.phone && <div><dt className="text-muted-foreground">Telefon</dt><dd>{client.phone}</dd></div>}
             {client.organization && <div><dt className="text-muted-foreground">Organisation</dt><dd>{client.organization}</dd></div>}
             {client.ipi_number && <div><dt className="text-muted-foreground">IPI-nummer</dt><dd className="font-mono">{client.ipi_number}</dd></div>}
-            {client.notes && <div className="sm:col-span-2"><dt className="text-muted-foreground">Anteckningar</dt><dd>{client.notes}</dd></div>}
+            {client.vat_number && <div><dt className="text-muted-foreground">Momsnummer</dt><dd className="font-mono">{client.vat_number}</dd></div>}
+            {addressParts.length > 0 && (
+              <div className="sm:col-span-2">
+                <dt className="text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" /> Adress</dt>
+                <dd>{addressParts.join(", ")}</dd>
+              </div>
+            )}
+            {client.notes && <div className="sm:col-span-2"><dt className="text-muted-foreground">Anteckningar</dt><dd className="whitespace-pre-line">{client.notes}</dd></div>}
           </dl>
         </CardContent>
       </Card>
