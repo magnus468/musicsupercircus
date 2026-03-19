@@ -43,7 +43,7 @@ const AgreementsList = () => {
   const [sharePercentage, setSharePercentage] = useState("");
   const [status, setStatus] = useState("active");
   const [notes, setNotes] = useState("");
-  const [lifeOfCopyright, setLifeOfCopyright] = useState("no");
+  const [lifeOfCopyright, setLifeOfCopyright] = useState("yes");
   const [retentionDate, setRetentionDate] = useState("");
   const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([]);
 
