@@ -65,7 +65,7 @@ export const useWorksStats = () => {
       if (error) throw error;
       const works = data as Work[];
       const total = works.length;
-      const byType = { original: 0, MSCE: 0, MSCP: 0 };
+      const byType: Record<string, number> = { original: 0, MSCE: 0, MSCP: 0, administration: 0 };
       const byCreator: Record<string, number> = {};
       const byStimStatus = { anmäld: 0, claimad: 0, ej_anmäld: 0 };
       const coPublishers: Record<string, number> = {};

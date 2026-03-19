@@ -1,0 +1,1 @@
+ALTER TYPE public.publishing_type ADD VALUE IF NOT EXISTS 'administration';

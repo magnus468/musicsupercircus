@@ -15,7 +15,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [title, setTitle] = useState(work?.title ?? "");
   const [project, setProject] = useState(work?.project ?? "");
   const [creators, setCreators] = useState(work?.creators ?? "");
-  const [publishingType, setPublishingType] = useState<"original" | "MSCE" | "MSCP">(work?.publishing_type ?? "original");
+  const [publishingType, setPublishingType] = useState<"original" | "MSCE" | "MSCP" | "administration">(work?.publishing_type ?? "original");
   const [coPublishers, setCoPublishers] = useState(work?.co_publishers?.join(", ") ?? "");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
@@ -79,6 +79,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               <SelectItem value="original">Original</SelectItem>
               <SelectItem value="MSCE">MSCE</SelectItem>
               <SelectItem value="MSCP">MSCP</SelectItem>
+              <SelectItem value="administration">Administration</SelectItem>
             </SelectContent>
           </Select>
         </div>
