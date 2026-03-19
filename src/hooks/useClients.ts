@@ -10,7 +10,7 @@ export const useClients = (search?: string) => {
   return useQuery({
     queryKey: ["clients", search],
     queryFn: async () => {
-      let query = supabase.from("clients").select("*").order("name");
+      let query = supabase.from("clients").select("*").order("first_name").order("last_name");
       if (search && search.trim()) {
         const s = `%${search.trim()}%`;
         query = query.or(`name.ilike.${s},email.ilike.${s},organization.ilike.${s}`);
