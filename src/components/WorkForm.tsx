@@ -36,11 +36,15 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const isEdit = !!work;
 
   const addCreator = () => {
-    const trimmed = newCreator.trim();
-    if (trimmed && !creatorsList.includes(trimmed)) {
-      setCreatorsList((prev) => [...prev, trimmed]);
+    const first = newCreatorFirst.trim();
+    const last = newCreatorLast.trim();
+    if (!first && !last) return;
+    const fullName = [first, last].filter(Boolean).join(" ");
+    if (!creatorsList.includes(fullName)) {
+      setCreatorsList((prev) => [...prev, fullName]);
     }
-    setNewCreator("");
+    setNewCreatorFirst("");
+    setNewCreatorLast("");
   };
 
   const removeCreator = (name: string) => {
