@@ -161,6 +161,7 @@ const AgreementsList = () => {
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
                 
                 <TableCell>{a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}</TableCell>
+                <TableCell className="text-muted-foreground">{!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}</TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
                     {statusLabels[a.status] || a.status}
