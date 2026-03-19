@@ -11,11 +11,16 @@ const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { data: client, isLoading: loadingClient } = useClient(id);
   const { data: allWorks, isLoading: loadingWorks } = useWorks();
+  const { data: allClients } = useClients();
 
   const fullName = client ? `${client.first_name} ${client.last_name}`.trim() : "";
   const clientWorks = allWorks?.filter((w) =>
     client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === fullName.toLowerCase())
   ) ?? [];
+
+  // Build a map of client full name (lowercase) -> client id for linking
+  const clientMap = new Map<string, string>();
+  allClients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
 
   if (loadingClient) return <p className="text-muted-foreground">Laddar...</p>;
   if (!client) return <p className="text-muted-foreground">Klienten hittades inte.</p>;
