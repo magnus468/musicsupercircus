@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Music2, LayoutDashboard, List, Plus, LogOut, Menu, X } from "lucide-react";
+import { Music2, LayoutDashboard, List, Plus, LogOut, Menu, X, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
