@@ -55,7 +55,7 @@ const AgreementsList = () => {
     setSharePercentage("");
     setStatus("active");
     setNotes("");
-    setLifeOfCopyright("no");
+    setLifeOfCopyright("yes");
     setRetentionDate("");
     setSelectedWorkIds([]);
   };
