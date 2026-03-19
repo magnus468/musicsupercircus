@@ -112,7 +112,7 @@ const AgreementPdfPreview = ({ fileUrl }: AgreementPdfPreviewProps) => {
         activeDocument = await pdfjsLib.getDocument(fileUrl).promise;
         if (cancelled || !containerRef.current) return;
 
-        const availableWidth = Math.max(320, containerRef.current.clientWidth - 32);
+        const availableWidth = Math.max(320, containerRef.current.clientWidth - 16);
 
         for (let pageNumber = 1; pageNumber <= activeDocument.numPages; pageNumber += 1) {
           const page = await activeDocument.getPage(pageNumber);
