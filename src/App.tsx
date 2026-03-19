@@ -11,6 +11,7 @@ import WorksList from "@/pages/WorksList";
 import NewWork from "@/pages/NewWork";
 import ClientsList from "@/pages/ClientsList";
 import ClientDetail from "@/pages/ClientDetail";
+import AgreementsList from "@/pages/AgreementsList";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/works/new" element={<ProtectedRoute><NewWork /></ProtectedRoute>} />
             <Route path="/clients" element={<ProtectedRoute><ClientsList /></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
+            <Route path="/agreements" element={<ProtectedRoute><AgreementsList /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      agreement_works: {
+        Row: {
+          agreement_id: string
+          id: string
+          work_id: string
+        }
+        Insert: {
+          agreement_id: string
+          id?: string
+          work_id: string
+        }
+        Update: {
+          agreement_id?: string
+          id?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_works_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_works_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreements: {
+        Row: {
+          agreement_date: string
+          agreement_type: string
+          client_id: string
+          created_at: string
+          expiry_date: string | null
+          file_path: string | null
+          id: string
+          notes: string | null
+          share_percentage: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agreement_date?: string
+          agreement_type?: string
+          client_id: string
+          created_at?: string
+          expiry_date?: string | null
+          file_path?: string | null
+          id?: string
+          notes?: string | null
+          share_percentage?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agreement_date?: string
+          agreement_type?: string
+          client_id?: string
+          created_at?: string
+          expiry_date?: string | null
+          file_path?: string | null
+          id?: string
+          notes?: string | null
+          share_percentage?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           bank_name: string | null
