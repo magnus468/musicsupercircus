@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface WorkFormProps {
@@ -18,7 +18,10 @@ interface WorkFormProps {
 const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [title, setTitle] = useState(work?.title ?? "");
   const [project, setProject] = useState(work?.project ?? "");
-  const [creators, setCreators] = useState(work?.creators ?? "");
+  const [creatorsList, setCreatorsList] = useState<string[]>(
+    work?.creators ? work.creators.split(/[,/]/).map((c) => c.trim()).filter(Boolean) : []
+  );
+  const [newCreator, setNewCreator] = useState("");
   const [publishingType, setPublishingType] = useState<"original" | "MSCE" | "MSCP" | "administration">(work?.publishing_type ?? "original");
   const [selectedCoPublishers, setSelectedCoPublishers] = useState<string[]>(work?.co_publishers ?? []);
   const [newCoPublisher, setNewCoPublisher] = useState("");
@@ -30,6 +33,18 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const updateWork = useUpdateWork();
   const { data: coPublisherOptions = [] } = useCoPublisherOptions();
   const isEdit = !!work;
+
+  const addCreator = () => {
+    const trimmed = newCreator.trim();
+    if (trimmed && !creatorsList.includes(trimmed)) {
+      setCreatorsList((prev) => [...prev, trimmed]);
+    }
+    setNewCreator("");
+  };
+
+  const removeCreator = (name: string) => {
+    setCreatorsList((prev) => prev.filter((c) => c !== name));
+  };
 
   const toggleCoPublisher = (name: string) => {
     setSelectedCoPublishers((prev) =>
@@ -50,7 +65,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
-      creators: creators.trim(),
+      creators: creatorsList.join(", "),
       publishing_type: publishingType,
       co_publishers: selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
       stim_status: stimStatus,
@@ -65,7 +80,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       } else {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
-        setTitle(""); setProject(""); setCreators(""); setPublishingType("original");
+        setTitle(""); setProject(""); setCreatorsList([]); setNewCreator(""); setPublishingType("original");
         setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
@@ -90,8 +105,30 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="creators">Upphovsperson(er) *</Label>
-        <Input id="creators" value={creators} onChange={(e) => setCreators(e.target.value)} required placeholder="Separera med komma" />
+        <Label>Upphovsperson(er) *</Label>
+        <div className="flex gap-2">
+          <Input
+            value={newCreator}
+            onChange={(e) => setNewCreator(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+            placeholder="Lägg till upphovsperson..."
+          />
+          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreator.trim()}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        {creatorsList.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {creatorsList.map((name) => (
+              <Badge key={name} variant="secondary" className="gap-1">
+                {name}
+                <button type="button" onClick={() => removeCreator(name)} className="hover:text-destructive">
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
