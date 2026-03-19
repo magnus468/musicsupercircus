@@ -31,7 +31,7 @@ const ClientDetail = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            <Link to="/clients" className="hover:underline">
+            <Link to={`/clients/${client.id}`} className="hover:underline">
               {fullName}
             </Link>
           </CardTitle>
