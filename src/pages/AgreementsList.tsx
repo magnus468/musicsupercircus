@@ -20,6 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { Download, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -495,18 +496,7 @@ const AgreementsList = () => {
             )}
 
             {!pdfLoading && pdfViewerUrl && !pdfError && (
-              <object
-                data={pdfViewerUrl}
-                type="application/pdf"
-                className="h-full w-full"
-                aria-label="PDF-förhandsgranskning"
-              >
-                <iframe
-                  src={pdfViewerUrl}
-                  title="PDF-förhandsgranskning"
-                  className="h-full w-full border-0"
-                />
-              </object>
+              <AgreementPdfPreview fileUrl={pdfViewerUrl} />
             )}
           </div>
         </DialogContent>
