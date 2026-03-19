@@ -56,6 +56,7 @@ const AgreementsList = () => {
     setStatus("active");
     setNotes("");
     setLifeOfCopyright("no");
+    setRetentionDate("");
     setSelectedWorkIds([]);
   };
 
