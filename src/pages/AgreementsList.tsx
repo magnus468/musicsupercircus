@@ -406,7 +406,7 @@ const AgreementsList = () => {
                       {form.pdfFile
                         ? form.pdfFile.name
                         : editingAgreement?.file_path
-                          ? "Byt ut befintlig PDF..."
+                          ? `Byt ut: ${(editingAgreement as any).file_name || editingAgreement.file_path}`
                           : "Välj PDF-fil..."}
                     </span>
                   </div>
