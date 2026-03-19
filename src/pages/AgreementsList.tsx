@@ -1,5 +1,14 @@
-import { useState, useEffect } from "react";
-import { useAgreements, useCreateAgreement, useUpdateAgreement, useDeleteAgreement, useAgreementWorks, uploadAgreementFile, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
+import { useEffect, useState } from "react";
+import {
+  useAgreements,
+  useCreateAgreement,
+  useUpdateAgreement,
+  useDeleteAgreement,
+  useAgreementWorks,
+  uploadAgreementFile,
+  getAgreementSignedUrl,
+  type Agreement,
+} from "@/hooks/useAgreements";
 import { useClients } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
 import { Button } from "@/components/ui/button";
@@ -11,8 +20,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, FileText, Upload, Download, X, Pencil, Search } from "lucide-react";
+import { Download, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 const typeLabels: Record<string, string> = {
   original: "Original",
@@ -66,8 +83,10 @@ const AgreementsList = () => {
   const [uploading, setUploading] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
+  const [pdfPageCount, setPdfPageCount] = useState(0);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
-  // Load linked works when editing
   const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
 
   useEffect(() => {
@@ -75,6 +94,14 @@ const AgreementsList = () => {
       setForm((f) => ({ ...f, selectedWorkIds: editWorkIds }));
     }
   }, [editWorkIds, editingAgreement?.id]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfViewerUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfViewerUrl);
+      }
+    };
+  }, [pdfViewerUrl]);
 
   const openNew = () => {
     setEditingAgreement(null);
@@ -104,6 +131,16 @@ const AgreementsList = () => {
     setShowDialog(false);
     setEditingAgreement(null);
     setForm(emptyForm);
+  };
+
+  const closePdfViewer = () => {
+    if (pdfViewerUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(pdfViewerUrl);
+    }
+    setPdfViewerUrl(null);
+    setPdfPageCount(0);
+    setPdfLoading(false);
+    setPdfError(null);
   };
 
   const handleSave = async () => {
@@ -167,10 +204,28 @@ const AgreementsList = () => {
 
   const handleDownload = async (filePath: string) => {
     try {
-      const url = await getAgreementSignedUrl(filePath);
-      setPdfViewerUrl(url);
+      setPdfLoading(true);
+      setPdfError(null);
+      setPdfPageCount(0);
+
+      if (pdfViewerUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfViewerUrl);
+      }
+
+      const signedUrl = await getAgreementSignedUrl(filePath);
+      const response = await fetch(signedUrl);
+      if (!response.ok) {
+        throw new Error("Kunde inte hämta PDF-filen");
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setPdfViewerUrl(objectUrl);
     } catch {
+      setPdfError("Kunde inte visa PDF-filen.");
       toast.error("Kunde inte öppna filen");
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -188,6 +243,9 @@ const AgreementsList = () => {
   };
 
   const isSaving = createAgreement.isPending || updateAgreement.isPending;
+  const pdfPageWidth = typeof window !== "undefined"
+    ? Math.max(280, Math.min(900, window.innerWidth - 220))
+    : 900;
 
   return (
     <div className="space-y-4">
@@ -201,7 +259,7 @@ const AgreementsList = () => {
         {isLoading ? "Laddar..." : `${agreements?.length ?? 0} avtal`}
       </p>
 
-      <div className="rounded-lg border bg-card overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -220,11 +278,17 @@ const AgreementsList = () => {
             {agreements?.map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="font-medium">{a.client_name}</TableCell>
-                <TableCell><Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge></TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
+                </TableCell>
                 <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
-                <TableCell>{a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}</TableCell>
-                <TableCell className="text-muted-foreground">{!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}</TableCell>
+                <TableCell>
+                  {a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}
+                </TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
                     {statusLabels[a.status] || a.status}
@@ -232,7 +296,7 @@ const AgreementsList = () => {
                 </TableCell>
                 <TableCell>
                   {a.file_path ? (
-                    <Button variant="ghost" size="sm" className="gap-1.5 h-7 text-xs" onClick={() => handleDownload(a.file_path!)}>
+                    <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => handleDownload(a.file_path!)}>
                       <Download className="h-3 w-3" /> Öppna
                     </Button>
                   ) : (
@@ -246,7 +310,7 @@ const AgreementsList = () => {
                           if (file) handleFileUpload(a.id, file);
                         }}
                       />
-                      <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs pointer-events-none" disabled={uploading === a.id}>
+                      <Button variant="outline" size="sm" className="pointer-events-none h-7 gap-1.5 text-xs" disabled={uploading === a.id}>
                         <Upload className="h-3 w-3" /> {uploading === a.id ? "Laddar..." : "Ladda upp"}
                       </Button>
                     </label>
@@ -266,7 +330,7 @@ const AgreementsList = () => {
             ))}
             {!isLoading && agreements?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                   Inga avtal registrerade
                 </TableCell>
               </TableRow>
@@ -275,13 +339,12 @@ const AgreementsList = () => {
         </Table>
       </div>
 
-      {/* Create / Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => { if (!open) closeDialog(); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+        <DialogContent className="flex max-h-[90vh] max-w-lg flex-col">
           <DialogHeader>
             <DialogTitle>{editingAgreement ? "Redigera förlagsavtal" : "Nytt förlagsavtal"}</DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto flex-1 space-y-4 pr-1">
+          <div className="flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="space-y-2">
               <Label>Klient *</Label>
               <Select value={form.clientId} onValueChange={(v) => setField("clientId", v)}>
@@ -355,7 +418,6 @@ const AgreementsList = () => {
               <Textarea value={form.notes} onChange={(e) => setField("notes", e.target.value)} rows={2} />
             </div>
 
-            {/* Link works */}
             <div className="space-y-2">
               <Label>Koppla verk</Label>
               <div className="relative">
@@ -364,10 +426,10 @@ const AgreementsList = () => {
                   placeholder="Sök verk..."
                   value={form.workSearch || ""}
                   onChange={(e) => setField("workSearch", e.target.value)}
-                  className="pl-8 h-8 text-sm"
+                  className="h-8 pl-8 text-sm"
                 />
               </div>
-              <div className="rounded-lg border max-h-40 overflow-y-auto p-2 space-y-1">
+              <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border p-2">
                 {works?.length === 0 && <p className="text-xs text-muted-foreground">Inga verk</p>}
                 {works
                   ?.filter((w) => {
@@ -379,13 +441,13 @@ const AgreementsList = () => {
                     return normalize(w.title).includes(nq) || normalize(w.creators).includes(nq) || (w.project && normalize(w.project).includes(nq));
                   })
                   .map((w) => (
-                    <label key={w.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5">
+                    <label key={w.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-accent/50">
                       <Checkbox
                         checked={form.selectedWorkIds.includes(w.id)}
                         onCheckedChange={() => toggleWork(w.id)}
                       />
                       <span className="truncate">{w.title}</span>
-                      <span className="text-muted-foreground text-xs ml-auto shrink-0">{w.creators}</span>
+                      <span className="ml-auto shrink-0 text-xs text-muted-foreground">{w.creators}</span>
                     </label>
                   ))}
               </div>
@@ -394,20 +456,20 @@ const AgreementsList = () => {
             <div className="space-y-2">
               <Label>Signerat avtal (PDF)</Label>
               <div className="flex items-center gap-3">
-                <label className="cursor-pointer flex-1">
+                <label className="flex-1 cursor-pointer">
                   <input
                     type="file"
                     className="hidden"
                     accept=".pdf"
                     onChange={(e) => setField("pdfFile", e.target.files?.[0] || null)}
                   />
-                  <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent/50 transition-colors">
+                  <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors hover:bg-accent/50">
                     <Upload className="h-4 w-4 text-muted-foreground" />
                     <span className={form.pdfFile ? "text-foreground" : "text-muted-foreground"}>
                       {form.pdfFile
                         ? form.pdfFile.name
                         : editingAgreement?.file_path
-                          ? `Byt ut: ${(editingAgreement as any).file_name || editingAgreement.file_path}`
+                          ? `Byt ut: ${editingAgreement.file_name || editingAgreement.file_path}`
                           : "Välj PDF-fil..."}
                     </span>
                   </div>
@@ -427,19 +489,48 @@ const AgreementsList = () => {
         </DialogContent>
       </Dialog>
 
-      {/* PDF Viewer Dialog */}
-      <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => { if (!open) setPdfViewerUrl(null); }}>
-        <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-2">
+      <Dialog open={pdfLoading || !!pdfViewerUrl || !!pdfError} onOpenChange={(open) => { if (!open) closePdfViewer(); }}>
+        <DialogContent className="flex h-[90vh] max-w-5xl flex-col">
+          <DialogHeader>
             <DialogTitle>Förhandsgranskning</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 min-h-0 px-6 pb-6">
-            {pdfViewerUrl && (
-              <iframe
-                src={pdfViewerUrl}
-                className="w-full h-full rounded-md border"
-                title="PDF-förhandsgranskning"
-              />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {pdfLoading && (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Laddar PDF...
+              </div>
+            )}
+
+            {!pdfLoading && pdfError && (
+              <div className="flex h-full items-center justify-center text-sm text-destructive">
+                {pdfError}
+              </div>
+            )}
+
+            {!pdfLoading && pdfViewerUrl && !pdfError && (
+              <Document
+                file={pdfViewerUrl}
+                loading={
+                  <div className="flex h-full items-center justify-center py-10 text-sm text-muted-foreground">
+                    Renderar PDF...
+                  </div>
+                }
+                onLoadSuccess={({ numPages }) => setPdfPageCount(numPages)}
+                onLoadError={() => setPdfError("Kunde inte rendera PDF-filen.")}
+                className="space-y-4"
+              >
+                {Array.from({ length: pdfPageCount }, (_, index) => (
+                  <div key={`page_${index + 1}`} className="flex justify-center pb-4">
+                    <Page
+                      pageNumber={index + 1}
+                      width={pdfPageWidth}
+                      renderAnnotationLayer={false}
+                      renderTextLayer={false}
+                      className="overflow-hidden rounded-md border bg-background shadow-sm"
+                    />
+                  </div>
+                ))}
+              </Document>
             )}
           </div>
         </DialogContent>

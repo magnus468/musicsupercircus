@@ -148,5 +148,7 @@ export const getAgreementSignedUrl = async (filePath: string) => {
     .from("agreements")
     .createSignedUrl(filePath, 3600);
   if (error) throw error;
-  return data.signedUrl;
+  return data.signedUrl.startsWith("http")
+    ? data.signedUrl
+    : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${data.signedUrl}`;
 };
