@@ -65,6 +65,7 @@ const AgreementsList = () => {
   const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
 
   // Load linked works when editing
   const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
