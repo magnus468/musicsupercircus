@@ -80,7 +80,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       } else {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
-        setTitle(""); setProject(""); setCreators(""); setPublishingType("original");
+        setTitle(""); setProject(""); setCreatorsList([]); setNewCreator(""); setPublishingType("original");
         setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
