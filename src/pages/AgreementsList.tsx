@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useAgreements, useCreateAgreement, useDeleteAgreement, uploadAgreementFile, getAgreementSignedUrl } from "@/hooks/useAgreements";
+import { useState, useEffect } from "react";
+import { useAgreements, useCreateAgreement, useUpdateAgreement, useDeleteAgreement, useAgreementWorks, uploadAgreementFile, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
 import { useClients } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, FileText, Upload, Download, X } from "lucide-react";
+import { Plus, Trash2, FileText, Upload, Download, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 const typeLabels: Record<string, string> = {
@@ -26,71 +26,116 @@ const statusLabels: Record<string, string> = {
   expired: "Avslutat",
 };
 
+interface FormState {
+  clientId: string;
+  agreementType: string;
+  agreementDate: string;
+  expiryDate: string;
+  status: string;
+  notes: string;
+  lifeOfCopyright: string;
+  retentionDate: string;
+  selectedWorkIds: string[];
+  pdfFile: File | null;
+}
+
+const emptyForm: FormState = {
+  clientId: "",
+  agreementType: "original",
+  agreementDate: new Date().toISOString().split("T")[0],
+  expiryDate: "",
+  status: "active",
+  notes: "",
+  lifeOfCopyright: "yes",
+  retentionDate: "",
+  selectedWorkIds: [],
+  pdfFile: null,
+};
+
 const AgreementsList = () => {
   const { data: agreements, isLoading } = useAgreements();
   const { data: clients } = useClients();
   const { data: works } = useWorks();
   const createAgreement = useCreateAgreement();
+  const updateAgreement = useUpdateAgreement();
   const deleteAgreement = useDeleteAgreement();
-  const [showNew, setShowNew] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm);
 
-  // Form state
-  const [clientId, setClientId] = useState("");
-  const [agreementType, setAgreementType] = useState("original");
-  const [agreementDate, setAgreementDate] = useState(new Date().toISOString().split("T")[0]);
-  const [expiryDate, setExpiryDate] = useState("");
-  const [sharePercentage, setSharePercentage] = useState("");
-  const [status, setStatus] = useState("active");
-  const [notes, setNotes] = useState("");
-  const [lifeOfCopyright, setLifeOfCopyright] = useState("yes");
-  const [retentionDate, setRetentionDate] = useState("");
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([]);
+  // Load linked works when editing
+  const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
 
-  const resetForm = () => {
-    setClientId("");
-    setAgreementType("original");
-    setAgreementDate(new Date().toISOString().split("T")[0]);
-    setExpiryDate("");
-    setSharePercentage("");
-    setStatus("active");
-    setNotes("");
-    setLifeOfCopyright("yes");
-    setRetentionDate("");
-    setPdfFile(null);
-    setSelectedWorkIds([]);
+  useEffect(() => {
+    if (editingAgreement && editWorkIds) {
+      setForm((f) => ({ ...f, selectedWorkIds: editWorkIds }));
+    }
+  }, [editWorkIds, editingAgreement?.id]);
+
+  const openNew = () => {
+    setEditingAgreement(null);
+    setForm(emptyForm);
+    setShowDialog(true);
   };
 
-  const handleCreate = async () => {
-    if (!clientId) {
+  const openEdit = (a: Agreement) => {
+    setEditingAgreement(a);
+    setForm({
+      clientId: a.client_id,
+      agreementType: a.agreement_type,
+      agreementDate: a.agreement_date,
+      expiryDate: a.expiry_date || "",
+      status: a.status,
+      notes: a.notes || "",
+      lifeOfCopyright: a.life_of_copyright ? "yes" : "no",
+      retentionDate: a.retention_date || "",
+      selectedWorkIds: [],
+      pdfFile: null,
+    });
+    setShowDialog(true);
+  };
+
+  const closeDialog = () => {
+    setShowDialog(false);
+    setEditingAgreement(null);
+    setForm(emptyForm);
+  };
+
+  const handleSave = async () => {
+    if (!form.clientId) {
       toast.error("Välj en klient");
       return;
     }
+    const payload = {
+      client_id: form.clientId,
+      agreement_type: form.agreementType,
+      agreement_date: form.agreementDate,
+      expiry_date: form.expiryDate || null,
+      status: form.status,
+      notes: form.notes || null,
+      life_of_copyright: form.lifeOfCopyright === "yes",
+      retention_date: form.lifeOfCopyright === "no" && form.retentionDate ? form.retentionDate : null,
+      workIds: form.selectedWorkIds,
+    };
+
     try {
-      const result = await createAgreement.mutateAsync({
-        client_id: clientId,
-        agreement_type: agreementType,
-        agreement_date: agreementDate,
-        expiry_date: expiryDate || null,
-        share_percentage: sharePercentage ? parseFloat(sharePercentage) : null,
-        status,
-        notes: notes || null,
-        life_of_copyright: lifeOfCopyright === "yes",
-        retention_date: lifeOfCopyright === "no" && retentionDate ? retentionDate : null,
-        workIds: selectedWorkIds,
-      });
-      // Upload PDF if provided
-      if (pdfFile && result) {
-        await uploadAgreementFile(pdfFile, (result as any).id);
+      if (editingAgreement) {
+        await updateAgreement.mutateAsync({ id: editingAgreement.id, ...payload });
+        if (form.pdfFile) {
+          await uploadAgreementFile(form.pdfFile, editingAgreement.id);
+        }
+        toast.success("Avtal uppdaterat");
+      } else {
+        const result = await createAgreement.mutateAsync(payload);
+        if (form.pdfFile && result) {
+          await uploadAgreementFile(form.pdfFile, (result as any).id);
+        }
+        toast.success("Avtal skapat");
       }
-      toast.success("Avtal skapat");
-      setShowNew(false);
-      resetForm();
-      // Refetch to show file
-      window.location.reload();
+      closeDialog();
     } catch {
-      toast.error("Kunde inte skapa avtalet");
+      toast.error("Kunde inte spara avtalet");
     }
   };
 
@@ -109,7 +154,6 @@ const AgreementsList = () => {
     try {
       await uploadAgreementFile(file, agreementId);
       toast.success("Avtal uppladdat");
-      // Refetch
       window.location.reload();
     } catch {
       toast.error("Kunde inte ladda upp filen");
@@ -133,15 +177,24 @@ const AgreementsList = () => {
   };
 
   const toggleWork = (workId: string) => {
-    setSelectedWorkIds((prev) =>
-      prev.includes(workId) ? prev.filter((id) => id !== workId) : [...prev, workId]
-    );
+    setForm((f) => ({
+      ...f,
+      selectedWorkIds: f.selectedWorkIds.includes(workId)
+        ? f.selectedWorkIds.filter((id) => id !== workId)
+        : [...f.selectedWorkIds, workId],
+    }));
   };
+
+  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+  };
+
+  const isSaving = createAgreement.isPending || updateAgreement.isPending;
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={() => setShowNew(true)} className="gap-2">
+        <Button onClick={openNew} className="gap-2">
           <Plus className="h-4 w-4" /> Nytt avtal
         </Button>
       </div>
@@ -158,12 +211,11 @@ const AgreementsList = () => {
               <TableHead>Avtalstyp</TableHead>
               <TableHead>Datum</TableHead>
               <TableHead>Förfaller</TableHead>
-              
               <TableHead>LoC</TableHead>
               <TableHead>Retention</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dokument</TableHead>
-              <TableHead className="w-16"></TableHead>
+              <TableHead className="w-20"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,7 +225,6 @@ const AgreementsList = () => {
                 <TableCell><Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge></TableCell>
                 <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
-                
                 <TableCell>{a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}</TableCell>
                 <TableCell className="text-muted-foreground">{!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}</TableCell>
                 <TableCell>
@@ -204,9 +255,14 @@ const AgreementsList = () => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(a.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(a)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(a.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -221,14 +277,16 @@ const AgreementsList = () => {
         </Table>
       </div>
 
-      {/* New Agreement Dialog */}
-      <Dialog open={showNew} onOpenChange={(open) => { setShowNew(open); if (!open) resetForm(); }}>
+      {/* Create / Edit Dialog */}
+      <Dialog open={showDialog} onOpenChange={(open) => { if (!open) closeDialog(); }}>
         <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
-          <DialogHeader><DialogTitle>Nytt förlagsavtal</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{editingAgreement ? "Redigera förlagsavtal" : "Nytt förlagsavtal"}</DialogTitle>
+          </DialogHeader>
           <div className="overflow-y-auto flex-1 space-y-4 pr-1">
             <div className="space-y-2">
               <Label>Klient *</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={form.clientId} onValueChange={(v) => setField("clientId", v)}>
                 <SelectTrigger><SelectValue placeholder="Välj klient" /></SelectTrigger>
                 <SelectContent>
                   {clients?.map((c) => (
@@ -243,7 +301,7 @@ const AgreementsList = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Avtalstyp</Label>
-                <Select value={agreementType} onValueChange={setAgreementType}>
+                <Select value={form.agreementType} onValueChange={(v) => setField("agreementType", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="original">Original</SelectItem>
@@ -255,7 +313,7 @@ const AgreementsList = () => {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={status} onValueChange={setStatus}>
+                <Select value={form.status} onValueChange={(v) => setField("status", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Aktivt</SelectItem>
@@ -268,17 +326,17 @@ const AgreementsList = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Avtalsdatum</Label>
-                <Input type="date" value={agreementDate} onChange={(e) => setAgreementDate(e.target.value)} />
+                <Input type="date" value={form.agreementDate} onChange={(e) => setField("agreementDate", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Förfallodatum</Label>
-                <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+                <Input type="date" value={form.expiryDate} onChange={(e) => setField("expiryDate", e.target.value)} />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Life of Copyright</Label>
-              <Select value={lifeOfCopyright} onValueChange={setLifeOfCopyright}>
+              <Select value={form.lifeOfCopyright} onValueChange={(v) => setField("lifeOfCopyright", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="yes">Ja</SelectItem>
@@ -287,16 +345,16 @@ const AgreementsList = () => {
               </Select>
             </div>
 
-            {lifeOfCopyright === "no" && (
+            {form.lifeOfCopyright === "no" && (
               <div className="space-y-2">
                 <Label>Retention (slutdatum)</Label>
-                <Input type="date" value={retentionDate} onChange={(e) => setRetentionDate(e.target.value)} />
+                <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
               </div>
             )}
 
             <div className="space-y-2">
               <Label>Anteckningar</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+              <Textarea value={form.notes} onChange={(e) => setField("notes", e.target.value)} rows={2} />
             </div>
 
             {/* Link works */}
@@ -307,7 +365,7 @@ const AgreementsList = () => {
                 {works?.map((w) => (
                   <label key={w.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5">
                     <Checkbox
-                      checked={selectedWorkIds.includes(w.id)}
+                      checked={form.selectedWorkIds.includes(w.id)}
                       onCheckedChange={() => toggleWork(w.id)}
                     />
                     <span className="truncate">{w.title}</span>
@@ -325,25 +383,29 @@ const AgreementsList = () => {
                     type="file"
                     className="hidden"
                     accept=".pdf"
-                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                    onChange={(e) => setField("pdfFile", e.target.files?.[0] || null)}
                   />
                   <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent/50 transition-colors">
                     <Upload className="h-4 w-4 text-muted-foreground" />
-                    <span className={pdfFile ? "text-foreground" : "text-muted-foreground"}>
-                      {pdfFile ? pdfFile.name : "Välj PDF-fil..."}
+                    <span className={form.pdfFile ? "text-foreground" : "text-muted-foreground"}>
+                      {form.pdfFile
+                        ? form.pdfFile.name
+                        : editingAgreement?.file_path
+                          ? "Byt ut befintlig PDF..."
+                          : "Välj PDF-fil..."}
                     </span>
                   </div>
                 </label>
-                {pdfFile && (
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setPdfFile(null)}>
+                {form.pdfFile && (
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setField("pdfFile", null)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             </div>
 
-            <Button onClick={handleCreate} disabled={createAgreement.isPending} className="w-full">
-              {createAgreement.isPending ? "Sparar..." : "Skapa avtal"}
+            <Button onClick={handleSave} disabled={isSaving} className="w-full">
+              {isSaving ? "Sparar..." : editingAgreement ? "Spara ändringar" : "Skapa avtal"}
             </Button>
           </div>
         </DialogContent>
