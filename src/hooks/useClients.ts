@@ -13,7 +13,7 @@ export const useClients = (search?: string) => {
       let query = supabase.from("clients").select("*").order("first_name").order("last_name");
       if (search && search.trim()) {
         const s = `%${search.trim()}%`;
-        query = query.or(`first_name.ilike.${s},last_name.ilike.${s},email.ilike.${s},organization.ilike.${s}`);
+        query = query.or(`first_name.ilike.${s},last_name.ilike.${s},email.ilike.${s},organization.ilike.${s},city.ilike.${s},country.ilike.${s}`);
       }
       const { data, error } = await query;
       if (error) throw error;
