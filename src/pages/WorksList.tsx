@@ -64,7 +64,7 @@ const WorksList = () => {
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Förlagstyp" />
+            <SelectValue placeholder="Internt förlag" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Alla typer</SelectItem>

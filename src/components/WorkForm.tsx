@@ -158,7 +158,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Förlagstyp</Label>
+          <Label>Internt förlag</Label>
           <Select value={publishingType} onValueChange={(v) => setPublishingType(v as any)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
