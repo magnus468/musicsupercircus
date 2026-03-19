@@ -144,16 +144,6 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="country">Land</Label>
-          <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="city">Stad</Label>
-          <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
-        </div>
-      </div>
       <div className="space-y-2">
         <Label htmlFor="streetAddress">Gatuadress</Label>
         <Input id="streetAddress" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} />
@@ -169,6 +159,16 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
             <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. SE123456789001" />
           </div>
         )}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="city">Stad</Label>
+          <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="country">Land</Label>
+          <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+        </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
