@@ -187,7 +187,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               size="sm"
               onClick={() => setIsCoPublisher(true)}
             >
-              Co-publisher
+              Co-publishing
             </Button>
           </div>
         </div>
