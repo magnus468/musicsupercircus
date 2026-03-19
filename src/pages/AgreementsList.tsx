@@ -58,6 +58,7 @@ const AgreementsList = () => {
     setNotes("");
     setLifeOfCopyright("yes");
     setRetentionDate("");
+    setPdfFile(null);
     setSelectedWorkIds([]);
   };
 
