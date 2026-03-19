@@ -168,7 +168,7 @@ const AgreementsList = () => {
   const handleDownload = async (filePath: string) => {
     try {
       const url = await getAgreementSignedUrl(filePath);
-      window.location.href = url;
+      setPdfViewerUrl(url);
     } catch {
       toast.error("Kunde inte öppna filen");
     }
