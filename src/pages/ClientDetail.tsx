@@ -30,11 +30,7 @@ const ClientDetail = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            <Link to={`/clients/${client.id}`} className="hover:underline cursor-pointer">
-              {fullName}
-            </Link>
-          </CardTitle>
+          <CardTitle>{fullName}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-3 sm:grid-cols-2 text-sm">
