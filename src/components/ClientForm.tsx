@@ -120,8 +120,8 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       {isCompany ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="vatNumber">Momsnummer</Label>
-            <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. SE123456789001" />
+            <Label htmlFor="vatNumber">Organisationsnummer</Label>
+            <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. 556123-4567" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ipiNumber">IPI-nummer</Label>
