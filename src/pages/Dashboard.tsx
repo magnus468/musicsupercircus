@@ -74,7 +74,7 @@ const Dashboard = () => {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Publishing type breakdown */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Förlagstyp</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Internt förlag</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
               {typeData.map((d) => (
