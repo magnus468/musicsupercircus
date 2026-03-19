@@ -13,6 +13,7 @@ export interface Agreement {
   life_of_copyright: boolean;
   retention_date: string | null;
   file_path: string | null;
+  file_name: string | null;
   created_at: string;
   updated_at: string;
   client_name?: string;
@@ -130,7 +131,7 @@ export const uploadAgreementFile = async (file: File, agreementId: string) => {
 
   const { error: updateError } = await supabase
     .from("agreements")
-    .update({ file_path: path })
+    .update({ file_path: path, file_name: file.name } as any)
     .eq("id", agreementId);
   if (updateError) throw updateError;
 
