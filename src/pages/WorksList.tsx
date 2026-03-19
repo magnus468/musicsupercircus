@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useWorks, useDeleteWork, type Work } from "@/hooks/useWorks";
+import { useClients } from "@/hooks/useClients";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import WorkForm from "@/components/WorkForm";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -15,8 +17,13 @@ const WorksList = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [stimFilter, setStimFilter] = useState<string>("all");
   const { data: works, isLoading } = useWorks(search);
+  const { data: clients } = useClients();
   const deleteWork = useDeleteWork();
   const [editWork, setEditWork] = useState<Work | null>(null);
+
+  // Build a map of client name (lowercase) -> client id for linking
+  const clientMap = new Map<string, string>();
+  clients?.forEach((c) => clientMap.set(c.name.toLowerCase(), c.id));
 
   const filtered = works?.filter((w) => {
     if (typeFilter !== "all" && w.publishing_type !== typeFilter) return false;
@@ -104,7 +111,22 @@ const WorksList = () => {
               <TableRow key={work.id}>
                 <TableCell className="font-medium max-w-[200px] truncate">{work.title}</TableCell>
                 <TableCell className="text-muted-foreground max-w-[150px] truncate">{work.project || "—"}</TableCell>
-                <TableCell className="max-w-[200px] truncate">{work.creators}</TableCell>
+                <TableCell className="max-w-[200px]">
+                  {work.creators.split(/[,/]/).map((c, i, arr) => {
+                    const name = c.trim();
+                    const clientId = clientMap.get(name.toLowerCase());
+                    return (
+                      <span key={i}>
+                        {clientId ? (
+                          <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                            {name}
+                          </Link>
+                        ) : name}
+                        {i < arr.length - 1 && ", "}
+                      </span>
+                    );
+                  })}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1.5">
                     {publishingBadge(work.publishing_type)}

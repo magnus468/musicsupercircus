@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Music2, LayoutDashboard, List, Plus, LogOut, Menu, X } from "lucide-react";
+import { Music2, LayoutDashboard, List, Plus, LogOut, Menu, X, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/works", label: "Verklista", icon: List },
   { to: "/works/new", label: "Nytt verk", icon: Plus },
+  { to: "/clients", label: "Klienter", icon: Users },
 ];
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
