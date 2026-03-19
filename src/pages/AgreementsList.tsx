@@ -257,9 +257,21 @@ const AgreementsList = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Andel (%)</Label>
-              <Input type="number" min="0" max="100" step="0.1" value={sharePercentage} onChange={(e) => setSharePercentage(e.target.value)} placeholder="t.ex. 50" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Andel (%)</Label>
+                <Input type="number" min="0" max="100" step="0.1" value={sharePercentage} onChange={(e) => setSharePercentage(e.target.value)} placeholder="t.ex. 50" />
+              </div>
+              <div className="space-y-2">
+                <Label>Life of Copyright</Label>
+                <Select value={lifeOfCopyright} onValueChange={setLifeOfCopyright}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Ja</SelectItem>
+                    <SelectItem value="no">Nej</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
