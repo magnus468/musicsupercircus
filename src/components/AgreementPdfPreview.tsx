@@ -119,7 +119,7 @@ const AgreementPdfPreview = ({ fileUrl }: AgreementPdfPreviewProps) => {
           if (cancelled || !containerRef.current) return;
 
           const baseViewport = page.getViewport({ scale: 1 });
-          const scale = (availableWidth / baseViewport.width) * 1.5;
+          const scale = (availableWidth / baseViewport.width) * 3;
           const viewport = page.getViewport({ scale });
 
           const pageWrapper = document.createElement("div");
