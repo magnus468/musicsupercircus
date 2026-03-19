@@ -22,11 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Download, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-import "react-pdf/dist/esm/Page/TextLayer.css";
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const typeLabels: Record<string, string> = {
   original: "Original",
@@ -80,7 +75,6 @@ const AgreementsList = () => {
   const [uploading, setUploading] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
-  const [pdfPageCount, setPdfPageCount] = useState(0);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
@@ -135,7 +129,6 @@ const AgreementsList = () => {
       URL.revokeObjectURL(pdfViewerUrl);
     }
     setPdfViewerUrl(null);
-    setPdfPageCount(0);
     setPdfLoading(false);
     setPdfError(null);
   };
@@ -145,6 +138,7 @@ const AgreementsList = () => {
       toast.error("Välj en klient");
       return;
     }
+
     const payload = {
       client_id: form.clientId,
       agreement_type: form.agreementType,
@@ -203,7 +197,6 @@ const AgreementsList = () => {
     try {
       setPdfLoading(true);
       setPdfError(null);
-      setPdfPageCount(0);
 
       if (pdfViewerUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(pdfViewerUrl);
@@ -240,9 +233,6 @@ const AgreementsList = () => {
   };
 
   const isSaving = createAgreement.isPending || updateAgreement.isPending;
-  const pdfPageWidth = typeof window !== "undefined"
-    ? Math.max(280, Math.min(900, window.innerWidth - 220))
-    : 900;
 
   return (
     <div className="space-y-4">
@@ -293,7 +283,7 @@ const AgreementsList = () => {
                 </TableCell>
                 <TableCell>
                   {a.file_path ? (
-                    <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => handleDownload(a.file_path!)}>
+                    <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => handleDownload(a.file_path)}>
                       <Download className="h-3 w-3" /> Öppna
                     </Button>
                   ) : (
@@ -491,7 +481,7 @@ const AgreementsList = () => {
           <DialogHeader>
             <DialogTitle>Förhandsgranskning</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-hidden rounded-md border bg-muted/20">
             {pdfLoading && (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                 Laddar PDF...
@@ -499,35 +489,24 @@ const AgreementsList = () => {
             )}
 
             {!pdfLoading && pdfError && (
-              <div className="flex h-full items-center justify-center text-sm text-destructive">
-                {pdfError}
+              <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+                <p className="text-sm text-destructive">{pdfError}</p>
               </div>
             )}
 
             {!pdfLoading && pdfViewerUrl && !pdfError && (
-              <Document
-                file={pdfViewerUrl}
-                loading={
-                  <div className="flex h-full items-center justify-center py-10 text-sm text-muted-foreground">
-                    Renderar PDF...
-                  </div>
-                }
-                onLoadSuccess={({ numPages }) => setPdfPageCount(numPages)}
-                onLoadError={() => setPdfError("Kunde inte rendera PDF-filen.")}
-                className="space-y-4"
+              <object
+                data={pdfViewerUrl}
+                type="application/pdf"
+                className="h-full w-full"
+                aria-label="PDF-förhandsgranskning"
               >
-                {Array.from({ length: pdfPageCount }, (_, index) => (
-                  <div key={`page_${index + 1}`} className="flex justify-center pb-4">
-                    <Page
-                      pageNumber={index + 1}
-                      width={pdfPageWidth}
-                      renderAnnotationLayer={false}
-                      renderTextLayer={false}
-                      className="overflow-hidden rounded-md border bg-background shadow-sm"
-                    />
-                  </div>
-                ))}
-              </Document>
+                <iframe
+                  src={pdfViewerUrl}
+                  title="PDF-förhandsgranskning"
+                  className="h-full w-full border-0"
+                />
+              </object>
             )}
           </div>
         </DialogContent>
