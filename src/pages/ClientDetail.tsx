@@ -74,6 +74,7 @@ const ClientDetail = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Titel</TableHead>
+                    <TableHead>Upphovspersoner</TableHead>
                     <TableHead>Projekt</TableHead>
                     <TableHead>Förlag</TableHead>
                     <TableHead>STIM</TableHead>
@@ -83,6 +84,22 @@ const ClientDetail = () => {
                   {clientWorks.map((w) => (
                     <TableRow key={w.id}>
                       <TableCell className="font-medium">{w.title}</TableCell>
+                      <TableCell>
+                        {w.creators.split(/[,/]/).map((c, i, arr) => {
+                          const name = c.trim();
+                          const clientId = clientMap.get(name.toLowerCase());
+                          return (
+                            <span key={i}>
+                              {clientId ? (
+                                <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                                  {name}
+                                </Link>
+                              ) : name}
+                              {i < arr.length - 1 && ", "}
+                            </span>
+                          );
+                        })}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{w.project || "—"}</TableCell>
                       <TableCell><Badge variant="secondary">{w.publishing_type}</Badge></TableCell>
                       <TableCell><Badge variant="outline">{w.stim_status}</Badge></TableCell>
