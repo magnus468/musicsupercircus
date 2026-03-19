@@ -34,6 +34,18 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const { data: coPublisherOptions = [] } = useCoPublisherOptions();
   const isEdit = !!work;
 
+  const addCreator = () => {
+    const trimmed = newCreator.trim();
+    if (trimmed && !creatorsList.includes(trimmed)) {
+      setCreatorsList((prev) => [...prev, trimmed]);
+    }
+    setNewCreator("");
+  };
+
+  const removeCreator = (name: string) => {
+    setCreatorsList((prev) => prev.filter((c) => c !== name));
+  };
+
   const toggleCoPublisher = (name: string) => {
     setSelectedCoPublishers((prev) =>
       prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]
