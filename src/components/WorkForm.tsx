@@ -33,6 +33,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
   const createWork = useCreateWork();
   const updateWork = useUpdateWork();
+  const createClient = useCreateClient();
+  const { data: existingClients = [] } = useClients();
   const { data: coPublisherOptions = [] } = useCoPublisherOptions();
   const isEdit = !!work;
 
