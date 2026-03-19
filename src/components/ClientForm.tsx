@@ -66,7 +66,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       } else {
         await createClient.mutateAsync(data);
         toast.success("Klient tillagd");
-        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setCountry(""); setCity(""); setPostalCode(""); setStreetAddress(""); setVatNumber(""); setBankName(""); setIban(""); setBicSwift(""); setNotes("");
+        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setCountry(""); setCity(""); setPostalCode(""); setStreetAddress(""); setVatNumber(""); setBankName(""); setIban(""); setBicSwift(""); setContactPerson(""); setNotes("");
       }
       onSuccess?.();
     } catch {
