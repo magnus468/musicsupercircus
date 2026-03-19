@@ -72,6 +72,7 @@ const AgreementsList = () => {
         share_percentage: sharePercentage ? parseFloat(sharePercentage) : null,
         status,
         notes: notes || null,
+        life_of_copyright: lifeOfCopyright === "yes",
         workIds: selectedWorkIds,
       });
       toast.success("Avtal skapat");
