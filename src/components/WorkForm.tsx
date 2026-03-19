@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCreateWork, useUpdateWork, useCoPublisherOptions, type Work, type WorkInsert } from "@/hooks/useWorks";
+import { useCreateClient, useClients } from "@/hooks/useClients";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,16 +33,29 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
   const createWork = useCreateWork();
   const updateWork = useUpdateWork();
+  const createClient = useCreateClient();
+  const { data: existingClients = [] } = useClients();
   const { data: coPublisherOptions = [] } = useCoPublisherOptions();
   const isEdit = !!work;
 
-  const addCreator = () => {
+  const addCreator = async () => {
     const first = newCreatorFirst.trim();
     const last = newCreatorLast.trim();
     if (!first && !last) return;
     const fullName = [first, last].filter(Boolean).join(" ");
     if (!creatorsList.includes(fullName)) {
       setCreatorsList((prev) => [...prev, fullName]);
+    }
+    // Auto-create client if not exists
+    const alreadyExists = existingClients.some(
+      (c) => c.first_name.toLowerCase() === (first || "").toLowerCase() && c.last_name.toLowerCase() === (last || "").toLowerCase()
+    );
+    if (!alreadyExists && (first || last)) {
+      try {
+        await createClient.mutateAsync({ first_name: first || last, last_name: first ? last : "" });
+      } catch {
+        // Silently ignore if client creation fails (e.g. duplicate)
+      }
     }
     setNewCreatorFirst("");
     setNewCreatorLast("");
