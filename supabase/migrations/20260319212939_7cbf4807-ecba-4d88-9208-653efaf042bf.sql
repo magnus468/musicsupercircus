@@ -1,0 +1,1 @@
+ALTER TABLE public.agreements ADD COLUMN life_of_copyright boolean NOT NULL DEFAULT false;

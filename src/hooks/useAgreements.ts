@@ -10,6 +10,7 @@ export interface Agreement {
   share_percentage: number | null;
   status: string;
   notes: string | null;
+  life_of_copyright: boolean;
   file_path: string | null;
   created_at: string;
   updated_at: string;
@@ -25,6 +26,7 @@ export interface AgreementInsert {
   share_percentage?: number | null;
   status?: string;
   notes?: string | null;
+  life_of_copyright?: boolean;
   file_path?: string | null;
 }
 

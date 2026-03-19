@@ -43,6 +43,7 @@ const AgreementsList = () => {
   const [sharePercentage, setSharePercentage] = useState("");
   const [status, setStatus] = useState("active");
   const [notes, setNotes] = useState("");
+  const [lifeOfCopyright, setLifeOfCopyright] = useState("no");
   const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([]);
 
   const resetForm = () => {
@@ -53,6 +54,7 @@ const AgreementsList = () => {
     setSharePercentage("");
     setStatus("active");
     setNotes("");
+    setLifeOfCopyright("no");
     setSelectedWorkIds([]);
   };
 
@@ -70,6 +72,7 @@ const AgreementsList = () => {
         share_percentage: sharePercentage ? parseFloat(sharePercentage) : null,
         status,
         notes: notes || null,
+        life_of_copyright: lifeOfCopyright === "yes",
         workIds: selectedWorkIds,
       });
       toast.success("Avtal skapat");
@@ -139,6 +142,7 @@ const AgreementsList = () => {
               <TableHead>Datum</TableHead>
               <TableHead>Förfaller</TableHead>
               <TableHead>Andel</TableHead>
+              <TableHead>LoC</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dokument</TableHead>
               <TableHead className="w-16"></TableHead>
@@ -152,6 +156,7 @@ const AgreementsList = () => {
                 <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{a.share_percentage != null ? `${a.share_percentage}%` : "—"}</TableCell>
+                <TableCell>{a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}</TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
                     {statusLabels[a.status] || a.status}
@@ -188,7 +193,7 @@ const AgreementsList = () => {
             ))}
             {!isLoading && agreements?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Inga avtal registrerade
                 </TableCell>
               </TableRow>
@@ -252,9 +257,21 @@ const AgreementsList = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Andel (%)</Label>
-              <Input type="number" min="0" max="100" step="0.1" value={sharePercentage} onChange={(e) => setSharePercentage(e.target.value)} placeholder="t.ex. 50" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Andel (%)</Label>
+                <Input type="number" min="0" max="100" step="0.1" value={sharePercentage} onChange={(e) => setSharePercentage(e.target.value)} placeholder="t.ex. 50" />
+              </div>
+              <div className="space-y-2">
+                <Label>Life of Copyright</Label>
+                <Select value={lifeOfCopyright} onValueChange={setLifeOfCopyright}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Ja</SelectItem>
+                    <SelectItem value="no">Nej</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">

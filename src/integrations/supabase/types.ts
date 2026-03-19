@@ -56,6 +56,7 @@ export type Database = {
           expiry_date: string | null
           file_path: string | null
           id: string
+          life_of_copyright: boolean
           notes: string | null
           share_percentage: number | null
           status: string
@@ -69,6 +70,7 @@ export type Database = {
           expiry_date?: string | null
           file_path?: string | null
           id?: string
+          life_of_copyright?: boolean
           notes?: string | null
           share_percentage?: number | null
           status?: string
@@ -82,6 +84,7 @@ export type Database = {
           expiry_date?: string | null
           file_path?: string | null
           id?: string
+          life_of_copyright?: boolean
           notes?: string | null
           share_percentage?: number | null
           status?: string
