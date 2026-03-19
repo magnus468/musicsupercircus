@@ -1,0 +1,1 @@
+ALTER TABLE public.agreements ADD COLUMN retention_date date;
