@@ -60,7 +60,8 @@ const ClientsList = () => {
           <TableBody>
             {clients?.map((client) => (
               <TableRow key={client.id}>
-                <TableCell className="font-medium">{client.name}</TableCell>
+                <TableCell className="font-medium">{client.first_name}</TableCell>
+                <TableCell className="font-medium">{client.last_name}</TableCell>
                 <TableCell className="text-muted-foreground">{client.email || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{client.phone || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{client.organization || "—"}</TableCell>
