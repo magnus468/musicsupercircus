@@ -46,6 +46,9 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       postal_code: postalCode.trim() || null,
       street_address: streetAddress.trim() || null,
       vat_number: vatNumber.trim() || null,
+      bank_name: bankName.trim() || null,
+      iban: iban.trim() || null,
+      bic_swift: bicSwift.trim() || null,
       notes: notes.trim() || null,
     };
 
