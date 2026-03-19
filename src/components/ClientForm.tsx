@@ -117,17 +117,6 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="email">E-post</Label>
-          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefon</Label>
-          <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-      </div>
-
       {isCompany ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -151,6 +140,17 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
           </div>
         </div>
       )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="email">E-post</Label>
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Telefon</Label>
+          <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="streetAddress">Gatuadress</Label>
