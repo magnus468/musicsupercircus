@@ -21,7 +21,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [creatorsList, setCreatorsList] = useState<string[]>(
     work?.creators ? work.creators.split(/[,/]/).map((c) => c.trim()).filter(Boolean) : []
   );
-  const [newCreator, setNewCreator] = useState("");
+  const [newCreatorFirst, setNewCreatorFirst] = useState("");
+  const [newCreatorLast, setNewCreatorLast] = useState("");
   const [publishingType, setPublishingType] = useState<"original" | "MSCE" | "MSCP" | "administration">(work?.publishing_type ?? "original");
   const [selectedCoPublishers, setSelectedCoPublishers] = useState<string[]>(work?.co_publishers ?? []);
   const [newCoPublisher, setNewCoPublisher] = useState("");
