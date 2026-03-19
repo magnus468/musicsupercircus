@@ -248,11 +248,23 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             </div>
           </div>
         )}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>STIM-status</Label>
+          <Select value={stimStatus} onValueChange={(v) => setStimStatus(v as any)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="anmäld">Anmäld</SelectItem>
+              <SelectItem value="claimad">Claimad</SelectItem>
+              <SelectItem value="ej_anmäld">Ej anmäld</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="share">Andel (%)</Label>
           <Input id="share" type="number" min="0" max="100" step="0.01" value={sharePercentage} onChange={(e) => setSharePercentage(e.target.value)} placeholder="t.ex. 50" />
         </div>
-      </div>
       <div className="space-y-2">
         <Label htmlFor="stimComment">Kommentar</Label>
         <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
