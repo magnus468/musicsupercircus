@@ -75,6 +75,7 @@ const AgreementsList = () => {
         status,
         notes: notes || null,
         life_of_copyright: lifeOfCopyright === "yes",
+        retention_date: lifeOfCopyright === "no" && retentionDate ? retentionDate : null,
         workIds: selectedWorkIds,
       });
       toast.success("Avtal skapat");
