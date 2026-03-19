@@ -43,6 +43,7 @@ const AgreementsList = () => {
   const [sharePercentage, setSharePercentage] = useState("");
   const [status, setStatus] = useState("active");
   const [notes, setNotes] = useState("");
+  const [lifeOfCopyright, setLifeOfCopyright] = useState("no");
   const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([]);
 
   const resetForm = () => {
