@@ -79,6 +79,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               <SelectItem value="original">Original</SelectItem>
               <SelectItem value="MSCE">MSCE</SelectItem>
               <SelectItem value="MSCP">MSCP</SelectItem>
+              <SelectItem value="administration">Administration</SelectItem>
             </SelectContent>
           </Select>
         </div>

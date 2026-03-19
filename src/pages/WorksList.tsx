@@ -64,6 +64,7 @@ const WorksList = () => {
             <SelectItem value="original">Original</SelectItem>
             <SelectItem value="MSCE">MSCE</SelectItem>
             <SelectItem value="MSCP">MSCP</SelectItem>
+            <SelectItem value="administration">Administration</SelectItem>
           </SelectContent>
         </Select>
         <Select value={stimFilter} onValueChange={setStimFilter}>
