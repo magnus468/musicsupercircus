@@ -141,7 +141,7 @@ const AgreementsList = () => {
               <TableHead>Avtalstyp</TableHead>
               <TableHead>Datum</TableHead>
               <TableHead>Förfaller</TableHead>
-              <TableHead>Andel</TableHead>
+              
               <TableHead>LoC</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dokument</TableHead>
