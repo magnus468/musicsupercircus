@@ -179,7 +179,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="bankName">Bank</Label>
+          <Label htmlFor="bankName">Bankkonto</Label>
           <Input id="bankName" value={bankName} onChange={(e) => setBankName(e.target.value)} />
         </div>
         <div className="space-y-2">
