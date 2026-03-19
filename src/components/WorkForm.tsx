@@ -21,7 +21,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [creatorsList, setCreatorsList] = useState<string[]>(
     work?.creators ? work.creators.split(/[,/]/).map((c) => c.trim()).filter(Boolean) : []
   );
-  const [newCreator, setNewCreator] = useState("");
+  const [newCreatorFirst, setNewCreatorFirst] = useState("");
+  const [newCreatorLast, setNewCreatorLast] = useState("");
   const [publishingType, setPublishingType] = useState<"original" | "MSCE" | "MSCP" | "administration">(work?.publishing_type ?? "original");
   const [selectedCoPublishers, setSelectedCoPublishers] = useState<string[]>(work?.co_publishers ?? []);
   const [newCoPublisher, setNewCoPublisher] = useState("");
@@ -35,11 +36,15 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const isEdit = !!work;
 
   const addCreator = () => {
-    const trimmed = newCreator.trim();
-    if (trimmed && !creatorsList.includes(trimmed)) {
-      setCreatorsList((prev) => [...prev, trimmed]);
+    const first = newCreatorFirst.trim();
+    const last = newCreatorLast.trim();
+    if (!first && !last) return;
+    const fullName = [first, last].filter(Boolean).join(" ");
+    if (!creatorsList.includes(fullName)) {
+      setCreatorsList((prev) => [...prev, fullName]);
     }
-    setNewCreator("");
+    setNewCreatorFirst("");
+    setNewCreatorLast("");
   };
 
   const removeCreator = (name: string) => {
@@ -80,7 +85,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       } else {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
-        setTitle(""); setProject(""); setCreatorsList([]); setNewCreator(""); setPublishingType("original");
+        setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast(""); setPublishingType("original");
         setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
@@ -108,12 +113,19 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         <Label>Upphovsperson(er) *</Label>
         <div className="flex gap-2">
           <Input
-            value={newCreator}
-            onChange={(e) => setNewCreator(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-            placeholder="Lägg till upphovsperson..."
+            value={newCreatorFirst}
+            onChange={(e) => setNewCreatorFirst(e.target.value)}
+            placeholder="Förnamn"
+            className="flex-1"
           />
-          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreator.trim()}>
+          <Input
+            value={newCreatorLast}
+            onChange={(e) => setNewCreatorLast(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+            placeholder="Efternamn"
+            className="flex-1"
+          />
+          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreatorFirst.trim() && !newCreatorLast.trim()}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
