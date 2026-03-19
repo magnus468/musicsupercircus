@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useClient, useClients } from "@/hooks/useClients";
+import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,16 +11,11 @@ const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { data: client, isLoading: loadingClient } = useClient(id);
   const { data: allWorks, isLoading: loadingWorks } = useWorks();
-  const { data: allClients } = useClients();
 
   const fullName = client ? `${client.first_name} ${client.last_name}`.trim() : "";
   const clientWorks = allWorks?.filter((w) =>
     client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === fullName.toLowerCase())
   ) ?? [];
-
-  // Build a map of client full name (lowercase) -> client id for linking
-  const clientMap = new Map<string, string>();
-  allClients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
 
   if (loadingClient) return <p className="text-muted-foreground">Laddar...</p>;
   if (!client) return <p className="text-muted-foreground">Klienten hittades inte.</p>;
@@ -74,7 +69,6 @@ const ClientDetail = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Titel</TableHead>
-                    <TableHead>Upphovspersoner</TableHead>
                     <TableHead>Projekt</TableHead>
                     <TableHead>Förlag</TableHead>
                     <TableHead>STIM</TableHead>
@@ -84,22 +78,6 @@ const ClientDetail = () => {
                   {clientWorks.map((w) => (
                     <TableRow key={w.id}>
                       <TableCell className="font-medium">{w.title}</TableCell>
-                      <TableCell>
-                        {w.creators.split(/[,/]/).map((c, i, arr) => {
-                          const name = c.trim();
-                          const clientId = clientMap.get(name.toLowerCase());
-                          return (
-                            <span key={i}>
-                              {clientId ? (
-                                <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
-                                  {name}
-                                </Link>
-                              ) : name}
-                              {i < arr.length - 1 && ", "}
-                            </span>
-                          );
-                        })}
-                      </TableCell>
                       <TableCell className="text-muted-foreground">{w.project || "—"}</TableCell>
                       <TableCell><Badge variant="secondary">{w.publishing_type}</Badge></TableCell>
                       <TableCell><Badge variant="outline">{w.stim_status}</Badge></TableCell>
