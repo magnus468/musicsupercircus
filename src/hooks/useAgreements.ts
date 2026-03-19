@@ -131,7 +131,7 @@ export const uploadAgreementFile = async (file: File, agreementId: string) => {
 
   const { error: updateError } = await supabase
     .from("agreements")
-    .update({ file_path: path })
+    .update({ file_path: path, file_name: file.name } as any)
     .eq("id", agreementId);
   if (updateError) throw updateError;
 
