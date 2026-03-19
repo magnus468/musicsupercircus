@@ -162,10 +162,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Select value={publishingType} onValueChange={(v) => setPublishingType(v as any)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="original">Original</SelectItem>
               <SelectItem value="MSCE">MSCE</SelectItem>
               <SelectItem value="MSCP">MSCP</SelectItem>
-              <SelectItem value="administration">Administration</SelectItem>
             </SelectContent>
           </Select>
         </div>
