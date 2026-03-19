@@ -44,6 +44,7 @@ const AgreementsList = () => {
   const [status, setStatus] = useState("active");
   const [notes, setNotes] = useState("");
   const [lifeOfCopyright, setLifeOfCopyright] = useState("no");
+  const [retentionDate, setRetentionDate] = useState("");
   const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([]);
 
   const resetForm = () => {
@@ -55,6 +56,7 @@ const AgreementsList = () => {
     setStatus("active");
     setNotes("");
     setLifeOfCopyright("no");
+    setRetentionDate("");
     setSelectedWorkIds([]);
   };
 
@@ -73,6 +75,7 @@ const AgreementsList = () => {
         status,
         notes: notes || null,
         life_of_copyright: lifeOfCopyright === "yes",
+        retention_date: lifeOfCopyright === "no" && retentionDate ? retentionDate : null,
         workIds: selectedWorkIds,
       });
       toast.success("Avtal skapat");
@@ -143,6 +146,7 @@ const AgreementsList = () => {
               <TableHead>Förfaller</TableHead>
               
               <TableHead>LoC</TableHead>
+              <TableHead>Retention</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dokument</TableHead>
               <TableHead className="w-16"></TableHead>
@@ -157,6 +161,7 @@ const AgreementsList = () => {
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
                 
                 <TableCell>{a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}</TableCell>
+                <TableCell className="text-muted-foreground">{!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}</TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
                     {statusLabels[a.status] || a.status}
@@ -267,6 +272,13 @@ const AgreementsList = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {lifeOfCopyright === "no" && (
+              <div className="space-y-2">
+                <Label>Retention (slutdatum)</Label>
+                <Input type="date" value={retentionDate} onChange={(e) => setRetentionDate(e.target.value)} />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Anteckningar</Label>

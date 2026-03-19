@@ -11,6 +11,7 @@ export interface Agreement {
   status: string;
   notes: string | null;
   life_of_copyright: boolean;
+  retention_date: string | null;
   file_path: string | null;
   created_at: string;
   updated_at: string;
@@ -27,6 +28,7 @@ export interface AgreementInsert {
   status?: string;
   notes?: string | null;
   life_of_copyright?: boolean;
+  retention_date?: string | null;
   file_path?: string | null;
 }
 
