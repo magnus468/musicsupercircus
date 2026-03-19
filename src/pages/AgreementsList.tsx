@@ -36,6 +36,7 @@ interface FormState {
   lifeOfCopyright: string;
   retentionDate: string;
   selectedWorkIds: string[];
+  workSearch: string;
   pdfFile: File | null;
 }
 
