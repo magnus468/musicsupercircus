@@ -159,10 +159,20 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           </div>
         )}
       </div>
-      <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Internt förlag</Label>
+          <Select value={publishingType} onValueChange={(v) => setPublishingType(v as any)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MSCE">MSCE</SelectItem>
+              <SelectItem value="MSCP">MSCP</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-2">
           <Label>Typ</Label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-1">
             <Button
               type="button"
               variant={!isCoPublisher ? "default" : "outline"}
@@ -181,74 +191,62 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             </Button>
           </div>
         </div>
-        {isCoPublisher && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Internt förlag</Label>
-              <Select value={publishingType} onValueChange={(v) => setPublishingType(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MSCE">MSCE</SelectItem>
-                  <SelectItem value="MSCP">MSCP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Co-publishers</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" type="button" className="w-full justify-between font-normal">
-                    {selectedCoPublishers.length > 0
-                      ? `${selectedCoPublishers.length} valda`
-                      : "Välj co-publishers"}
-                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 p-3" align="start">
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {allOptions.map((name) => (
-                      <label key={name} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-accent rounded px-1 py-0.5">
-                        <Checkbox
-                          checked={selectedCoPublishers.includes(name)}
-                          onCheckedChange={() => toggleCoPublisher(name)}
-                        />
-                        {name}
-                      </label>
-                    ))}
-                    {allOptions.length === 0 && (
-                      <p className="text-sm text-muted-foreground">Inga co-publishers ännu</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2 mt-3 pt-3 border-t">
-                    <Input
-                      placeholder="Lägg till nytt..."
-                      value={newCoPublisher}
-                      onChange={(e) => setNewCoPublisher(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addNewCoPublisher(); } }}
-                      className="h-8 text-sm"
-                    />
-                    <Button type="button" size="sm" variant="secondary" onClick={addNewCoPublisher} disabled={!newCoPublisher.trim()}>
-                      +
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              {selectedCoPublishers.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {selectedCoPublishers.map((name) => (
-                    <Badge key={name} variant="secondary" className="gap-1">
-                      {name}
-                      <button type="button" onClick={() => toggleCoPublisher(name)} className="hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+      {isCoPublisher && (
+        <div className="space-y-2">
+          <Label>Co-publishers</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" type="button" className="w-full justify-between font-normal">
+                {selectedCoPublishers.length > 0
+                  ? `${selectedCoPublishers.length} valda`
+                  : "Välj co-publishers"}
+                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-3" align="start">
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {allOptions.map((name) => (
+                  <label key={name} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-accent rounded px-1 py-0.5">
+                    <Checkbox
+                      checked={selectedCoPublishers.includes(name)}
+                      onCheckedChange={() => toggleCoPublisher(name)}
+                    />
+                    {name}
+                  </label>
+                ))}
+                {allOptions.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Inga co-publishers ännu</p>
+                )}
+              </div>
+              <div className="flex gap-2 mt-3 pt-3 border-t">
+                <Input
+                  placeholder="Lägg till nytt..."
+                  value={newCoPublisher}
+                  onChange={(e) => setNewCoPublisher(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addNewCoPublisher(); } }}
+                  className="h-8 text-sm"
+                />
+                <Button type="button" size="sm" variant="secondary" onClick={addNewCoPublisher} disabled={!newCoPublisher.trim()}>
+                  +
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          {selectedCoPublishers.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {selectedCoPublishers.map((name) => (
+                <Badge key={name} variant="secondary" className="gap-1">
+                  {name}
+                  <button type="button" onClick={() => toggleCoPublisher(name)} className="hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>STIM-status</Label>
