@@ -141,7 +141,7 @@ const AgreementsList = () => {
               <TableHead>Avtalstyp</TableHead>
               <TableHead>Datum</TableHead>
               <TableHead>Förfaller</TableHead>
-              <TableHead>Andel</TableHead>
+              
               <TableHead>LoC</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dokument</TableHead>
@@ -155,7 +155,7 @@ const AgreementsList = () => {
                 <TableCell><Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge></TableCell>
                 <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
-                <TableCell className="text-muted-foreground">{a.share_percentage != null ? `${a.share_percentage}%` : "—"}</TableCell>
+                
                 <TableCell>{a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}</TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
