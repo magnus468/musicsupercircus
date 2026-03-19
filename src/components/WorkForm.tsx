@@ -113,12 +113,19 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         <Label>Upphovsperson(er) *</Label>
         <div className="flex gap-2">
           <Input
-            value={newCreator}
-            onChange={(e) => setNewCreator(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-            placeholder="Lägg till upphovsperson..."
+            value={newCreatorFirst}
+            onChange={(e) => setNewCreatorFirst(e.target.value)}
+            placeholder="Förnamn"
+            className="flex-1"
           />
-          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreator.trim()}>
+          <Input
+            value={newCreatorLast}
+            onChange={(e) => setNewCreatorLast(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+            placeholder="Efternamn"
+            className="flex-1"
+          />
+          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreatorFirst.trim() && !newCreatorLast.trim()}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
