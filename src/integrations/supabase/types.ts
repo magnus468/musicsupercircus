@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      works: {
+        Row: {
+          co_publishers: string[] | null
+          created_at: string
+          creators: string
+          id: string
+          project: string | null
+          publishing_type: Database["public"]["Enums"]["publishing_type"]
+          share_percentage: number | null
+          stim_comment: string | null
+          stim_status: Database["public"]["Enums"]["stim_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          co_publishers?: string[] | null
+          created_at?: string
+          creators: string
+          id?: string
+          project?: string | null
+          publishing_type?: Database["public"]["Enums"]["publishing_type"]
+          share_percentage?: number | null
+          stim_comment?: string | null
+          stim_status?: Database["public"]["Enums"]["stim_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          co_publishers?: string[] | null
+          created_at?: string
+          creators?: string
+          id?: string
+          project?: string | null
+          publishing_type?: Database["public"]["Enums"]["publishing_type"]
+          share_percentage?: number | null
+          stim_comment?: string | null
+          stim_status?: Database["public"]["Enums"]["stim_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +64,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      publishing_type: "original" | "MSCE" | "MSCP"
+      stim_status: "anmäld" | "claimad" | "ej_anmäld"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +192,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      publishing_type: ["original", "MSCE", "MSCP"],
+      stim_status: ["anmäld", "claimad", "ej_anmäld"],
+    },
   },
 } as const
