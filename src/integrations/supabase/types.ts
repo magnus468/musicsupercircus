@@ -64,7 +64,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      publishing_type: "original" | "MSCE" | "MSCP"
+      publishing_type: "original" | "MSCE" | "MSCP" | "administration"
       stim_status: "anmäld" | "claimad" | "ej_anmäld"
     }
     CompositeTypes: {
@@ -193,7 +193,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      publishing_type: ["original", "MSCE", "MSCP"],
+      publishing_type: ["original", "MSCE", "MSCP", "administration"],
       stim_status: ["anmäld", "claimad", "ej_anmäld"],
     },
   },
