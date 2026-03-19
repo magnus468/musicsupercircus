@@ -265,6 +265,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Label htmlFor="share">Andel (%)</Label>
           <Input id="share" type="number" min="0" max="100" step="0.01" value={sharePercentage} onChange={(e) => setSharePercentage(e.target.value)} placeholder="t.ex. 50" />
         </div>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="stimComment">Kommentar</Label>
         <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
