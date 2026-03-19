@@ -142,8 +142,8 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="organization">Organisation</Label>
-            <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} />
+            <Label htmlFor="organization">Personnummer</Label>
+            <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="t.ex. YYYYMMDD-XXXX" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ipiNumber">IPI-nummer</Label>
