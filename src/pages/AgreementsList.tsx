@@ -93,6 +93,7 @@ const AgreementsList = () => {
       lifeOfCopyright: a.life_of_copyright ? "yes" : "no",
       retentionDate: a.retention_date || "",
       selectedWorkIds: [],
+      workSearch: "",
       pdfFile: null,
     });
     setShowDialog(true);
