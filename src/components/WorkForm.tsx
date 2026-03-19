@@ -103,7 +103,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
         setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast(""); setPublishingType("MSCP");
-        setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
+        setIsCoPublisher(false); setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
     } catch {
