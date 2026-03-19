@@ -29,6 +29,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
   const [bankName, setBankName] = useState(client?.bank_name ?? "");
   const [iban, setIban] = useState(client?.iban ?? "");
   const [bicSwift, setBicSwift] = useState(client?.bic_swift ?? "");
+  const [contactPerson, setContactPerson] = useState(client?.contact_person ?? "");
   const [notes, setNotes] = useState(client?.notes ?? "");
 
   const createClient = useCreateClient();
