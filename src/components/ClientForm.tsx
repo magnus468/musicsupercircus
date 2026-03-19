@@ -99,6 +99,16 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
             <Label htmlFor="organization">Företagsnamn *</Label>
             <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} required />
           </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="vatNumber">Organisationsnummer</Label>
+              <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. 556123-4567" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ipiNumber">IPI-nummer</Label>
+              <Input id="ipiNumber" value={ipiNumber} onChange={(e) => setIpiNumber(e.target.value)} placeholder="t.ex. 00123456789" />
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="contactPerson">Kontaktperson</Label>
             <Input id="contactPerson" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} />
@@ -117,18 +127,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
         </div>
       )}
 
-      {isCompany ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="vatNumber">Organisationsnummer</Label>
-            <Input id="vatNumber" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="t.ex. 556123-4567" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ipiNumber">IPI-nummer</Label>
-            <Input id="ipiNumber" value={ipiNumber} onChange={(e) => setIpiNumber(e.target.value)} placeholder="t.ex. 00123456789" />
-          </div>
-        </div>
-      ) : (
+      {!isCompany && (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="organization">Personnummer</Label>
