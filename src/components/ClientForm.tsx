@@ -55,6 +55,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       bank_name: bankName.trim() || null,
       iban: iban.trim() || null,
       bic_swift: bicSwift.trim() || null,
+      contact_person: isCompany ? (contactPerson.trim() || null) : null,
       notes: notes.trim() || null,
     };
 
