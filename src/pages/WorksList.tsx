@@ -123,7 +123,7 @@ const WorksList = () => {
                 <TableCell className="max-w-[200px]">
                   {work.creators.split(/[,/]/).map((c, i, arr) => {
                     const name = c.trim();
-                    const clientId = clientMap.get(name.toLowerCase());
+                    const clientId = findClientId(name);
                     return (
                       <span key={i}>
                         {clientId ? (
