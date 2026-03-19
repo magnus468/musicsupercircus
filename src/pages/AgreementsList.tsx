@@ -167,13 +167,7 @@ const AgreementsList = () => {
   const handleDownload = async (filePath: string) => {
     try {
       const url = await getAgreementSignedUrl(filePath);
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      window.location.href = url;
     } catch {
       toast.error("Kunde inte öppna filen");
     }
