@@ -189,9 +189,11 @@ const ClientsList = () => {
       </div>
 
       <Dialog open={showNew} onOpenChange={setShowNew}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
           <DialogHeader><DialogTitle>Ny klient</DialogTitle></DialogHeader>
-          <ClientForm onSuccess={() => setShowNew(false)} />
+          <div className="overflow-y-auto flex-1 pr-1">
+            <ClientForm onSuccess={() => setShowNew(false)} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
