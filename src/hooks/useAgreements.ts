@@ -28,6 +28,7 @@ export interface AgreementInsert {
   status?: string;
   notes?: string | null;
   life_of_copyright?: boolean;
+  retention_date?: string | null;
   file_path?: string | null;
 }
 

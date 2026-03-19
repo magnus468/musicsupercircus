@@ -273,6 +273,13 @@ const AgreementsList = () => {
               </Select>
             </div>
 
+            {lifeOfCopyright === "no" && (
+              <div className="space-y-2">
+                <Label>Retention (slutdatum)</Label>
+                <Input type="date" value={retentionDate} onChange={(e) => setRetentionDate(e.target.value)} />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Anteckningar</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
