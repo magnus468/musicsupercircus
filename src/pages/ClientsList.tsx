@@ -54,6 +54,7 @@ const ClientsList = () => {
               <TableHead>Organisation</TableHead>
               <TableHead>IPI-nummer</TableHead>
               <TableHead className="w-28"></TableHead>
+
             </TableRow>
           </TableHeader>
           <TableBody>
