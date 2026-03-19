@@ -45,6 +45,7 @@ const AgreementsList = () => {
   const [notes, setNotes] = useState("");
   const [lifeOfCopyright, setLifeOfCopyright] = useState("yes");
   const [retentionDate, setRetentionDate] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([]);
 
   const resetForm = () => {
