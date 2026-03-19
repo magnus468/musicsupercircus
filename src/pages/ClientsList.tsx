@@ -47,7 +47,8 @@ const ClientsList = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Namn</TableHead>
+              <TableHead>Förnamn</TableHead>
+              <TableHead>Efternamn</TableHead>
               <TableHead>E-post</TableHead>
               <TableHead>Telefon</TableHead>
               <TableHead>Organisation</TableHead>
