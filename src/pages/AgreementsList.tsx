@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, FileText, Upload, Download } from "lucide-react";
+import { Plus, Trash2, FileText, Upload, Download, X } from "lucide-react";
 import { toast } from "sonner";
 
 const typeLabels: Record<string, string> = {
@@ -45,6 +45,7 @@ const AgreementsList = () => {
   const [notes, setNotes] = useState("");
   const [lifeOfCopyright, setLifeOfCopyright] = useState("yes");
   const [retentionDate, setRetentionDate] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [selectedWorkIds, setSelectedWorkIds] = useState<string[]>([]);
 
   const resetForm = () => {
@@ -57,6 +58,7 @@ const AgreementsList = () => {
     setNotes("");
     setLifeOfCopyright("yes");
     setRetentionDate("");
+    setPdfFile(null);
     setSelectedWorkIds([]);
   };
 
@@ -66,7 +68,7 @@ const AgreementsList = () => {
       return;
     }
     try {
-      await createAgreement.mutateAsync({
+      const result = await createAgreement.mutateAsync({
         client_id: clientId,
         agreement_type: agreementType,
         agreement_date: agreementDate,
@@ -78,9 +80,15 @@ const AgreementsList = () => {
         retention_date: lifeOfCopyright === "no" && retentionDate ? retentionDate : null,
         workIds: selectedWorkIds,
       });
+      // Upload PDF if provided
+      if (pdfFile && result) {
+        await uploadAgreementFile(pdfFile, (result as any).id);
+      }
       toast.success("Avtal skapat");
       setShowNew(false);
       resetForm();
+      // Refetch to show file
+      window.location.reload();
     } catch {
       toast.error("Kunde inte skapa avtalet");
     }
@@ -300,6 +308,31 @@ const AgreementsList = () => {
                     <span className="text-muted-foreground text-xs ml-auto shrink-0">{w.creators}</span>
                   </label>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Signerat avtal (PDF)</Label>
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer flex-1">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                  />
+                  <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent/50 transition-colors">
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    <span className={pdfFile ? "text-foreground" : "text-muted-foreground"}>
+                      {pdfFile ? pdfFile.name : "Välj PDF-fil..."}
+                    </span>
+                  </div>
+                </label>
+                {pdfFile && (
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setPdfFile(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
 
