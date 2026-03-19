@@ -105,8 +105,30 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="creators">Upphovsperson(er) *</Label>
-        <Input id="creators" value={creators} onChange={(e) => setCreators(e.target.value)} required placeholder="Separera med komma" />
+        <Label>Upphovsperson(er) *</Label>
+        <div className="flex gap-2">
+          <Input
+            value={newCreator}
+            onChange={(e) => setNewCreator(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+            placeholder="Lägg till upphovsperson..."
+          />
+          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreator.trim()}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        {creatorsList.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {creatorsList.map((name) => (
+              <Badge key={name} variant="secondary" className="gap-1">
+                {name}
+                <button type="button" onClick={() => removeCreator(name)} className="hover:text-destructive">
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
