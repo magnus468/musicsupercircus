@@ -80,9 +80,15 @@ const AgreementsList = () => {
         retention_date: lifeOfCopyright === "no" && retentionDate ? retentionDate : null,
         workIds: selectedWorkIds,
       });
+      // Upload PDF if provided
+      if (pdfFile && result) {
+        await uploadAgreementFile(pdfFile, (result as any).id);
+      }
       toast.success("Avtal skapat");
       setShowNew(false);
       resetForm();
+      // Refetch to show file
+      window.location.reload();
     } catch {
       toast.error("Kunde inte skapa avtalet");
     }
