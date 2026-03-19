@@ -94,13 +94,16 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       </div>
 
       {isCompany ? (
-        <div className="space-y-2">
-          <Label htmlFor="organization">Företagsnamn *</Label>
-          <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="contactPerson">Kontaktperson</Label>
-          <Input id="contactPerson" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} />
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="organization">Företagsnamn *</Label>
+            <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contactPerson">Kontaktperson</Label>
+            <Input id="contactPerson" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} />
+          </div>
+        </>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
