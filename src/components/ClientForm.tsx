@@ -12,7 +12,8 @@ interface ClientFormProps {
 }
 
 const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
-  const [name, setName] = useState(client?.name ?? "");
+  const [firstName, setFirstName] = useState(client?.first_name ?? "");
+  const [lastName, setLastName] = useState(client?.last_name ?? "");
   const [email, setEmail] = useState(client?.email ?? "");
   const [phone, setPhone] = useState(client?.phone ?? "");
   const [organization, setOrganization] = useState(client?.organization ?? "");
@@ -26,7 +27,8 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data: ClientInsert = {
-      name: name.trim(),
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
       email: email.trim() || null,
       phone: phone.trim() || null,
       organization: organization.trim() || null,
@@ -41,7 +43,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       } else {
         await createClient.mutateAsync(data);
         toast.success("Klient tillagd");
-        setName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setNotes("");
+        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setNotes("");
       }
       onSuccess?.();
     } catch {
