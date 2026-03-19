@@ -24,7 +24,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   );
   const [newCreatorFirst, setNewCreatorFirst] = useState("");
   const [newCreatorLast, setNewCreatorLast] = useState("");
-  const [publishingType, setPublishingType] = useState<"original" | "MSCE" | "MSCP" | "administration">(work?.publishing_type ?? "original");
+  const [publishingType, setPublishingType] = useState<"MSCE" | "MSCP">(work?.publishing_type === "MSCE" || work?.publishing_type === "MSCP" ? work.publishing_type : "MSCE");
   const [selectedCoPublishers, setSelectedCoPublishers] = useState<string[]>(work?.co_publishers ?? []);
   const [newCoPublisher, setNewCoPublisher] = useState("");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
