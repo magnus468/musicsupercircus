@@ -94,3 +94,18 @@ export const useWorksStats = () => {
     },
   });
 };
+
+export const useCoPublisherOptions = () => {
+  return useQuery({
+    queryKey: ["co-publisher-options"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("works").select("co_publishers");
+      if (error) throw error;
+      const set = new Set<string>();
+      (data as { co_publishers: string[] | null }[]).forEach((w) => {
+        w.co_publishers?.forEach((cp) => set.add(cp));
+      });
+      return Array.from(set).sort();
+    },
+  });
+};

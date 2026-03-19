@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { useCreateWork, useUpdateWork, type Work, type WorkInsert } from "@/hooks/useWorks";
+import { useCreateWork, useUpdateWork, useCoPublisherOptions, type Work, type WorkInsert } from "@/hooks/useWorks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { X, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 interface WorkFormProps {
@@ -16,14 +20,30 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [project, setProject] = useState(work?.project ?? "");
   const [creators, setCreators] = useState(work?.creators ?? "");
   const [publishingType, setPublishingType] = useState<"original" | "MSCE" | "MSCP" | "administration">(work?.publishing_type ?? "original");
-  const [coPublishers, setCoPublishers] = useState(work?.co_publishers?.join(", ") ?? "");
+  const [selectedCoPublishers, setSelectedCoPublishers] = useState<string[]>(work?.co_publishers ?? []);
+  const [newCoPublisher, setNewCoPublisher] = useState("");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
 
   const createWork = useCreateWork();
   const updateWork = useUpdateWork();
+  const { data: coPublisherOptions = [] } = useCoPublisherOptions();
   const isEdit = !!work;
+
+  const toggleCoPublisher = (name: string) => {
+    setSelectedCoPublishers((prev) =>
+      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]
+    );
+  };
+
+  const addNewCoPublisher = () => {
+    const trimmed = newCoPublisher.trim();
+    if (trimmed && !selectedCoPublishers.includes(trimmed)) {
+      setSelectedCoPublishers((prev) => [...prev, trimmed]);
+    }
+    setNewCoPublisher("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +52,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       project: project.trim() || null,
       creators: creators.trim(),
       publishing_type: publishingType,
-      co_publishers: coPublishers.trim() ? coPublishers.split(",").map((s) => s.trim()).filter(Boolean) : null,
+      co_publishers: selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
       share_percentage: sharePercentage ? parseFloat(sharePercentage) : null,
@@ -46,13 +66,16 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
         setTitle(""); setProject(""); setCreators(""); setPublishingType("original");
-        setCoPublishers(""); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
+        setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
     } catch {
       toast.error("Något gick fel");
     }
   };
+
+  // Merge existing options with any selected values not yet in the DB
+  const allOptions = Array.from(new Set([...coPublisherOptions, ...selectedCoPublishers])).sort();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,8 +120,57 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="coPublishers">Co-publishers</Label>
-          <Input id="coPublishers" value={coPublishers} onChange={(e) => setCoPublishers(e.target.value)} placeholder="Separera med komma" />
+          <Label>Co-publishers</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" type="button" className="w-full justify-between font-normal">
+                {selectedCoPublishers.length > 0
+                  ? `${selectedCoPublishers.length} valda`
+                  : "Välj co-publishers"}
+                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-3" align="start">
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {allOptions.map((name) => (
+                  <label key={name} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-accent rounded px-1 py-0.5">
+                    <Checkbox
+                      checked={selectedCoPublishers.includes(name)}
+                      onCheckedChange={() => toggleCoPublisher(name)}
+                    />
+                    {name}
+                  </label>
+                ))}
+                {allOptions.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Inga co-publishers ännu</p>
+                )}
+              </div>
+              <div className="flex gap-2 mt-3 pt-3 border-t">
+                <Input
+                  placeholder="Lägg till nytt..."
+                  value={newCoPublisher}
+                  onChange={(e) => setNewCoPublisher(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addNewCoPublisher(); } }}
+                  className="h-8 text-sm"
+                />
+                <Button type="button" size="sm" variant="secondary" onClick={addNewCoPublisher} disabled={!newCoPublisher.trim()}>
+                  +
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          {selectedCoPublishers.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {selectedCoPublishers.map((name) => (
+                <Badge key={name} variant="secondary" className="gap-1">
+                  {name}
+                  <button type="button" onClick={() => toggleCoPublisher(name)} className="hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="share">Andel (%)</Label>
