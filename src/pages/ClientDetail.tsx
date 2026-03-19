@@ -1,0 +1,83 @@
+import { useParams, Link } from "react-router-dom";
+import { useClient } from "@/hooks/useClients";
+import { useWorks } from "@/hooks/useWorks";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const ClientDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const { data: client, isLoading: loadingClient } = useClient(id);
+  const { data: allWorks, isLoading: loadingWorks } = useWorks();
+
+  // Filter works where this client appears in creators
+  const clientWorks = allWorks?.filter((w) =>
+    client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === client.name.toLowerCase())
+  ) ?? [];
+
+  if (loadingClient) return <p className="text-muted-foreground">Laddar...</p>;
+  if (!client) return <p className="text-muted-foreground">Klienten hittades inte.</p>;
+
+  return (
+    <div className="space-y-6">
+      <Button variant="ghost" size="sm" asChild className="gap-2">
+        <Link to="/clients"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
+      </Button>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{client.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid gap-3 sm:grid-cols-2 text-sm">
+            {client.email && <div><dt className="text-muted-foreground">E-post</dt><dd>{client.email}</dd></div>}
+            {client.phone && <div><dt className="text-muted-foreground">Telefon</dt><dd>{client.phone}</dd></div>}
+            {client.organization && <div><dt className="text-muted-foreground">Organisation</dt><dd>{client.organization}</dd></div>}
+            {client.ipi_number && <div><dt className="text-muted-foreground">IPI-nummer</dt><dd className="font-mono">{client.ipi_number}</dd></div>}
+            {client.notes && <div className="sm:col-span-2"><dt className="text-muted-foreground">Anteckningar</dt><dd>{client.notes}</dd></div>}
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Verk ({clientWorks.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingWorks ? (
+            <p className="text-muted-foreground text-sm">Laddar verk...</p>
+          ) : clientWorks.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Inga verk kopplade till denna klient.</p>
+          ) : (
+            <div className="rounded-lg border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Titel</TableHead>
+                    <TableHead>Projekt</TableHead>
+                    <TableHead>Förlag</TableHead>
+                    <TableHead>STIM</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {clientWorks.map((w) => (
+                    <TableRow key={w.id}>
+                      <TableCell className="font-medium">{w.title}</TableCell>
+                      <TableCell className="text-muted-foreground">{w.project || "—"}</TableCell>
+                      <TableCell><Badge variant="secondary">{w.publishing_type}</Badge></TableCell>
+                      <TableCell><Badge variant="outline">{w.stim_status}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ClientDetail;
