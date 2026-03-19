@@ -65,7 +65,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
-      creators: creators.trim(),
+      creators: creatorsList.join(", "),
       publishing_type: publishingType,
       co_publishers: selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
       stim_status: stimStatus,
