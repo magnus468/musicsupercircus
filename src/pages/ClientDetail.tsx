@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useClient } from "@/hooks/useClients";
+import { useClient, useClients } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
