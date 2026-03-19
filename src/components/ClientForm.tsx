@@ -53,9 +53,15 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Namn *</Label>
-        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">Förnamn *</Label>
+          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Efternamn</Label>
+          <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+        </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
