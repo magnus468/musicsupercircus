@@ -16,11 +16,14 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          bank_name: string | null
+          bic_swift: string | null
           city: string | null
           country: string | null
           created_at: string
           email: string | null
           first_name: string
+          iban: string | null
           id: string
           ipi_number: string | null
           last_name: string
@@ -33,11 +36,14 @@ export type Database = {
           vat_number: string | null
         }
         Insert: {
+          bank_name?: string | null
+          bic_swift?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
           first_name: string
+          iban?: string | null
           id?: string
           ipi_number?: string | null
           last_name?: string
@@ -50,11 +56,14 @@ export type Database = {
           vat_number?: string | null
         }
         Update: {
+          bank_name?: string | null
+          bic_swift?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
+          iban?: string | null
           id?: string
           ipi_number?: string | null
           last_name?: string

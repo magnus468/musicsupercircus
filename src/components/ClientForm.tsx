@@ -23,6 +23,9 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
   const [postalCode, setPostalCode] = useState(client?.postal_code ?? "");
   const [streetAddress, setStreetAddress] = useState(client?.street_address ?? "");
   const [vatNumber, setVatNumber] = useState(client?.vat_number ?? "");
+  const [bankName, setBankName] = useState(client?.bank_name ?? "");
+  const [iban, setIban] = useState(client?.iban ?? "");
+  const [bicSwift, setBicSwift] = useState(client?.bic_swift ?? "");
   const [notes, setNotes] = useState(client?.notes ?? "");
 
   const createClient = useCreateClient();
@@ -43,6 +46,9 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       postal_code: postalCode.trim() || null,
       street_address: streetAddress.trim() || null,
       vat_number: vatNumber.trim() || null,
+      bank_name: bankName.trim() || null,
+      iban: iban.trim() || null,
+      bic_swift: bicSwift.trim() || null,
       notes: notes.trim() || null,
     };
 
@@ -53,7 +59,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       } else {
         await createClient.mutateAsync(data);
         toast.success("Klient tillagd");
-        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setCountry(""); setCity(""); setPostalCode(""); setStreetAddress(""); setVatNumber(""); setNotes("");
+        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setCountry(""); setCity(""); setPostalCode(""); setStreetAddress(""); setVatNumber(""); setBankName(""); setIban(""); setBicSwift(""); setNotes("");
       }
       onSuccess?.();
     } catch {
@@ -115,6 +121,20 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
         <div className="space-y-2">
           <Label htmlFor="city">Stad</Label>
           <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="bankName">Bank</Label>
+          <Input id="bankName" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="iban">IBAN</Label>
+          <Input id="iban" value={iban} onChange={(e) => setIban(e.target.value)} placeholder="t.ex. SE1234567890" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bicSwift">BIC/SWIFT</Label>
+          <Input id="bicSwift" value={bicSwift} onChange={(e) => setBicSwift(e.target.value)} placeholder="t.ex. NDEASESS" />
         </div>
       </div>
       <div className="space-y-2">

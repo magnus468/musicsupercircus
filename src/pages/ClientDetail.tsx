@@ -39,6 +39,9 @@ const ClientDetail = () => {
             {client.organization && <div><dt className="text-muted-foreground">Organisation</dt><dd>{client.organization}</dd></div>}
             {client.ipi_number && <div><dt className="text-muted-foreground">IPI-nummer</dt><dd className="font-mono">{client.ipi_number}</dd></div>}
             {client.vat_number && <div><dt className="text-muted-foreground">Momsnummer</dt><dd className="font-mono">{client.vat_number}</dd></div>}
+            {client.bank_name && <div><dt className="text-muted-foreground">Bank</dt><dd>{client.bank_name}</dd></div>}
+            {client.iban && <div><dt className="text-muted-foreground">IBAN</dt><dd className="font-mono">{client.iban}</dd></div>}
+            {client.bic_swift && <div><dt className="text-muted-foreground">BIC/SWIFT</dt><dd className="font-mono">{client.bic_swift}</dd></div>}
             {addressParts.length > 0 && (
               <div className="sm:col-span-2">
                 <dt className="text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" /> Adress</dt>
