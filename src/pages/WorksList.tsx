@@ -111,7 +111,22 @@ const WorksList = () => {
               <TableRow key={work.id}>
                 <TableCell className="font-medium max-w-[200px] truncate">{work.title}</TableCell>
                 <TableCell className="text-muted-foreground max-w-[150px] truncate">{work.project || "—"}</TableCell>
-                <TableCell className="max-w-[200px] truncate">{work.creators}</TableCell>
+                <TableCell className="max-w-[200px]">
+                  {work.creators.split(/[,/]/).map((c, i, arr) => {
+                    const name = c.trim();
+                    const clientId = clientMap.get(name.toLowerCase());
+                    return (
+                      <span key={i}>
+                        {clientId ? (
+                          <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                            {name}
+                          </Link>
+                        ) : name}
+                        {i < arr.length - 1 && ", "}
+                      </span>
+                    );
+                  })}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1.5">
                     {publishingBadge(work.publishing_type)}
