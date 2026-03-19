@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ClientForm from "@/components/ClientForm";
 
-type EditableField = "first_name" | "last_name" | "email" | "phone" | "organization" | "ipi_number";
+type EditableField = "first_name" | "last_name" | "email" | "phone" | "organization" | "ipi_number" | "country" | "city";
 
 interface EditingCell {
   clientId: string;
@@ -95,7 +95,7 @@ const ClientsList = () => {
 
   const handleSave = async (client: Client, field: EditableField, value: string) => {
     const trimmed = value.trim();
-    const current = client[field] ?? "";
+    const current = (client as any)[field] ?? "";
     if (trimmed === current) {
       setEditingCell(null);
       return;
@@ -111,6 +111,17 @@ const ClientsList = () => {
 
   const isEditing = (clientId: string, field: EditableField) =>
     editingCell?.clientId === clientId && editingCell?.field === field;
+
+  const renderCell = (client: Client, field: EditableField, mono?: boolean) => (
+    <InlineEdit
+      value={(client as any)[field] || ""}
+      isEditing={isEditing(client.id, field)}
+      onStartEdit={() => setEditingCell({ clientId: client.id, field })}
+      onSave={(v) => handleSave(client, field, v)}
+      onCancel={() => setEditingCell(null)}
+      mono={mono}
+    />
+  );
 
   return (
     <div className="space-y-4">
@@ -137,6 +148,8 @@ const ClientsList = () => {
               <TableHead>E-post</TableHead>
               <TableHead>Telefon</TableHead>
               <TableHead>Organisation</TableHead>
+              <TableHead>Land</TableHead>
+              <TableHead>Stad</TableHead>
               <TableHead>IPI-nummer</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
@@ -144,61 +157,14 @@ const ClientsList = () => {
           <TableBody>
             {clients?.map((client) => (
               <TableRow key={client.id}>
-                <TableCell>
-                  <InlineEdit
-                    value={client.first_name}
-                    isEditing={isEditing(client.id, "first_name")}
-                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "first_name" })}
-                    onSave={(v) => handleSave(client, "first_name", v)}
-                    onCancel={() => setEditingCell(null)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEdit
-                    value={client.last_name}
-                    isEditing={isEditing(client.id, "last_name")}
-                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "last_name" })}
-                    onSave={(v) => handleSave(client, "last_name", v)}
-                    onCancel={() => setEditingCell(null)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEdit
-                    value={client.email || ""}
-                    isEditing={isEditing(client.id, "email")}
-                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "email" })}
-                    onSave={(v) => handleSave(client, "email", v)}
-                    onCancel={() => setEditingCell(null)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEdit
-                    value={client.phone || ""}
-                    isEditing={isEditing(client.id, "phone")}
-                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "phone" })}
-                    onSave={(v) => handleSave(client, "phone", v)}
-                    onCancel={() => setEditingCell(null)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEdit
-                    value={client.organization || ""}
-                    isEditing={isEditing(client.id, "organization")}
-                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "organization" })}
-                    onSave={(v) => handleSave(client, "organization", v)}
-                    onCancel={() => setEditingCell(null)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEdit
-                    value={client.ipi_number || ""}
-                    isEditing={isEditing(client.id, "ipi_number")}
-                    onStartEdit={() => setEditingCell({ clientId: client.id, field: "ipi_number" })}
-                    onSave={(v) => handleSave(client, "ipi_number", v)}
-                    onCancel={() => setEditingCell(null)}
-                    mono
-                  />
-                </TableCell>
+                <TableCell>{renderCell(client, "first_name")}</TableCell>
+                <TableCell>{renderCell(client, "last_name")}</TableCell>
+                <TableCell>{renderCell(client, "email")}</TableCell>
+                <TableCell>{renderCell(client, "phone")}</TableCell>
+                <TableCell>{renderCell(client, "organization")}</TableCell>
+                <TableCell>{renderCell(client, "country")}</TableCell>
+                <TableCell>{renderCell(client, "city")}</TableCell>
+                <TableCell>{renderCell(client, "ipi_number", true)}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
@@ -213,7 +179,7 @@ const ClientsList = () => {
             ))}
             {!isLoading && clients?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Inga klienter hittades
                 </TableCell>
               </TableRow>
@@ -222,7 +188,6 @@ const ClientsList = () => {
         </Table>
       </div>
 
-      {/* New dialog */}
       <Dialog open={showNew} onOpenChange={setShowNew}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Ny klient</DialogTitle></DialogHeader>
