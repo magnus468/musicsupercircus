@@ -12,8 +12,16 @@ export const useWorks = (search?: string) => {
     queryFn: async () => {
       let query = supabase.from("works").select("*").order("created_at", { ascending: false });
       if (search && search.trim()) {
-        const s = `%${search.trim()}%`;
-        query = query.or(`title.ilike.${s},creators.ilike.${s},project.ilike.${s}`);
+        const term = search.trim();
+        const s = `%${term}%`;
+        // Also search with accent variants (é↔e, ö↔o, etc.)
+        const normalized = term.replace(/[éèê]/gi, 'e').replace(/[öô]/gi, 'o').replace(/[åâä]/gi, 'a').replace(/[ü]/gi, 'u');
+        const accented = term !== normalized ? `%${normalized}%` : null;
+        const filters = [`title.ilike.${s}`, `creators.ilike.${s}`, `project.ilike.${s}`];
+        if (accented) {
+          filters.push(`title.ilike.${accented}`, `creators.ilike.${accented}`, `project.ilike.${accented}`);
+        }
+        query = query.or(filters.join(','));
       }
       const { data, error } = await query;
       if (error) throw error;

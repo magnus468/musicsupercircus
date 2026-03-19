@@ -12,8 +12,16 @@ export const useClients = (search?: string) => {
     queryFn: async () => {
       let query = supabase.from("clients").select("*").order("first_name").order("last_name");
       if (search && search.trim()) {
-        const s = `%${search.trim()}%`;
-        query = query.or(`first_name.ilike.${s},last_name.ilike.${s},email.ilike.${s},organization.ilike.${s},city.ilike.${s},country.ilike.${s}`);
+        const term = search.trim();
+        const s = `%${term}%`;
+        const normalized = term.replace(/[éèê]/gi, 'e').replace(/[öô]/gi, 'o').replace(/[åâä]/gi, 'a').replace(/[ü]/gi, 'u');
+        const accented = term !== normalized ? `%${normalized}%` : null;
+        const fields = ['first_name', 'last_name', 'email', 'organization', 'city', 'country'];
+        const filters = fields.map(f => `${f}.ilike.${s}`);
+        if (accented) {
+          filters.push(...fields.map(f => `${f}.ilike.${accented}`));
+        }
+        query = query.or(filters.join(','));
       }
       const { data, error } = await query;
       if (error) throw error;
