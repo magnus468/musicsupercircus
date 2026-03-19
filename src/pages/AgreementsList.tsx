@@ -311,6 +311,31 @@ const AgreementsList = () => {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label>Signerat avtal (PDF)</Label>
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer flex-1">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                  />
+                  <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent/50 transition-colors">
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    <span className={pdfFile ? "text-foreground" : "text-muted-foreground"}>
+                      {pdfFile ? pdfFile.name : "Välj PDF-fil..."}
+                    </span>
+                  </div>
+                </label>
+                {pdfFile && (
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setPdfFile(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <Button onClick={handleCreate} disabled={createAgreement.isPending} className="w-full">
               {createAgreement.isPending ? "Sparar..." : "Skapa avtal"}
             </Button>
