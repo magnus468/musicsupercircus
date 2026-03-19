@@ -1,0 +1,1 @@
+ALTER TABLE public.agreements ADD COLUMN file_name text;

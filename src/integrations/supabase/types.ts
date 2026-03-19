@@ -54,6 +54,7 @@ export type Database = {
           client_id: string
           created_at: string
           expiry_date: string | null
+          file_name: string | null
           file_path: string | null
           id: string
           life_of_copyright: boolean
@@ -69,6 +70,7 @@ export type Database = {
           client_id: string
           created_at?: string
           expiry_date?: string | null
+          file_name?: string | null
           file_path?: string | null
           id?: string
           life_of_copyright?: boolean
@@ -84,6 +86,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           expiry_date?: string | null
+          file_name?: string | null
           file_path?: string | null
           id?: string
           life_of_copyright?: boolean
