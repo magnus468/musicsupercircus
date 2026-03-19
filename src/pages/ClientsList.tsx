@@ -12,6 +12,7 @@ import ClientForm from "@/components/ClientForm";
 const ClientsList = () => {
   const [search, setSearch] = useState("");
   const { data: clients, isLoading } = useClients(search);
+  const fullName = (c: Client) => `${c.first_name} ${c.last_name}`.trim();
   const deleteClient = useDeleteClient();
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [showNew, setShowNew] = useState(false);
