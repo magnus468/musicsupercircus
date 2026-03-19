@@ -37,6 +37,7 @@ const ClientDetail = () => {
             {client.email && <div><dt className="text-muted-foreground">E-post</dt><dd>{client.email}</dd></div>}
             {client.phone && <div><dt className="text-muted-foreground">Telefon</dt><dd>{client.phone}</dd></div>}
             {client.organization && <div><dt className="text-muted-foreground">Organisation</dt><dd>{client.organization}</dd></div>}
+            {client.contact_person && <div><dt className="text-muted-foreground">Kontaktperson</dt><dd>{client.contact_person}</dd></div>}
             {client.ipi_number && <div><dt className="text-muted-foreground">IPI-nummer</dt><dd className="font-mono">{client.ipi_number}</dd></div>}
             {client.vat_number && <div><dt className="text-muted-foreground">Momsnummer</dt><dd className="font-mono">{client.vat_number}</dd></div>}
             {client.bank_name && <div><dt className="text-muted-foreground">Bank</dt><dd>{client.bank_name}</dd></div>}
