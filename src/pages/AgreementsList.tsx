@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, FileText, Upload, Download, X, Pencil } from "lucide-react";
+import { Plus, Trash2, FileText, Upload, Download, X, Pencil, Search } from "lucide-react";
 import { toast } from "sonner";
 
 const typeLabels: Record<string, string> = {
@@ -36,6 +36,7 @@ interface FormState {
   lifeOfCopyright: string;
   retentionDate: string;
   selectedWorkIds: string[];
+  workSearch: string;
   pdfFile: File | null;
 }
 
@@ -49,6 +50,7 @@ const emptyForm: FormState = {
   lifeOfCopyright: "yes",
   retentionDate: "",
   selectedWorkIds: [],
+  workSearch: "",
   pdfFile: null,
 };
 
@@ -91,6 +93,7 @@ const AgreementsList = () => {
       lifeOfCopyright: a.life_of_copyright ? "yes" : "no",
       retentionDate: a.retention_date || "",
       selectedWorkIds: [],
+      workSearch: "",
       pdfFile: null,
     });
     setShowDialog(true);
@@ -360,18 +363,36 @@ const AgreementsList = () => {
             {/* Link works */}
             <div className="space-y-2">
               <Label>Koppla verk</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Sök verk..."
+                  value={form.workSearch || ""}
+                  onChange={(e) => setField("workSearch", e.target.value)}
+                  className="pl-8 h-8 text-sm"
+                />
+              </div>
               <div className="rounded-lg border max-h-40 overflow-y-auto p-2 space-y-1">
                 {works?.length === 0 && <p className="text-xs text-muted-foreground">Inga verk</p>}
-                {works?.map((w) => (
-                  <label key={w.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5">
-                    <Checkbox
-                      checked={form.selectedWorkIds.includes(w.id)}
-                      onCheckedChange={() => toggleWork(w.id)}
-                    />
-                    <span className="truncate">{w.title}</span>
-                    <span className="text-muted-foreground text-xs ml-auto shrink-0">{w.creators}</span>
-                  </label>
-                ))}
+                {works
+                  ?.filter((w) => {
+                    const q = (form.workSearch || "").trim().toLowerCase();
+                    if (!q) return true;
+                    const normalize = (s: string) =>
+                      s.toLowerCase().replace(/[éèê]/g, "e").replace(/[öô]/g, "o").replace(/[åâä]/g, "a").replace(/[ü]/g, "u");
+                    const nq = normalize(q);
+                    return normalize(w.title).includes(nq) || normalize(w.creators).includes(nq) || (w.project && normalize(w.project).includes(nq));
+                  })
+                  .map((w) => (
+                    <label key={w.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5">
+                      <Checkbox
+                        checked={form.selectedWorkIds.includes(w.id)}
+                        onCheckedChange={() => toggleWork(w.id)}
+                      />
+                      <span className="truncate">{w.title}</span>
+                      <span className="text-muted-foreground text-xs ml-auto shrink-0">{w.creators}</span>
+                    </label>
+                  ))}
               </div>
             </div>
 
