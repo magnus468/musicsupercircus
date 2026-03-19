@@ -17,8 +17,13 @@ const WorksList = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [stimFilter, setStimFilter] = useState<string>("all");
   const { data: works, isLoading } = useWorks(search);
+  const { data: clients } = useClients();
   const deleteWork = useDeleteWork();
   const [editWork, setEditWork] = useState<Work | null>(null);
+
+  // Build a map of client name (lowercase) -> client id for linking
+  const clientMap = new Map<string, string>();
+  clients?.forEach((c) => clientMap.set(c.name.toLowerCase(), c.id));
 
   const filtered = works?.filter((w) => {
     if (typeFilter !== "all" && w.publishing_type !== typeFilter) return false;
