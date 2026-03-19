@@ -29,6 +29,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
   const [bankName, setBankName] = useState(client?.bank_name ?? "");
   const [iban, setIban] = useState(client?.iban ?? "");
   const [bicSwift, setBicSwift] = useState(client?.bic_swift ?? "");
+  const [contactPerson, setContactPerson] = useState(client?.contact_person ?? "");
   const [notes, setNotes] = useState(client?.notes ?? "");
 
   const createClient = useCreateClient();
@@ -54,6 +55,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       bank_name: bankName.trim() || null,
       iban: iban.trim() || null,
       bic_swift: bicSwift.trim() || null,
+      contact_person: isCompany ? (contactPerson.trim() || null) : null,
       notes: notes.trim() || null,
     };
 
@@ -64,7 +66,7 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       } else {
         await createClient.mutateAsync(data);
         toast.success("Klient tillagd");
-        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setCountry(""); setCity(""); setPostalCode(""); setStreetAddress(""); setVatNumber(""); setBankName(""); setIban(""); setBicSwift(""); setNotes("");
+        setFirstName(""); setLastName(""); setEmail(""); setPhone(""); setOrganization(""); setIpiNumber(""); setCountry(""); setCity(""); setPostalCode(""); setStreetAddress(""); setVatNumber(""); setBankName(""); setIban(""); setBicSwift(""); setContactPerson(""); setNotes("");
       }
       onSuccess?.();
     } catch {
@@ -92,10 +94,16 @@ const ClientForm = ({ client, onSuccess }: ClientFormProps) => {
       </div>
 
       {isCompany ? (
-        <div className="space-y-2">
-          <Label htmlFor="organization">Företagsnamn *</Label>
-          <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} required />
-        </div>
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="organization">Företagsnamn *</Label>
+            <Input id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contactPerson">Kontaktperson</Label>
+            <Input id="contactPerson" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} />
+          </div>
+        </>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
