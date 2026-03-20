@@ -360,13 +360,16 @@ const AgreementsList = () => {
                       : "—";
                   })() : "—"}
                 </TableCell>
-                <TableCell className="text-muted-foreground text-xs">
+                <TableCell>
                   {!a.life_of_copyright
-                    ? ((a as any).post_expiry_action === "rolling_3" ? "Rullande 3 månader"
-                      : (a as any).post_expiry_action === "rolling_6" ? "Rullande 6 månader"
-                      : (a as any).post_expiry_action === "expires" || !(a as any).post_expiry_action ? "Upphör"
-                      : (a as any).post_expiry_action)
-                    : "—"}
+                    ? ((a as any).post_expiry_action === "rolling_3"
+                      ? <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">Rullande 3 mån</Badge>
+                      : (a as any).post_expiry_action === "rolling_6"
+                      ? <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">Rullande 6 mån</Badge>
+                      : (a as any).post_expiry_action === "expires" || !(a as any).post_expiry_action
+                      ? <span className="text-muted-foreground text-xs">Upphör</span>
+                      : <span className="text-muted-foreground text-xs">{(a as any).post_expiry_action}</span>)
+                    : <span className="text-muted-foreground text-xs">—</span>}
                 </TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
