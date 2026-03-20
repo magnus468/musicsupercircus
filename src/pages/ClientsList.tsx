@@ -82,6 +82,7 @@ const ClientsList = () => {
   const { data: clients, isLoading } = useClients(search);
   const deleteClient = useDeleteClient();
   const updateClient = useUpdateClient();
+  const { data: workCounts } = useClientWorkCounts();
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [showNew, setShowNew] = useState(false);
 
