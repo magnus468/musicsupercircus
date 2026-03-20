@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useClients, useDeleteClient, useUpdateClient, type Client } from "@/hooks/useClients";
+import { useClientWorkCounts } from "@/hooks/useClientWorkCounts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Trash2, Plus, Eye, Check, X, User, Building2 } from "lucide-react";
+import { Search, Trash2, Plus, Eye, Check, X, User, Building2, Music } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ClientForm from "@/components/ClientForm";
@@ -81,6 +82,7 @@ const ClientsList = () => {
   const { data: clients, isLoading } = useClients(search);
   const deleteClient = useDeleteClient();
   const updateClient = useUpdateClient();
+  const { data: workCounts } = useClientWorkCounts();
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [showNew, setShowNew] = useState(false);
 
@@ -152,6 +154,7 @@ const ClientsList = () => {
               <TableHead>Land</TableHead>
               <TableHead>Stad</TableHead>
               <TableHead>IPI-nummer</TableHead>
+              <TableHead className="text-center">Verk</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
@@ -187,6 +190,19 @@ const ClientsList = () => {
                 <TableCell>{renderCell(client, "country")}</TableCell>
                 <TableCell>{renderCell(client, "city")}</TableCell>
                 <TableCell>{renderCell(client, "ipi_number", true)}</TableCell>
+                <TableCell className="text-center">
+                  {(() => {
+                    const count = workCounts?.[client.id] ?? 0;
+                    return count > 0 ? (
+                      <Badge variant="secondary" className="gap-1">
+                        <Music className="h-3 w-3" />
+                        {count}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">0</span>
+                    );
+                  })()}
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
@@ -202,7 +218,7 @@ const ClientsList = () => {
             })}
             {!isLoading && clients?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   Inga klienter hittades
                 </TableCell>
               </TableRow>
