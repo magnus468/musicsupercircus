@@ -294,9 +294,10 @@ const AgreementsList = () => {
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   {!a.life_of_copyright
-                    ? ((a as any).post_expiry_action === "rolling_3" ? "Rullande 3 mån"
-                      : (a as any).post_expiry_action === "rolling_6" ? "Rullande 6 mån"
-                      : "Upphör")
+                    ? ((a as any).post_expiry_action === "rolling_3" ? "Rullande 3 månader"
+                      : (a as any).post_expiry_action === "rolling_6" ? "Rullande 6 månader"
+                      : (a as any).post_expiry_action === "expires" || !(a as any).post_expiry_action ? "Upphör"
+                      : (a as any).post_expiry_action)
                     : "—"}
                 </TableCell>
                 <TableCell>
