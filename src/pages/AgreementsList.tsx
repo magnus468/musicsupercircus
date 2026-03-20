@@ -409,7 +409,7 @@ const AgreementsList = () => {
             ))}
             {!isLoading && agreements?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                   Inga avtal registrerade
                 </TableCell>
               </TableRow>
