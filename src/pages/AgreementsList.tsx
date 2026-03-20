@@ -57,7 +57,8 @@ interface FormState {
 
 const emptyForm: FormState = {
   clientId: "",
-  agreementType: "MSCP",
+  agreementType: "original",
+  internalPublisher: "MSCP",
   agreementDate: new Date().toISOString().split("T")[0],
   expiryDate: "",
   status: "active",
