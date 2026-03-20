@@ -36,10 +36,8 @@ const Login = () => {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <Music2 className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Musikförlagskatalogen</CardTitle>
+          <img src={mscLogo} alt="Music Super Circus" className="mx-auto h-24 w-24" />
+          <CardTitle className="text-2xl font-bold">Music Super Circus</CardTitle>
           <CardDescription>
             {isSignUp ? "Skapa ett nytt konto" : "Logga in för att hantera katalogen"}
           </CardDescription>
