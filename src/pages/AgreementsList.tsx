@@ -9,7 +9,7 @@ import {
   getAgreementSignedUrl,
   type Agreement,
 } from "@/hooks/useAgreements";
-import { useClients } from "@/hooks/useClients";
+import { useClients, useCreateClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +74,7 @@ const AgreementsList = () => {
   const createAgreement = useCreateAgreement();
   const updateAgreement = useUpdateAgreement();
   const deleteAgreement = useDeleteAgreement();
+  const createClient = useCreateClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -81,6 +82,8 @@ const AgreementsList = () => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [showNewClientDialog, setShowNewClientDialog] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
 
   const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
 
@@ -338,42 +341,54 @@ const AgreementsList = () => {
           <div className="flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="space-y-2">
               <Label>Klient *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                    {form.clientId
-                      ? (() => {
-                          const c = clients?.find((c) => c.id === form.clientId);
-                          return c ? (c.organization || `${c.first_name} ${c.last_name}`.trim()) : "Välj klient";
-                        })()
-                      : "Välj klient"}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Sök klient..." />
-                    <CommandList>
-                      <CommandEmpty>Ingen klient hittad</CommandEmpty>
-                      <CommandGroup>
-                        {clients?.map((c) => {
-                          const label = c.organization || `${c.first_name} ${c.last_name}`.trim();
-                          return (
-                            <CommandItem
-                              key={c.id}
-                              value={label}
-                              onSelect={() => setField("clientId", c.id)}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", form.clientId === c.id ? "opacity-100" : "opacity-0")} />
-                              {label}
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="flex-1 justify-between font-normal">
+                      {form.clientId
+                        ? (() => {
+                            const c = clients?.find((c) => c.id === form.clientId);
+                            return c ? (c.organization || `${c.first_name} ${c.last_name}`.trim()) : "Välj klient";
+                          })()
+                        : "Välj klient"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Sök klient..." />
+                      <CommandList>
+                        <CommandEmpty>Ingen klient hittad</CommandEmpty>
+                        <CommandGroup>
+                          {clients?.map((c) => {
+                            const label = c.organization || `${c.first_name} ${c.last_name}`.trim();
+                            return (
+                              <CommandItem
+                                key={c.id}
+                                value={label}
+                                onSelect={() => setField("clientId", c.id)}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", form.clientId === c.id ? "opacity-100" : "opacity-0")} />
+                                {label}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setShowNewClientDialog(true)}
+                  title="Lägg till ny klient"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -527,6 +542,45 @@ const AgreementsList = () => {
             {!pdfLoading && pdfViewerUrl && !pdfError && (
               <AgreementPdfPreview fileUrl={pdfViewerUrl} />
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick-add client dialog */}
+      <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ny klient</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Namn *</Label>
+              <Input
+                placeholder="Förnamn Efternamn"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+              />
+            </div>
+            <Button
+              className="w-full"
+              disabled={!newClientName.trim() || createClient.isPending}
+              onClick={async () => {
+                const parts = newClientName.trim().split(/\s+/);
+                const firstName = parts[0] || "";
+                const lastName = parts.slice(1).join(" ") || "";
+                try {
+                  const result = await createClient.mutateAsync({ first_name: firstName, last_name: lastName });
+                  setField("clientId", result.id);
+                  setNewClientName("");
+                  setShowNewClientDialog(false);
+                  toast.success("Klient skapad");
+                } catch {
+                  toast.error("Kunde inte skapa klient");
+                }
+              }}
+            >
+              {createClient.isPending ? "Skapar..." : "Skapa klient"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
