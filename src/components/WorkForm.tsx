@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 interface CreatorEntry {
   name: string;
-  role: "CA" | "C" | "A" | "Arr";
+  role: "CA" | "C" | "A" | "Arr" | "E";
   share: string; // percentage as string for input
   represented: boolean;
 }
