@@ -154,6 +154,7 @@ const ClientsList = () => {
               <TableHead>Land</TableHead>
               <TableHead>Stad</TableHead>
               <TableHead>IPI-nummer</TableHead>
+              <TableHead className="text-center">Verk</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
