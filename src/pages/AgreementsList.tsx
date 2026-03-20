@@ -48,6 +48,7 @@ interface FormState {
   notes: string;
   lifeOfCopyright: string;
   retentionDate: string;
+  postExpiryAction: string;
   selectedWorkIds: string[];
   workSearch: string;
   pdfFile: File | null;
