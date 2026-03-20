@@ -52,6 +52,7 @@ const ROLE_OPTIONS: { value: CreatorEntry["role"]; label: string }[] = [
   { value: "C", label: "C" },
   { value: "A", label: "A" },
   { value: "Arr", label: "Arr" },
+  { value: "E", label: "E" },
 ];
 
 const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
