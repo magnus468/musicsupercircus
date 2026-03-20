@@ -20,9 +20,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
-import { Download, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronsUpDown, Download, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const typeLabels: Record<string, string> = {
   original: "Original",
@@ -335,16 +338,42 @@ const AgreementsList = () => {
           <div className="flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="space-y-2">
               <Label>Klient *</Label>
-              <Select value={form.clientId} onValueChange={(v) => setField("clientId", v)}>
-                <SelectTrigger><SelectValue placeholder="Välj klient" /></SelectTrigger>
-                <SelectContent>
-                  {clients?.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.organization || `${c.first_name} ${c.last_name}`.trim()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                    {form.clientId
+                      ? (() => {
+                          const c = clients?.find((c) => c.id === form.clientId);
+                          return c ? (c.organization || `${c.first_name} ${c.last_name}`.trim()) : "Välj klient";
+                        })()
+                      : "Välj klient"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Sök klient..." />
+                    <CommandList>
+                      <CommandEmpty>Ingen klient hittad</CommandEmpty>
+                      <CommandGroup>
+                        {clients?.map((c) => {
+                          const label = c.organization || `${c.first_name} ${c.last_name}`.trim();
+                          return (
+                            <CommandItem
+                              key={c.id}
+                              value={label}
+                              onSelect={() => setField("clientId", c.id)}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", form.clientId === c.id ? "opacity-100" : "opacity-0")} />
+                              {label}
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
