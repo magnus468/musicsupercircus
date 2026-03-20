@@ -246,20 +246,6 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
                 </button>
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-1"
-              onClick={() => {
-                const count = creatorsList.length;
-                if (count === 0) return;
-                const equalShare = (100 / count).toFixed(2).replace(/\.?0+$/, "");
-                setCreatorsList((prev) => prev.map((c) => ({ ...c, share: equalShare })));
-              }}
-            >
-              Fördela lika ({creatorsList.length} st = {(100 / (creatorsList.length || 1)).toFixed(2).replace(/\.?0+$/, "")}% var)
-            </Button>
           </div>
         )}
       </div>
