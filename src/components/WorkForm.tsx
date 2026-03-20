@@ -15,6 +15,7 @@ interface CreatorEntry {
   name: string;
   role: "CA" | "C" | "A" | "Arr";
   share: string; // percentage as string for input
+  represented: boolean;
 }
 
 // Parse "Name (CA, 50%)" format back to CreatorEntry
