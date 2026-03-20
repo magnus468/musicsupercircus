@@ -316,6 +316,7 @@ const AgreementsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Klient</TableHead>
+              <TableHead>Verk</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead>Internt förlag</TableHead>
               <TableHead>Datum</TableHead>
