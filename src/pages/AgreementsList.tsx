@@ -545,6 +545,45 @@ const AgreementsList = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Quick-add client dialog */}
+      <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ny klient</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Namn *</Label>
+              <Input
+                placeholder="Förnamn Efternamn"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+              />
+            </div>
+            <Button
+              className="w-full"
+              disabled={!newClientName.trim() || createClient.isPending}
+              onClick={async () => {
+                const parts = newClientName.trim().split(/\s+/);
+                const firstName = parts[0] || "";
+                const lastName = parts.slice(1).join(" ") || "";
+                try {
+                  const result = await createClient.mutateAsync({ first_name: firstName, last_name: lastName });
+                  setField("clientId", result.id);
+                  setNewClientName("");
+                  setShowNewClientDialog(false);
+                  toast.success("Klient skapad");
+                } catch {
+                  toast.error("Kunde inte skapa klient");
+                }
+              }}
+            >
+              {createClient.isPending ? "Skapar..." : "Skapa klient"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
