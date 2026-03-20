@@ -157,7 +157,11 @@ const WorksList = () => {
           <TableBody>
             {filtered?.map((work) => (
               <TableRow key={work.id}>
-                <TableCell className="font-medium max-w-[200px] truncate">{work.title}</TableCell>
+                <TableCell className="font-medium max-w-[200px] truncate">
+                  <Link to={`/works/${work.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                    {work.title}
+                  </Link>
+                </TableCell>
                 <TableCell className="text-muted-foreground max-w-[150px] truncate">{work.project || "—"}</TableCell>
                 <TableCell className="max-w-[200px]">
                   {(work.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || []).map((c) => c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim()).filter(Boolean).map((nameOnly, i, arr) => {
