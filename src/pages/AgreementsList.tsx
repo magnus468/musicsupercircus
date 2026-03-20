@@ -49,6 +49,7 @@ interface FormState {
   status: string;
   notes: string;
   lifeOfCopyright: string;
+  retentionYears: string;
   retentionDate: string;
   postExpiryAction: string;
   selectedWorkIds: string[];
@@ -65,11 +66,21 @@ const emptyForm: FormState = {
   status: "active",
   notes: "",
   lifeOfCopyright: "yes",
+  retentionYears: "",
   retentionDate: "",
   postExpiryAction: "expires",
   selectedWorkIds: [],
   workSearch: "",
   pdfFile: null,
+};
+
+const calcRetentionDate = (expiryDate: string, retentionYears: string): string => {
+  if (!expiryDate || !retentionYears) return "";
+  const years = parseInt(retentionYears, 10);
+  if (isNaN(years) || years <= 0) return "";
+  const d = new Date(expiryDate);
+  d.setFullYear(d.getFullYear() + years);
+  return d.toISOString().split("T")[0];
 };
 
 const AgreementsList = () => {
@@ -127,6 +138,7 @@ const AgreementsList = () => {
       status: a.status,
       notes: a.notes || "",
       lifeOfCopyright: a.life_of_copyright ? "yes" : "no",
+      retentionYears: "",
       retentionDate: a.retention_date || "",
       postExpiryAction: (a as any).post_expiry_action || "expires",
       selectedWorkIds: [],
@@ -488,8 +500,30 @@ const AgreementsList = () => {
 
             {form.lifeOfCopyright === "no" && (
               <div className="space-y-2">
-                <Label>Retention (slutdatum)</Label>
-                <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
+                <Label>Retention (antal år)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Antal år"
+                  value={form.retentionYears}
+                  onChange={(e) => {
+                    const years = e.target.value;
+                    const computed = calcRetentionDate(form.expiryDate, years);
+                    setForm((f) => ({ ...f, retentionYears: years, retentionDate: computed }));
+                  }}
+                />
+                {form.retentionDate && (
+                  <p className="text-xs text-muted-foreground">
+                    Retention t.o.m: <span className="font-medium text-foreground">{form.retentionDate}</span>
+                    {form.postExpiryAction === "expires"
+                      ? " (beräknat från förfallodatum)"
+                      : form.postExpiryAction === "rolling_3"
+                        ? " (beräknat från förfallodatum, rullande 3 mån)"
+                        : form.postExpiryAction === "rolling_6"
+                          ? " (beräknat från förfallodatum, rullande 6 mån)"
+                          : " (beräknat från förfallodatum)"}
+                  </p>
+                )}
               </div>
             )}
 
