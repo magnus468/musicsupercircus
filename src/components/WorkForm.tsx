@@ -11,19 +11,54 @@ import { Badge } from "@/components/ui/badge";
 import { X, ChevronDown, Plus } from "lucide-react";
 import { toast } from "sonner";
 
+interface CreatorEntry {
+  name: string;
+  role: "CA" | "C" | "A" | "Arr";
+  share: string; // percentage as string for input
+}
+
+// Parse "Name (CA, 50%)" format back to CreatorEntry
+const parseCreatorsString = (str: string): CreatorEntry[] => {
+  if (!str) return [];
+  return str.split(", ").map((part) => {
+    const match = part.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?\)$/);
+    if (match) {
+      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "" };
+    }
+    return { name: part.trim(), role: "CA" as const, share: "" };
+  }).filter((c) => c.name);
+};
+
+const serializeCreators = (creators: CreatorEntry[]): string => {
+  return creators.map((c) => {
+    const parts = [c.role];
+    if (c.share) parts.push(`${c.share}%`);
+    return `${c.name} (${parts.join(", ")})`;
+  }).join(", ");
+};
+
 interface WorkFormProps {
   work?: Work;
   onSuccess?: () => void;
 }
 
+const ROLE_OPTIONS: { value: CreatorEntry["role"]; label: string }[] = [
+  { value: "CA", label: "CA" },
+  { value: "C", label: "C" },
+  { value: "A", label: "A" },
+  { value: "Arr", label: "Arr" },
+];
+
 const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [title, setTitle] = useState(work?.title ?? "");
   const [project, setProject] = useState(work?.project ?? "");
-  const [creatorsList, setCreatorsList] = useState<string[]>(
-    work?.creators ? work.creators.split(/[,/]/).map((c) => c.trim()).filter(Boolean) : []
+  const [creatorsList, setCreatorsList] = useState<CreatorEntry[]>(
+    work?.creators ? parseCreatorsString(work.creators) : []
   );
   const [newCreatorFirst, setNewCreatorFirst] = useState("");
   const [newCreatorLast, setNewCreatorLast] = useState("");
+  const [newCreatorRole, setNewCreatorRole] = useState<CreatorEntry["role"]>("CA");
+  const [newCreatorShare, setNewCreatorShare] = useState("");
   const [isCoPublisher, setIsCoPublisher] = useState(
     work ? (work.co_publishers && work.co_publishers.length > 0) : false
   );
@@ -46,8 +81,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     const last = newCreatorLast.trim();
     if (!first && !last) return;
     const fullName = [first, last].filter(Boolean).join(" ");
-    if (!creatorsList.includes(fullName)) {
-      setCreatorsList((prev) => [...prev, fullName]);
+    if (!creatorsList.some((c) => c.name === fullName)) {
+      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare }]);
     }
     // Auto-create client if not exists
     const alreadyExists = existingClients.some(
@@ -57,15 +92,25 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       try {
         await createClient.mutateAsync({ first_name: first || last, last_name: first ? last : "" });
       } catch {
-        // Silently ignore if client creation fails (e.g. duplicate)
+        // Silently ignore
       }
     }
     setNewCreatorFirst("");
     setNewCreatorLast("");
+    setNewCreatorRole("CA");
+    setNewCreatorShare("");
   };
 
   const removeCreator = (name: string) => {
-    setCreatorsList((prev) => prev.filter((c) => c !== name));
+    setCreatorsList((prev) => prev.filter((c) => c.name !== name));
+  };
+
+  const updateCreatorRole = (name: string, role: CreatorEntry["role"]) => {
+    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, role } : c));
+  };
+
+  const updateCreatorShare = (name: string, share: string) => {
+    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, share } : c));
   };
 
   const toggleCoPublisher = (name: string) => {
@@ -87,7 +132,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
-      creators: creatorsList.join(", "),
+      creators: serializeCreators(creatorsList),
       publishing_type: isCoPublisher ? publishingType : "original",
       co_publishers: isCoPublisher && selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
       stim_status: stimStatus,
@@ -102,7 +147,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       } else {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
-        setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast(""); setPublishingType("MSCP");
+        setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast("");
+        setNewCreatorRole("CA"); setNewCreatorShare(""); setPublishingType("MSCP");
         setIsCoPublisher(false); setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
@@ -111,7 +157,6 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     }
   };
 
-  // Merge existing options with any selected values not yet in the DB
   const allOptions = Array.from(new Set([...coPublisherOptions, ...selectedCoPublishers])).sort();
 
   return (
@@ -128,33 +173,78 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       </div>
       <div className="space-y-2">
         <Label>Upphovsperson(er) *</Label>
-        <div className="flex gap-2">
-          <Input
-            value={newCreatorFirst}
-            onChange={(e) => setNewCreatorFirst(e.target.value)}
-            placeholder="Förnamn"
-            className="flex-1"
-          />
-          <Input
-            value={newCreatorLast}
-            onChange={(e) => setNewCreatorLast(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-            placeholder="Efternamn"
-            className="flex-1"
-          />
-          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreatorFirst.trim() && !newCreatorLast.trim()}>
+        <div className="flex gap-2 items-end">
+          <div className="flex-1 space-y-1">
+            <span className="text-xs text-muted-foreground">Förnamn</span>
+            <Input
+              value={newCreatorFirst}
+              onChange={(e) => setNewCreatorFirst(e.target.value)}
+              placeholder="Förnamn"
+            />
+          </div>
+          <div className="flex-1 space-y-1">
+            <span className="text-xs text-muted-foreground">Efternamn</span>
+            <Input
+              value={newCreatorLast}
+              onChange={(e) => setNewCreatorLast(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+              placeholder="Efternamn"
+            />
+          </div>
+          <div className="w-20 space-y-1">
+            <span className="text-xs text-muted-foreground">Roll</span>
+            <Select value={newCreatorRole} onValueChange={(v) => setNewCreatorRole(v as CreatorEntry["role"])}>
+              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-20 space-y-1">
+            <span className="text-xs text-muted-foreground">Andel %</span>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={newCreatorShare}
+              onChange={(e) => setNewCreatorShare(e.target.value)}
+              placeholder="%"
+            />
+          </div>
+          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreatorFirst.trim() && !newCreatorLast.trim()} className="h-10">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
         {creatorsList.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {creatorsList.map((name) => (
-              <Badge key={name} variant="secondary" className="gap-1">
-                {name}
-                <button type="button" onClick={() => removeCreator(name)} className="hover:text-destructive">
-                  <X className="h-3 w-3" />
+          <div className="space-y-1 mt-2">
+            {creatorsList.map((creator) => (
+              <div key={creator.name} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                <span className="flex-1 font-medium">{creator.name}</span>
+                <Select value={creator.role} onValueChange={(v) => updateCreatorRole(creator.name, v as CreatorEntry["role"])}>
+                  <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ROLE_OPTIONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={creator.share}
+                  onChange={(e) => updateCreatorShare(creator.name, e.target.value)}
+                  placeholder="%"
+                  className="h-7 w-20 text-xs"
+                />
+                <button type="button" onClick={() => removeCreator(creator.name)} className="text-muted-foreground hover:text-destructive">
+                  <X className="h-3.5 w-3.5" />
                 </button>
-              </Badge>
+              </div>
             ))}
           </div>
         )}
