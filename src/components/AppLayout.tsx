@@ -1,9 +1,10 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Music2, LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText } from "lucide-react";
+import { LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import mscLogoBlack from "@/assets/msc-logo-black.jpg";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -26,8 +27,8 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-16 items-center gap-3 px-6 border-b border-sidebar-border">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Music2 className="h-4 w-4 text-sidebar-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
+            <img src={mscLogoBlack} alt="Music Super Circus" className="h-8 w-8 object-contain" />
           </div>
           <span className="font-semibold text-sm">Music Super Circus</span>
           <button onClick={() => setMobileOpen(false)} className="ml-auto lg:hidden">
