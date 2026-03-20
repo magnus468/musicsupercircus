@@ -1,19 +1,17 @@
 import { useState } from "react";
-import { useCreateWork, useUpdateWork, useCoPublisherOptions, type Work, type WorkInsert } from "@/hooks/useWorks";
+import { useCreateWork, useUpdateWork, type Work, type WorkInsert } from "@/hooks/useWorks";
 import { useCreateClient, useClients } from "@/hooks/useClients";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { X, ChevronDown, Plus } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreatorEntry {
   name: string;
-  role: "CA" | "C" | "A" | "Arr";
+  role: "CA" | "C" | "A" | "Arr" | "E";
   share: string; // percentage as string for input
   represented: boolean;
 }
@@ -52,6 +50,7 @@ const ROLE_OPTIONS: { value: CreatorEntry["role"]; label: string }[] = [
   { value: "C", label: "C" },
   { value: "A", label: "A" },
   { value: "Arr", label: "Arr" },
+  { value: "E", label: "E" },
 ];
 
 const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
@@ -62,14 +61,9 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   );
   const [newCreatorFirst, setNewCreatorFirst] = useState("");
   const [newCreatorLast, setNewCreatorLast] = useState("");
+  const [newCreatorName, setNewCreatorName] = useState("");
   const [newCreatorRole, setNewCreatorRole] = useState<CreatorEntry["role"]>("CA");
   const [newCreatorShare, setNewCreatorShare] = useState("");
-  const [isCoPublisher, setIsCoPublisher] = useState(
-    work ? (work.co_publishers && work.co_publishers.length > 0) : false
-  );
-  const [publishingType, setPublishingType] = useState<"MSCE" | "MSCP">(work?.publishing_type === "MSCE" || work?.publishing_type === "MSCP" ? work.publishing_type : "MSCP");
-  const [selectedCoPublishers, setSelectedCoPublishers] = useState<string[]>(work?.co_publishers ?? []);
-  const [newCoPublisher, setNewCoPublisher] = useState("");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
@@ -78,10 +72,20 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const updateWork = useUpdateWork();
   const createClient = useCreateClient();
   const { data: existingClients = [] } = useClients();
-  const { data: coPublisherOptions = [] } = useCoPublisherOptions();
   const isEdit = !!work;
 
   const addCreator = async () => {
+    if (newCreatorRole === "E") {
+      const name = newCreatorName.trim();
+      if (!name) return;
+      if (!creatorsList.some((c) => c.name === name)) {
+        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, represented: true }]);
+      }
+      setNewCreatorName("");
+      setNewCreatorRole("CA");
+      setNewCreatorShare("");
+      return;
+    }
     const first = newCreatorFirst.trim();
     const last = newCreatorLast.trim();
     if (!first && !last) return;
@@ -122,28 +126,17 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, represented: !c.represented } : c));
   };
 
-  const toggleCoPublisher = (name: string) => {
-    setSelectedCoPublishers((prev) =>
-      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]
-    );
-  };
-
-  const addNewCoPublisher = () => {
-    const trimmed = newCoPublisher.trim();
-    if (trimmed && !selectedCoPublishers.includes(trimmed)) {
-      setSelectedCoPublishers((prev) => [...prev, trimmed]);
-    }
-    setNewCoPublisher("");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Extract co_publishers from creators with role E
+    const publishers = creatorsList.filter((c) => c.role === "E").map((c) => c.name);
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
       creators: serializeCreators(creatorsList),
-      publishing_type: publishingType,
-      co_publishers: isCoPublisher && selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
+      publishing_type: publishers.length > 0 ? "MSCP" as const : "original" as const,
+      co_publishers: publishers.length > 0 ? publishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
       share_percentage: creatorsList.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
@@ -157,8 +150,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
         setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast("");
-        setNewCreatorRole("CA"); setNewCreatorShare(""); setPublishingType("MSCP");
-        setIsCoPublisher(false); setSelectedCoPublishers([]); setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
+        setNewCreatorName(""); setNewCreatorRole("CA"); setNewCreatorShare("");
+        setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
     } catch {
@@ -166,7 +159,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     }
   };
 
-  const allOptions = Array.from(new Set([...coPublisherOptions, ...selectedCoPublishers])).sort();
+  const isPublisherRole = newCreatorRole === "E";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -181,28 +174,15 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Upphovsperson(er) *</Label>
+        <Label>Upphovsperson(er) & Förlag *</Label>
         <div className="flex gap-2 items-end">
-          <div className="flex-1 space-y-1">
-            <span className="text-xs text-muted-foreground">Förnamn</span>
-            <Input
-              value={newCreatorFirst}
-              onChange={(e) => setNewCreatorFirst(e.target.value)}
-              placeholder="Förnamn"
-            />
-          </div>
-          <div className="flex-1 space-y-1">
-            <span className="text-xs text-muted-foreground">Efternamn</span>
-            <Input
-              value={newCreatorLast}
-              onChange={(e) => setNewCreatorLast(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-              placeholder="Efternamn"
-            />
-          </div>
           <div className="w-20 space-y-1">
             <span className="text-xs text-muted-foreground">Roll</span>
-            <Select value={newCreatorRole} onValueChange={(v) => setNewCreatorRole(v as CreatorEntry["role"])}>
+            <Select value={newCreatorRole} onValueChange={(v) => {
+              setNewCreatorRole(v as CreatorEntry["role"]);
+              // Clear fields when switching between E and other roles
+              setNewCreatorFirst(""); setNewCreatorLast(""); setNewCreatorName("");
+            }}>
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ROLE_OPTIONS.map((r) => (
@@ -211,6 +191,37 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               </SelectContent>
             </Select>
           </div>
+          {isPublisherRole ? (
+            <div className="flex-1 space-y-1">
+              <span className="text-xs text-muted-foreground">Förlagsnamn</span>
+              <Input
+                value={newCreatorName}
+                onChange={(e) => setNewCreatorName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+                placeholder="Förlagsnamn"
+              />
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 space-y-1">
+                <span className="text-xs text-muted-foreground">Förnamn</span>
+                <Input
+                  value={newCreatorFirst}
+                  onChange={(e) => setNewCreatorFirst(e.target.value)}
+                  placeholder="Förnamn"
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <span className="text-xs text-muted-foreground">Efternamn</span>
+                <Input
+                  value={newCreatorLast}
+                  onChange={(e) => setNewCreatorLast(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+                  placeholder="Efternamn"
+                />
+              </div>
+            </>
+          )}
           <div className="w-20 space-y-1">
             <span className="text-xs text-muted-foreground">Andel %</span>
             <Input
@@ -223,7 +234,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               placeholder="%"
             />
           </div>
-          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreatorFirst.trim() && !newCreatorLast.trim()} className="h-10">
+          <Button type="button" variant="secondary" onClick={addCreator} disabled={isPublisherRole ? !newCreatorName.trim() : (!newCreatorFirst.trim() && !newCreatorLast.trim())} className="h-10">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -266,94 +277,6 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           </div>
         )}
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Internt förlag</Label>
-          <Select value={publishingType} onValueChange={(v) => setPublishingType(v as any)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MSCE">MSCE</SelectItem>
-              <SelectItem value="MSCP">MSCP</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Typ</Label>
-          <div className="flex gap-2 pt-1">
-            <Button
-              type="button"
-              variant={!isCoPublisher ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setIsCoPublisher(false); setSelectedCoPublishers([]); }}
-            >
-              Original
-            </Button>
-            <Button
-              type="button"
-              variant={isCoPublisher ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsCoPublisher(true)}
-            >
-              Co-publishing
-            </Button>
-          </div>
-        </div>
-      </div>
-      {isCoPublisher && (
-        <div className="space-y-2">
-          <Label>Co-publishers</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" type="button" className="w-full justify-between font-normal">
-                {selectedCoPublishers.length > 0
-                  ? `${selectedCoPublishers.length} valda`
-                  : "Välj co-publishers"}
-                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-3" align="start">
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {allOptions.map((name) => (
-                  <label key={name} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-accent rounded px-1 py-0.5">
-                    <Checkbox
-                      checked={selectedCoPublishers.includes(name)}
-                      onCheckedChange={() => toggleCoPublisher(name)}
-                    />
-                    {name}
-                  </label>
-                ))}
-                {allOptions.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Inga co-publishers ännu</p>
-                )}
-              </div>
-              <div className="flex gap-2 mt-3 pt-3 border-t">
-                <Input
-                  placeholder="Lägg till nytt..."
-                  value={newCoPublisher}
-                  onChange={(e) => setNewCoPublisher(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addNewCoPublisher(); } }}
-                  className="h-8 text-sm"
-                />
-                <Button type="button" size="sm" variant="secondary" onClick={addNewCoPublisher} disabled={!newCoPublisher.trim()}>
-                  +
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-          {selectedCoPublishers.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {selectedCoPublishers.map((name) => (
-                <Badge key={name} variant="secondary" className="gap-1">
-                  {name}
-                  <button type="button" onClick={() => toggleCoPublisher(name)} className="hover:text-destructive">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Andel (%)</Label>
