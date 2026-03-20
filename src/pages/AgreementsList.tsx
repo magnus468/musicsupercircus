@@ -74,6 +74,7 @@ const AgreementsList = () => {
   const createAgreement = useCreateAgreement();
   const updateAgreement = useUpdateAgreement();
   const deleteAgreement = useDeleteAgreement();
+  const createClient = useCreateClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -81,6 +82,8 @@ const AgreementsList = () => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [showNewClientDialog, setShowNewClientDialog] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
 
   const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
 
