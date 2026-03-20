@@ -270,7 +270,8 @@ const AgreementsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Klient</TableHead>
-              <TableHead>Avtalstyp</TableHead>
+              <TableHead>Typ</TableHead>
+              <TableHead>Internt förlag</TableHead>
               <TableHead>Datum</TableHead>
               <TableHead>Förfaller</TableHead>
               <TableHead>LoC</TableHead>
