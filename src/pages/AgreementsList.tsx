@@ -408,10 +408,21 @@ const AgreementsList = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label>Typ</Label>
+                <Select value={form.agreementType} onValueChange={(v) => setField("agreementType", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="original">Original</SelectItem>
+                    <SelectItem value="co-publishing">Co-publishing</SelectItem>
+                    <SelectItem value="administration">Administration</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Internt förlag</Label>
-                <Select value={form.agreementType} onValueChange={(v) => setField("agreementType", v)}>
+                <Select value={form.agreementType === "MSCE" || form.agreementType === "MSCP" ? form.agreementType : "MSCP"} onValueChange={() => {}}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MSCE">MSCE</SelectItem>
