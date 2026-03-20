@@ -52,6 +52,7 @@ interface FormState {
   retentionYears: string;
   retentionDate: string;
   postExpiryAction: string;
+  rollingEndDate: string;
   selectedWorkIds: string[];
   workSearch: string;
   pdfFile: File | null;
@@ -69,18 +70,44 @@ const emptyForm: FormState = {
   retentionYears: "",
   retentionDate: "",
   postExpiryAction: "expires",
+  rollingEndDate: "",
   selectedWorkIds: [],
   workSearch: "",
   pdfFile: null,
 };
 
-const calcRetentionDate = (expiryDate: string, retentionYears: string): string => {
-  if (!expiryDate || !retentionYears) return "";
+const isRolling = (action: string) => action === "rolling_3" || action === "rolling_6";
+
+const calcRetentionDate = (
+  expiryDate: string,
+  retentionYears: string,
+  postExpiryAction: string,
+  rollingEndDate: string,
+): { retentionDate: string; isLocked: boolean } => {
   const years = parseInt(retentionYears, 10);
-  if (isNaN(years) || years <= 0) return "";
+  if (isNaN(years) || years <= 0) return { retentionDate: "", isLocked: false };
+
+  if (isRolling(postExpiryAction)) {
+    if (rollingEndDate) {
+      // Rolling period has a defined end → retention locked from that date
+      const d = new Date(rollingEndDate);
+      d.setFullYear(d.getFullYear() + years);
+      const today = new Date().toISOString().split("T")[0];
+      return { retentionDate: d.toISOString().split("T")[0], isLocked: rollingEndDate <= today };
+    }
+    // No end date yet → dynamic: today + notice months + retention years
+    const noticeMonths = postExpiryAction === "rolling_3" ? 3 : 6;
+    const d = new Date();
+    d.setMonth(d.getMonth() + noticeMonths);
+    d.setFullYear(d.getFullYear() + years);
+    return { retentionDate: d.toISOString().split("T")[0], isLocked: false };
+  }
+
+  // "expires" or custom: retention from expiry date
+  if (!expiryDate) return { retentionDate: "", isLocked: false };
   const d = new Date(expiryDate);
   d.setFullYear(d.getFullYear() + years);
-  return d.toISOString().split("T")[0];
+  return { retentionDate: d.toISOString().split("T")[0], isLocked: true };
 };
 
 const AgreementsList = () => {
