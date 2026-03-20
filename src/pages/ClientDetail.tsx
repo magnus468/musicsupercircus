@@ -38,7 +38,9 @@ const ClientDetail = () => {
   // Combine: works matched by creator name + works linked via agreements
   const agreementWorkIdSet = new Set(agreementWorkIds ?? []);
   const clientWorks = allWorks?.filter((w) => {
-    const matchByName = client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === fullName.toLowerCase());
+    const creatorNames = (w.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
+      .map((c) => c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim().toLowerCase());
+    const matchByName = client && creatorNames.includes(fullName.toLowerCase());
     const matchByAgreement = agreementWorkIdSet.has(w.id);
     return matchByName || matchByAgreement;
   }) ?? [];
