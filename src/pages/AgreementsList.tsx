@@ -294,9 +294,10 @@ const AgreementsList = () => {
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   {!a.life_of_copyright
-                    ? ((a as any).post_expiry_action === "rolling_3" ? "Rullande 3 mån"
-                      : (a as any).post_expiry_action === "rolling_6" ? "Rullande 6 mån"
-                      : "Upphör")
+                    ? ((a as any).post_expiry_action === "rolling_3" ? "Rullande 3 månader"
+                      : (a as any).post_expiry_action === "rolling_6" ? "Rullande 6 månader"
+                      : (a as any).post_expiry_action === "expires" || !(a as any).post_expiry_action ? "Upphör"
+                      : (a as any).post_expiry_action)
                     : "—"}
                 </TableCell>
                 <TableCell>
@@ -462,14 +463,25 @@ const AgreementsList = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Vid förfall</Label>
-                  <Select value={form.postExpiryAction} onValueChange={(v) => setField("postExpiryAction", v)}>
+                  <Select
+                    value={["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) ? form.postExpiryAction : "custom"}
+                    onValueChange={(v) => setField("postExpiryAction", v === "custom" ? "" : v)}
+                  >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="expires">Upphör</SelectItem>
-                      <SelectItem value="rolling_3">Rullande 3 mån uppsägning</SelectItem>
-                      <SelectItem value="rolling_6">Rullande 6 mån uppsägning</SelectItem>
+                      <SelectItem value="rolling_3">Rullande 3 månaders uppsägning</SelectItem>
+                      <SelectItem value="rolling_6">Rullande 6 månaders uppsägning</SelectItem>
+                      <SelectItem value="custom">Annat...</SelectItem>
                     </SelectContent>
                   </Select>
+                  {!["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) && (
+                    <Input
+                      placeholder="Ange villkor vid förfall..."
+                      value={form.postExpiryAction === "custom" ? "" : form.postExpiryAction}
+                      onChange={(e) => setField("postExpiryAction", e.target.value)}
+                    />
+                  )}
                 </div>
               </>
             )}
