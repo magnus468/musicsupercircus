@@ -453,6 +453,29 @@ const AgreementsList = () => {
             </div>
 
             <div className="space-y-2">
+              <Label>Vid förfall</Label>
+              <Select
+                value={["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) ? form.postExpiryAction : "custom"}
+                onValueChange={(v) => setField("postExpiryAction", v === "custom" ? "" : v)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expires">Upphör</SelectItem>
+                  <SelectItem value="rolling_3">Rullande 3 månaders uppsägning</SelectItem>
+                  <SelectItem value="rolling_6">Rullande 6 månaders uppsägning</SelectItem>
+                  <SelectItem value="custom">Annat...</SelectItem>
+                </SelectContent>
+              </Select>
+              {!["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) && (
+                <Input
+                  placeholder="Ange villkor vid förfall..."
+                  value={form.postExpiryAction === "custom" ? "" : form.postExpiryAction}
+                  onChange={(e) => setField("postExpiryAction", e.target.value)}
+                />
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label>Life of Copyright</Label>
               <Select value={form.lifeOfCopyright} onValueChange={(v) => setField("lifeOfCopyright", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -464,34 +487,10 @@ const AgreementsList = () => {
             </div>
 
             {form.lifeOfCopyright === "no" && (
-              <>
-                <div className="space-y-2">
-                  <Label>Retention (slutdatum)</Label>
-                  <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Vid förfall</Label>
-                  <Select
-                    value={["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) ? form.postExpiryAction : "custom"}
-                    onValueChange={(v) => setField("postExpiryAction", v === "custom" ? "" : v)}
-                  >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="expires">Upphör</SelectItem>
-                      <SelectItem value="rolling_3">Rullande 3 månaders uppsägning</SelectItem>
-                      <SelectItem value="rolling_6">Rullande 6 månaders uppsägning</SelectItem>
-                      <SelectItem value="custom">Annat...</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {!["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) && (
-                    <Input
-                      placeholder="Ange villkor vid förfall..."
-                      value={form.postExpiryAction === "custom" ? "" : form.postExpiryAction}
-                      onChange={(e) => setField("postExpiryAction", e.target.value)}
-                    />
-                  )}
-                </div>
-              </>
+              <div className="space-y-2">
+                <Label>Retention (slutdatum)</Label>
+                <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
+              </div>
             )}
 
             <div className="space-y-2">
