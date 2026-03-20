@@ -342,7 +342,17 @@ const AgreementsList = () => {
                   {a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}
+                  {!a.life_of_copyright ? (() => {
+                    const ret = calcRetentionDate(
+                      a.expiry_date || "",
+                      ((a as any).retention_years || "").toString(),
+                      (a as any).post_expiry_action || "expires",
+                      (a as any).rolling_end_date || "",
+                    );
+                    return ret.retentionDate
+                      ? <span>{ret.retentionDate}{!ret.isLocked && <Badge variant="outline" className="ml-1 text-[10px]">dynamiskt</Badge>}</span>
+                      : "—";
+                  })() : "—"}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   {!a.life_of_copyright
