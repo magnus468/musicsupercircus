@@ -15,17 +15,18 @@ interface CreatorEntry {
   name: string;
   role: "CA" | "C" | "A" | "Arr";
   share: string; // percentage as string for input
+  represented: boolean;
 }
 
 // Parse "Name (CA, 50%)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
   if (!str) return [];
   return str.split(", ").map((part) => {
-    const match = part.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?\)$/);
+    const match = part.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
-      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "" };
+      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", represented: !!match[4] };
     }
-    return { name: part.trim(), role: "CA" as const, share: "" };
+    return { name: part.trim(), role: "CA" as const, share: "", represented: false };
   }).filter((c) => c.name);
 };
 
@@ -33,6 +34,7 @@ const serializeCreators = (creators: CreatorEntry[]): string => {
   return creators.map((c) => {
     const parts: string[] = [c.role];
     if (c.share) parts.push(`${c.share}%`);
+    if (c.represented) parts.push("repr");
     return `${c.name} (${parts.join(", ")})`;
   }).join(", ");
 };
@@ -82,7 +84,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     if (!first && !last) return;
     const fullName = [first, last].filter(Boolean).join(" ");
     if (!creatorsList.some((c) => c.name === fullName)) {
-      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare }]);
+      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, represented: true }]);
     }
     // Auto-create client if not exists
     const alreadyExists = existingClients.some(
@@ -111,6 +113,10 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
   const updateCreatorShare = (name: string, share: string) => {
     setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, share } : c));
+  };
+
+  const toggleCreatorRepresented = (name: string) => {
+    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, represented: !c.represented } : c));
   };
 
   const toggleCoPublisher = (name: string) => {
@@ -223,6 +229,14 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             {creatorsList.map((creator) => (
               <div key={creator.name} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                 <span className="flex-1 font-medium">{creator.name}</span>
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+                  <Checkbox
+                    checked={creator.represented}
+                    onCheckedChange={() => toggleCreatorRepresented(creator.name)}
+                    className="h-3.5 w-3.5"
+                  />
+                  Repr.
+                </label>
                 <Select value={creator.role} onValueChange={(v) => updateCreatorRole(creator.name, v as CreatorEntry["role"])}>
                   <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
