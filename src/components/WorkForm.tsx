@@ -115,6 +115,10 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, share } : c));
   };
 
+  const toggleCreatorRepresented = (name: string) => {
+    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, represented: !c.represented } : c));
+  };
+
   const toggleCoPublisher = (name: string) => {
     setSelectedCoPublishers((prev) =>
       prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]
