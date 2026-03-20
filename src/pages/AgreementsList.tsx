@@ -337,7 +337,11 @@ const AgreementsList = () => {
                   {workCounts?.[a.id] || 0}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
+                  <Badge className={
+                    a.agreement_type === "co-publishing" ? "bg-violet-100 text-violet-700 border-0"
+                    : a.agreement_type === "administration" ? "bg-amber-100 text-amber-700 border-0"
+                    : "bg-secondary text-secondary-foreground border-0"
+                  }>{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">{(a as any).internal_publisher || "MSCP"}</Badge>
