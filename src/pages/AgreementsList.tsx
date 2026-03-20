@@ -333,6 +333,9 @@ const AgreementsList = () => {
             {agreements?.map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="font-medium">{a.client_name}</TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  {workCounts?.[a.id] || 0}
+                </TableCell>
                 <TableCell>
                   <Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
                 </TableCell>
