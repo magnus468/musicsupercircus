@@ -1,6 +1,9 @@
 import { useParams, Link } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
+import { useAgreements } from "@/hooks/useAgreements";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,11 +14,34 @@ const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { data: client, isLoading: loadingClient } = useClient(id);
   const { data: allWorks, isLoading: loadingWorks } = useWorks();
+  const { data: agreements } = useAgreements();
+
+  // Get all agreement IDs for this client
+  const clientAgreementIds = agreements?.filter((a) => a.client_id === id).map((a) => a.id) ?? [];
+
+  // Fetch work IDs linked via agreements for this client
+  const { data: agreementWorkIds } = useQuery({
+    queryKey: ["client-agreement-work-ids", id, clientAgreementIds],
+    enabled: clientAgreementIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_works")
+        .select("work_id")
+        .in("agreement_id", clientAgreementIds);
+      if (error) throw error;
+      return data.map((d: any) => d.work_id as string);
+    },
+  });
 
   const fullName = client ? `${client.first_name} ${client.last_name}`.trim() : "";
-  const clientWorks = allWorks?.filter((w) =>
-    client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === fullName.toLowerCase())
-  ) ?? [];
+
+  // Combine: works matched by creator name + works linked via agreements
+  const agreementWorkIdSet = new Set(agreementWorkIds ?? []);
+  const clientWorks = allWorks?.filter((w) => {
+    const matchByName = client && w.creators.toLowerCase().split(/[,/]/).some((c) => c.trim().toLowerCase() === fullName.toLowerCase());
+    const matchByAgreement = agreementWorkIdSet.has(w.id);
+    return matchByName || matchByAgreement;
+  }) ?? [];
 
   if (loadingClient) return <p className="text-muted-foreground">Laddar...</p>;
   if (!client) return <p className="text-muted-foreground">Klienten hittades inte.</p>;
