@@ -42,6 +42,7 @@ const statusLabels: Record<string, string> = {
 interface FormState {
   clientId: string;
   agreementType: string;
+  internalPublisher: string;
   agreementDate: string;
   expiryDate: string;
   status: string;
