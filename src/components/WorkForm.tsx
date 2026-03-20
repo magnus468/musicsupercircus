@@ -131,12 +131,14 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Extract co_publishers from creators with role E
+    const publishers = creatorsList.filter((c) => c.role === "E").map((c) => c.name);
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
       creators: serializeCreators(creatorsList),
-      publishing_type: publishingType,
-      co_publishers: isCoPublisher && selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
+      publishing_type: publishers.length > 0 ? "MSCP" as const : "original" as const,
+      co_publishers: publishers.length > 0 ? publishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
       share_percentage: creatorsList.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
