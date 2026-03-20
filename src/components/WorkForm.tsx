@@ -22,11 +22,11 @@ interface CreatorEntry {
 const parseCreatorsString = (str: string): CreatorEntry[] => {
   if (!str) return [];
   return str.split(", ").map((part) => {
-    const match = part.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?\)$/);
+    const match = part.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
-      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "" };
+      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", represented: !!match[4] };
     }
-    return { name: part.trim(), role: "CA" as const, share: "" };
+    return { name: part.trim(), role: "CA" as const, share: "", represented: false };
   }).filter((c) => c.name);
 };
 
