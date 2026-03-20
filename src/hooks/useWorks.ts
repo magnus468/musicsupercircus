@@ -107,11 +107,19 @@ export const useCoPublisherOptions = () => {
   return useQuery({
     queryKey: ["co-publisher-options"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("works").select("co_publishers");
-      if (error) throw error;
+      const [worksRes, clientsRes] = await Promise.all([
+        supabase.from("works").select("co_publishers"),
+        supabase.from("clients").select("first_name, organization, id").eq("client_type", "company"),
+      ]);
+      if (worksRes.error) throw worksRes.error;
+      if (clientsRes.error) throw clientsRes.error;
       const set = new Set<string>();
-      (data as { co_publishers: string[] | null }[]).forEach((w) => {
+      (worksRes.data as { co_publishers: string[] | null }[]).forEach((w) => {
         w.co_publishers?.forEach((cp) => set.add(cp));
+      });
+      (clientsRes.data as { first_name: string; organization: string | null }[]).forEach((c) => {
+        const name = c.organization || c.first_name;
+        if (name) set.add(name);
       });
       return Array.from(set).sort();
     },
