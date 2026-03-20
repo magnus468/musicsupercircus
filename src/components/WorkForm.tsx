@@ -143,7 +143,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       co_publishers: isCoPublisher && selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
-      share_percentage: sharePercentage ? parseFloat(sharePercentage) : null,
+      share_percentage: creatorsList.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
     };
 
     try {
