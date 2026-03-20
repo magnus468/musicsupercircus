@@ -190,6 +190,19 @@ const ClientsList = () => {
                 <TableCell>{renderCell(client, "country")}</TableCell>
                 <TableCell>{renderCell(client, "city")}</TableCell>
                 <TableCell>{renderCell(client, "ipi_number", true)}</TableCell>
+                <TableCell className="text-center">
+                  {(() => {
+                    const count = workCounts?.[client.id] ?? 0;
+                    return count > 0 ? (
+                      <Badge variant="secondary" className="gap-1">
+                        <Music className="h-3 w-3" />
+                        {count}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">0</span>
+                    );
+                  })()}
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
