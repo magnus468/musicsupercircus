@@ -77,7 +77,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-semibold">
-            {navItems.find((n) => n.to === location.pathname)?.label || "Musikförlagskatalogen"}
+            {navItems.find((n) => n.to === location.pathname)?.label || "Music Super Circus"}
           </h1>
         </header>
         <div className="p-4 lg:p-8 animate-fade-in">{children}</div>
