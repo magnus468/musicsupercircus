@@ -110,7 +110,11 @@ const WorkDetail = () => {
                 </tr>
               </thead>
               <tbody>
-                {creatorEntries.map((entry, i) => {
+                {[...creatorEntries].sort((a, b) => {
+                  const aIsE = a.role === "E" ? 1 : 0;
+                  const bIsE = b.role === "E" ? 1 : 0;
+                  return aIsE - bIsE;
+                }).map((entry, i) => {
                   const clientId = clientMap.get(entry.name.toLowerCase());
                   return (
                     <tr key={i} className="border-b last:border-0">

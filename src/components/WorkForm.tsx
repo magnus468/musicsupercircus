@@ -240,7 +240,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
         {creatorsList.length > 0 && (
           <div className="space-y-1 mt-2">
-            {creatorsList.map((creator) => (
+            {[...creatorsList].sort((a, b) => (a.role === "E" ? 1 : 0) - (b.role === "E" ? 1 : 0)).map((creator) => (
               <div key={creator.name} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                 <span className="flex-1 font-medium">{creator.name}</span>
                 <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
