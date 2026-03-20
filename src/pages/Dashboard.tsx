@@ -25,47 +25,51 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+          <CardContent className="flex items-center gap-4 p-6 relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
               <Music2 className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Totalt antal verk</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-2xl font-bold tabular-nums">{stats.total}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
+        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+          <CardContent className="flex items-center gap-4 p-6 relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10 ring-1 ring-success/20">
               <FileCheck className="h-6 w-6 text-success" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Anmälda till STIM</p>
-              <p className="text-2xl font-bold">{stats.byStimStatus.anmäld}</p>
+              <p className="text-2xl font-bold tabular-nums">{stats.byStimStatus.anmäld}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
+        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+          <CardContent className="flex items-center gap-4 p-6 relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 ring-1 ring-accent/20">
               <BookOpen className="h-6 w-6 text-accent" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Co-publishing</p>
-              <p className="text-2xl font-bold">{stats.byType.MSCE + stats.byType.MSCP}</p>
+              <p className="text-2xl font-bold tabular-nums">{stats.byType.MSCE + stats.byType.MSCP}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-              <Users className="h-6 w-6 text-primary" />
+        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent pointer-events-none" />
+          <CardContent className="flex items-center gap-4 p-6 relative">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 ring-1 ring-violet-200">
+              <Users className="h-6 w-6 text-violet-600" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Upphovspersoner</p>
-              <p className="text-2xl font-bold">{stats.topCreators.length}+</p>
+              <p className="text-2xl font-bold tabular-nums">{stats.topCreators.length}+</p>
             </div>
           </CardContent>
         </Card>

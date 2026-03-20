@@ -337,7 +337,11 @@ const AgreementsList = () => {
                   {workCounts?.[a.id] || 0}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
+                  <Badge className={
+                    a.agreement_type === "co-publishing" ? "bg-violet-100 text-violet-700 border-0"
+                    : a.agreement_type === "administration" ? "bg-amber-100 text-amber-700 border-0"
+                    : "bg-secondary text-secondary-foreground border-0"
+                  }>{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">{(a as any).internal_publisher || "MSCP"}</Badge>
@@ -367,7 +371,12 @@ const AgreementsList = () => {
                     : (a as any).post_expiry_action}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={a.status === "active" ? "default" : "outline"}>
+                  <Badge className={
+                    a.status === "active"
+                      ? "bg-emerald-100 text-emerald-700 border-0"
+                      : "bg-muted text-muted-foreground border-0"
+                  }>
+                    <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
                     {statusLabels[a.status] || a.status}
                   </Badge>
                 </TableCell>

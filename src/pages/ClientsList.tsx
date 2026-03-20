@@ -2,9 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useClients, useDeleteClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Trash2, Plus, Eye, Check, X } from "lucide-react";
+import { Search, Trash2, Plus, Eye, Check, X, User, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ClientForm from "@/components/ClientForm";
@@ -155,9 +156,30 @@ const ClientsList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clients?.map((client) => (
-              <TableRow key={client.id}>
-                <TableCell>{renderCell(client, "first_name")}</TableCell>
+            {clients?.map((client) => {
+              const isPerson = !!(client.first_name && client.last_name);
+              const initials = isPerson
+                ? `${client.first_name.charAt(0)}${client.last_name.charAt(0)}`.toUpperCase()
+                : (client.organization || client.first_name || "?").charAt(0).toUpperCase();
+              return (
+              <TableRow key={client.id} className="group">
+                <TableCell>
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${isPerson ? "bg-violet-100 text-violet-700" : "bg-amber-100 text-amber-700"}`}>
+                      {initials}
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1.5">
+                        {renderCell(client, "first_name")}
+                        {isPerson ? (
+                          <User className="h-3 w-3 text-violet-400" />
+                        ) : (
+                          <Building2 className="h-3 w-3 text-amber-500" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
                 <TableCell>{renderCell(client, "last_name")}</TableCell>
                 <TableCell>{renderCell(client, "email")}</TableCell>
                 <TableCell>{renderCell(client, "phone")}</TableCell>
@@ -176,7 +198,8 @@ const ClientsList = () => {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
             {!isLoading && clients?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
