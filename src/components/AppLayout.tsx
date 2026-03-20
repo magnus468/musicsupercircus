@@ -23,7 +23,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform lg:relative lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform lg:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-16 items-center gap-3 px-6 border-b border-sidebar-border">
@@ -72,7 +72,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       {mobileOpen && <div className="fixed inset-0 z-40 bg-background/80 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
       {/* Main content */}
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 lg:ml-64">
         <header className="flex h-16 items-center gap-3 border-b px-4 lg:px-8">
           <button onClick={() => setMobileOpen(true)} className="lg:hidden">
             <Menu className="h-5 w-5" />
