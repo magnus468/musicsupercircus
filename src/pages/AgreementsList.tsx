@@ -462,14 +462,25 @@ const AgreementsList = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Vid förfall</Label>
-                  <Select value={form.postExpiryAction} onValueChange={(v) => setField("postExpiryAction", v)}>
+                  <Select
+                    value={["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) ? form.postExpiryAction : "custom"}
+                    onValueChange={(v) => setField("postExpiryAction", v === "custom" ? "" : v)}
+                  >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="expires">Upphör</SelectItem>
-                      <SelectItem value="rolling_3">Rullande 3 mån uppsägning</SelectItem>
-                      <SelectItem value="rolling_6">Rullande 6 mån uppsägning</SelectItem>
+                      <SelectItem value="rolling_3">Rullande 3 månaders uppsägning</SelectItem>
+                      <SelectItem value="rolling_6">Rullande 6 månaders uppsägning</SelectItem>
+                      <SelectItem value="custom">Annat...</SelectItem>
                     </SelectContent>
                   </Select>
+                  {!["expires", "rolling_3", "rolling_6"].includes(form.postExpiryAction) && (
+                    <Input
+                      placeholder="Ange villkor vid förfall..."
+                      value={form.postExpiryAction === "custom" ? "" : form.postExpiryAction}
+                      onChange={(e) => setField("postExpiryAction", e.target.value)}
+                    />
+                  )}
                 </div>
               </>
             )}
