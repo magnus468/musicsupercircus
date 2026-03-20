@@ -128,19 +128,6 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, represented: !c.represented } : c));
   };
 
-  const toggleCoPublisher = (name: string) => {
-    setSelectedCoPublishers((prev) =>
-      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]
-    );
-  };
-
-  const addNewCoPublisher = () => {
-    const trimmed = newCoPublisher.trim();
-    if (trimmed && !selectedCoPublishers.includes(trimmed)) {
-      setSelectedCoPublishers((prev) => [...prev, trimmed]);
-    }
-    setNewCoPublisher("");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
