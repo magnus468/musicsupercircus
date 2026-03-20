@@ -161,7 +161,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     }
   };
 
-  const allOptions = Array.from(new Set([...coPublisherOptions, ...selectedCoPublishers])).sort();
+  const isPublisherRole = newCreatorRole === "E";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
