@@ -12,6 +12,10 @@ export interface Agreement {
   notes: string | null;
   life_of_copyright: boolean;
   retention_date: string | null;
+  retention_years: number | null;
+  rolling_end_date: string | null;
+  post_expiry_action: string;
+  internal_publisher: string;
   file_path: string | null;
   file_name: string | null;
   created_at: string;
@@ -30,6 +34,10 @@ export interface AgreementInsert {
   notes?: string | null;
   life_of_copyright?: boolean;
   retention_date?: string | null;
+  retention_years?: number | null;
+  rolling_end_date?: string | null;
+  post_expiry_action?: string;
+  internal_publisher?: string;
   file_path?: string | null;
 }
 

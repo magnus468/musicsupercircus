@@ -52,6 +52,7 @@ interface FormState {
   retentionYears: string;
   retentionDate: string;
   postExpiryAction: string;
+  rollingEndDate: string;
   selectedWorkIds: string[];
   workSearch: string;
   pdfFile: File | null;
@@ -69,18 +70,44 @@ const emptyForm: FormState = {
   retentionYears: "",
   retentionDate: "",
   postExpiryAction: "expires",
+  rollingEndDate: "",
   selectedWorkIds: [],
   workSearch: "",
   pdfFile: null,
 };
 
-const calcRetentionDate = (expiryDate: string, retentionYears: string): string => {
-  if (!expiryDate || !retentionYears) return "";
+const isRolling = (action: string) => action === "rolling_3" || action === "rolling_6";
+
+const calcRetentionDate = (
+  expiryDate: string,
+  retentionYears: string,
+  postExpiryAction: string,
+  rollingEndDate: string,
+): { retentionDate: string; isLocked: boolean } => {
   const years = parseInt(retentionYears, 10);
-  if (isNaN(years) || years <= 0) return "";
+  if (isNaN(years) || years <= 0) return { retentionDate: "", isLocked: false };
+
+  if (isRolling(postExpiryAction)) {
+    if (rollingEndDate) {
+      // Rolling period has a defined end → retention locked from that date
+      const d = new Date(rollingEndDate);
+      d.setFullYear(d.getFullYear() + years);
+      const today = new Date().toISOString().split("T")[0];
+      return { retentionDate: d.toISOString().split("T")[0], isLocked: rollingEndDate <= today };
+    }
+    // No end date yet → dynamic: today + notice months + retention years
+    const noticeMonths = postExpiryAction === "rolling_3" ? 3 : 6;
+    const d = new Date();
+    d.setMonth(d.getMonth() + noticeMonths);
+    d.setFullYear(d.getFullYear() + years);
+    return { retentionDate: d.toISOString().split("T")[0], isLocked: false };
+  }
+
+  // "expires" or custom: retention from expiry date
+  if (!expiryDate) return { retentionDate: "", isLocked: false };
   const d = new Date(expiryDate);
   d.setFullYear(d.getFullYear() + years);
-  return d.toISOString().split("T")[0];
+  return { retentionDate: d.toISOString().split("T")[0], isLocked: true };
 };
 
 const AgreementsList = () => {
@@ -138,9 +165,10 @@ const AgreementsList = () => {
       status: a.status,
       notes: a.notes || "",
       lifeOfCopyright: a.life_of_copyright ? "yes" : "no",
-      retentionYears: "",
+      retentionYears: (a as any).retention_years?.toString() || "",
       retentionDate: a.retention_date || "",
       postExpiryAction: (a as any).post_expiry_action || "expires",
+      rollingEndDate: (a as any).rolling_end_date || "",
       selectedWorkIds: [],
       workSearch: "",
       pdfFile: null,
@@ -169,6 +197,7 @@ const AgreementsList = () => {
       return;
     }
 
+    const retCalc = calcRetentionDate(form.expiryDate, form.retentionYears, form.postExpiryAction, form.rollingEndDate);
     const payload = {
       client_id: form.clientId,
       agreement_type: form.agreementType,
@@ -178,8 +207,10 @@ const AgreementsList = () => {
       status: form.status,
       notes: form.notes || null,
       life_of_copyright: form.lifeOfCopyright === "yes",
-      retention_date: form.lifeOfCopyright === "no" && form.retentionDate ? form.retentionDate : null,
+      retention_date: form.lifeOfCopyright === "no" && retCalc.retentionDate ? retCalc.retentionDate : null,
+      retention_years: form.retentionYears ? parseInt(form.retentionYears, 10) : null,
       post_expiry_action: form.postExpiryAction || "expires",
+      rolling_end_date: isRolling(form.postExpiryAction) && form.rollingEndDate ? form.rollingEndDate : null,
       workIds: form.selectedWorkIds,
     };
 
@@ -311,7 +342,17 @@ const AgreementsList = () => {
                   {a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}
+                  {!a.life_of_copyright ? (() => {
+                    const ret = calcRetentionDate(
+                      a.expiry_date || "",
+                      ((a as any).retention_years || "").toString(),
+                      (a as any).post_expiry_action || "expires",
+                      (a as any).rolling_end_date || "",
+                    );
+                    return ret.retentionDate
+                      ? <span>{ret.retentionDate}{!ret.isLocked && <Badge variant="outline" className="ml-1 text-[10px]">dynamiskt</Badge>}</span>
+                      : "—";
+                  })() : "—"}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   {!a.life_of_copyright
@@ -487,6 +528,26 @@ const AgreementsList = () => {
               )}
             </div>
 
+            {isRolling(form.postExpiryAction) && (
+              <div className="space-y-2">
+                <Label>Rullande upphör</Label>
+                <Input
+                  type="date"
+                  value={form.rollingEndDate}
+                  onChange={(e) => {
+                    const endDate = e.target.value;
+                    const ret = calcRetentionDate(form.expiryDate, form.retentionYears, form.postExpiryAction, endDate);
+                    setForm((f) => ({ ...f, rollingEndDate: endDate, retentionDate: ret.retentionDate }));
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {form.rollingEndDate
+                    ? "Datum då det rullande avtalet upphör"
+                    : "Lämna tomt om rullande period fortfarande pågår"}
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Life of Copyright</Label>
               <Select value={form.lifeOfCopyright} onValueChange={(v) => setField("lifeOfCopyright", v)}>
@@ -498,34 +559,35 @@ const AgreementsList = () => {
               </Select>
             </div>
 
-            {form.lifeOfCopyright === "no" && (
-              <div className="space-y-2">
-                <Label>Retention (antal år)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  placeholder="Antal år"
-                  value={form.retentionYears}
-                  onChange={(e) => {
-                    const years = e.target.value;
-                    const computed = calcRetentionDate(form.expiryDate, years);
-                    setForm((f) => ({ ...f, retentionYears: years, retentionDate: computed }));
-                  }}
-                />
-                {form.retentionDate && (
-                  <p className="text-xs text-muted-foreground">
-                    Retention t.o.m: <span className="font-medium text-foreground">{form.retentionDate}</span>
-                    {form.postExpiryAction === "expires"
-                      ? " (beräknat från förfallodatum)"
-                      : form.postExpiryAction === "rolling_3"
-                        ? " (beräknat från förfallodatum, rullande 3 mån)"
-                        : form.postExpiryAction === "rolling_6"
-                          ? " (beräknat från förfallodatum, rullande 6 mån)"
+            {form.lifeOfCopyright === "no" && (() => {
+              const ret = calcRetentionDate(form.expiryDate, form.retentionYears, form.postExpiryAction, form.rollingEndDate);
+              return (
+                <div className="space-y-2">
+                  <Label>Retention (antal år)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="Antal år"
+                    value={form.retentionYears}
+                    onChange={(e) => {
+                      const years = e.target.value;
+                      const computed = calcRetentionDate(form.expiryDate, years, form.postExpiryAction, form.rollingEndDate);
+                      setForm((f) => ({ ...f, retentionYears: years, retentionDate: computed.retentionDate }));
+                    }}
+                  />
+                  {ret.retentionDate && (
+                    <p className="text-xs text-muted-foreground">
+                      Retention t.o.m: <span className="font-medium text-foreground">{ret.retentionDate}</span>
+                      {ret.isLocked
+                        ? " (låst)"
+                        : isRolling(form.postExpiryAction) && !form.rollingEndDate
+                          ? " (dynamiskt — uppdateras dagligen)"
                           : " (beräknat från förfallodatum)"}
-                  </p>
-                )}
-              </div>
-            )}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="space-y-2">
               <Label>Anteckningar</Label>

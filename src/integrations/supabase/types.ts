@@ -62,6 +62,8 @@ export type Database = {
           notes: string | null
           post_expiry_action: string
           retention_date: string | null
+          retention_years: number | null
+          rolling_end_date: string | null
           share_percentage: number | null
           status: string
           updated_at: string
@@ -80,6 +82,8 @@ export type Database = {
           notes?: string | null
           post_expiry_action?: string
           retention_date?: string | null
+          retention_years?: number | null
+          rolling_end_date?: string | null
           share_percentage?: number | null
           status?: string
           updated_at?: string
@@ -98,6 +102,8 @@ export type Database = {
           notes?: string | null
           post_expiry_action?: string
           retention_date?: string | null
+          retention_years?: number | null
+          rolling_end_date?: string | null
           share_percentage?: number | null
           status?: string
           updated_at?: string
