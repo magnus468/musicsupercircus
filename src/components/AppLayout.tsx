@@ -29,7 +29,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
             <Music2 className="h-4 w-4 text-sidebar-primary-foreground" />
           </div>
-          <span className="font-semibold text-sm">Musikförlaget</span>
+          <span className="font-semibold text-sm">Music Super Circus</span>
           <button onClick={() => setMobileOpen(false)} className="ml-auto lg:hidden">
             <X className="h-5 w-5" />
           </button>
@@ -77,7 +77,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-semibold">
-            {navItems.find((n) => n.to === location.pathname)?.label || "Musikförlagskatalogen"}
+            {navItems.find((n) => n.to === location.pathname)?.label || "Music Super Circus"}
           </h1>
         </header>
         <div className="p-4 lg:p-8 animate-fade-in">{children}</div>
