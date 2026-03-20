@@ -500,8 +500,30 @@ const AgreementsList = () => {
 
             {form.lifeOfCopyright === "no" && (
               <div className="space-y-2">
-                <Label>Retention (slutdatum)</Label>
-                <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
+                <Label>Retention (antal år)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Antal år"
+                  value={form.retentionYears}
+                  onChange={(e) => {
+                    const years = e.target.value;
+                    const computed = calcRetentionDate(form.expiryDate, years);
+                    setForm((f) => ({ ...f, retentionYears: years, retentionDate: computed }));
+                  }}
+                />
+                {form.retentionDate && (
+                  <p className="text-xs text-muted-foreground">
+                    Retention t.o.m: <span className="font-medium text-foreground">{form.retentionDate}</span>
+                    {form.postExpiryAction === "expires"
+                      ? " (beräknat från förfallodatum)"
+                      : form.postExpiryAction === "rolling_3"
+                        ? " (beräknat från förfallodatum, rullande 3 mån)"
+                        : form.postExpiryAction === "rolling_6"
+                          ? " (beräknat från förfallodatum, rullande 6 mån)"
+                          : " (beräknat från förfallodatum)"}
+                  </p>
+                )}
               </div>
             )}
 
