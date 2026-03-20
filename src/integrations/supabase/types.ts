@@ -57,6 +57,7 @@ export type Database = {
           file_name: string | null
           file_path: string | null
           id: string
+          internal_publisher: string
           life_of_copyright: boolean
           notes: string | null
           post_expiry_action: string
@@ -74,6 +75,7 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           id?: string
+          internal_publisher?: string
           life_of_copyright?: boolean
           notes?: string | null
           post_expiry_action?: string
@@ -91,6 +93,7 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           id?: string
+          internal_publisher?: string
           life_of_copyright?: boolean
           notes?: string | null
           post_expiry_action?: string

@@ -159,6 +159,7 @@ const AgreementsList = () => {
     const payload = {
       client_id: form.clientId,
       agreement_type: form.agreementType,
+      internal_publisher: form.internalPublisher,
       agreement_date: form.agreementDate,
       expiry_date: form.expiryDate || null,
       status: form.status,
