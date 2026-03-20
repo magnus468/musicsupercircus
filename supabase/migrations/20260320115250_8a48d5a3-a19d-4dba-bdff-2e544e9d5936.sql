@@ -1,0 +1,1 @@
+ALTER TABLE public.agreements ADD COLUMN post_expiry_action text NOT NULL DEFAULT 'expires';

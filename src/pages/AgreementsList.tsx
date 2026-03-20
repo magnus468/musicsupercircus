@@ -48,6 +48,7 @@ interface FormState {
   notes: string;
   lifeOfCopyright: string;
   retentionDate: string;
+  postExpiryAction: string;
   selectedWorkIds: string[];
   workSearch: string;
   pdfFile: File | null;
@@ -62,6 +63,7 @@ const emptyForm: FormState = {
   notes: "",
   lifeOfCopyright: "yes",
   retentionDate: "",
+  postExpiryAction: "expires",
   selectedWorkIds: [],
   workSearch: "",
   pdfFile: null,
@@ -122,6 +124,7 @@ const AgreementsList = () => {
       notes: a.notes || "",
       lifeOfCopyright: a.life_of_copyright ? "yes" : "no",
       retentionDate: a.retention_date || "",
+      postExpiryAction: (a as any).post_expiry_action || "expires",
       selectedWorkIds: [],
       workSearch: "",
       pdfFile: null,
@@ -159,6 +162,7 @@ const AgreementsList = () => {
       notes: form.notes || null,
       life_of_copyright: form.lifeOfCopyright === "yes",
       retention_date: form.lifeOfCopyright === "no" && form.retentionDate ? form.retentionDate : null,
+      post_expiry_action: form.lifeOfCopyright === "no" ? form.postExpiryAction : "expires",
       workIds: form.selectedWorkIds,
     };
 
@@ -267,6 +271,7 @@ const AgreementsList = () => {
               <TableHead>Förfaller</TableHead>
               <TableHead>LoC</TableHead>
               <TableHead>Retention</TableHead>
+              <TableHead>Vid förfall</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dokument</TableHead>
               <TableHead className="w-20"></TableHead>
@@ -286,6 +291,13 @@ const AgreementsList = () => {
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-xs">
+                  {!a.life_of_copyright
+                    ? ((a as any).post_expiry_action === "rolling_3" ? "Rullande 3 mån"
+                      : (a as any).post_expiry_action === "rolling_6" ? "Rullande 6 mån"
+                      : "Upphör")
+                    : "—"}
                 </TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
@@ -328,7 +340,7 @@ const AgreementsList = () => {
             ))}
             {!isLoading && agreements?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
                   Inga avtal registrerade
                 </TableCell>
               </TableRow>
@@ -443,10 +455,23 @@ const AgreementsList = () => {
             </div>
 
             {form.lifeOfCopyright === "no" && (
-              <div className="space-y-2">
-                <Label>Retention (slutdatum)</Label>
-                <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label>Retention (slutdatum)</Label>
+                  <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Vid förfall</Label>
+                  <Select value={form.postExpiryAction} onValueChange={(v) => setField("postExpiryAction", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="expires">Upphör</SelectItem>
+                      <SelectItem value="rolling_3">Rullande 3 mån uppsägning</SelectItem>
+                      <SelectItem value="rolling_6">Rullande 6 mån uppsägning</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             <div className="space-y-2">

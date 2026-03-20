@@ -59,6 +59,7 @@ export type Database = {
           id: string
           life_of_copyright: boolean
           notes: string | null
+          post_expiry_action: string
           retention_date: string | null
           share_percentage: number | null
           status: string
@@ -75,6 +76,7 @@ export type Database = {
           id?: string
           life_of_copyright?: boolean
           notes?: string | null
+          post_expiry_action?: string
           retention_date?: string | null
           share_percentage?: number | null
           status?: string
@@ -91,6 +93,7 @@ export type Database = {
           id?: string
           life_of_copyright?: boolean
           notes?: string | null
+          post_expiry_action?: string
           retention_date?: string | null
           share_percentage?: number | null
           status?: string
