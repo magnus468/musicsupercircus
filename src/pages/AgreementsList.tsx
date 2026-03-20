@@ -341,42 +341,54 @@ const AgreementsList = () => {
           <div className="flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="space-y-2">
               <Label>Klient *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                    {form.clientId
-                      ? (() => {
-                          const c = clients?.find((c) => c.id === form.clientId);
-                          return c ? (c.organization || `${c.first_name} ${c.last_name}`.trim()) : "Välj klient";
-                        })()
-                      : "Välj klient"}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Sök klient..." />
-                    <CommandList>
-                      <CommandEmpty>Ingen klient hittad</CommandEmpty>
-                      <CommandGroup>
-                        {clients?.map((c) => {
-                          const label = c.organization || `${c.first_name} ${c.last_name}`.trim();
-                          return (
-                            <CommandItem
-                              key={c.id}
-                              value={label}
-                              onSelect={() => setField("clientId", c.id)}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", form.clientId === c.id ? "opacity-100" : "opacity-0")} />
-                              {label}
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="flex-1 justify-between font-normal">
+                      {form.clientId
+                        ? (() => {
+                            const c = clients?.find((c) => c.id === form.clientId);
+                            return c ? (c.organization || `${c.first_name} ${c.last_name}`.trim()) : "Välj klient";
+                          })()
+                        : "Välj klient"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Sök klient..." />
+                      <CommandList>
+                        <CommandEmpty>Ingen klient hittad</CommandEmpty>
+                        <CommandGroup>
+                          {clients?.map((c) => {
+                            const label = c.organization || `${c.first_name} ${c.last_name}`.trim();
+                            return (
+                              <CommandItem
+                                key={c.id}
+                                value={label}
+                                onSelect={() => setField("clientId", c.id)}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", form.clientId === c.id ? "opacity-100" : "opacity-0")} />
+                                {label}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setShowNewClientDialog(true)}
+                  title="Lägg till ny klient"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
