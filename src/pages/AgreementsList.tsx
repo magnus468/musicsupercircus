@@ -167,7 +167,7 @@ const AgreementsList = () => {
       notes: form.notes || null,
       life_of_copyright: form.lifeOfCopyright === "yes",
       retention_date: form.lifeOfCopyright === "no" && form.retentionDate ? form.retentionDate : null,
-      post_expiry_action: form.lifeOfCopyright === "no" ? form.postExpiryAction : "expires",
+      post_expiry_action: form.postExpiryAction || "expires",
       workIds: form.selectedWorkIds,
     };
 
