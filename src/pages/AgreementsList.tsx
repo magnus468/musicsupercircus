@@ -115,6 +115,7 @@ const AgreementsList = () => {
   const { data: agreements, isLoading } = useAgreements();
   const { data: clients } = useClients();
   const { data: works } = useWorks();
+  const { data: workCounts } = useAllAgreementWorkCounts();
   const createAgreement = useCreateAgreement();
   const updateAgreement = useUpdateAgreement();
   const deleteAgreement = useDeleteAgreement();
