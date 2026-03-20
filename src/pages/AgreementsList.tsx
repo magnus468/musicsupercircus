@@ -83,7 +83,11 @@ const AgreementsList = () => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [showNewClientDialog, setShowNewClientDialog] = useState(false);
-  const [newClientName, setNewClientName] = useState("");
+  const [newClientType, setNewClientType] = useState<"person" | "company">("person");
+  const [newClientFirstName, setNewClientFirstName] = useState("");
+  const [newClientLastName, setNewClientLastName] = useState("");
+  const [newClientOrg, setNewClientOrg] = useState("");
+  const [newClientContact, setNewClientContact] = useState("");
 
   const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
 
