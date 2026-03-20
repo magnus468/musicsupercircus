@@ -229,6 +229,14 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             {creatorsList.map((creator) => (
               <div key={creator.name} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                 <span className="flex-1 font-medium">{creator.name}</span>
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+                  <Checkbox
+                    checked={creator.represented}
+                    onCheckedChange={() => toggleCreatorRepresented(creator.name)}
+                    className="h-3.5 w-3.5"
+                  />
+                  Repr.
+                </label>
                 <Select value={creator.role} onValueChange={(v) => updateCreatorRole(creator.name, v as CreatorEntry["role"])}>
                   <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
