@@ -197,6 +197,7 @@ const AgreementsList = () => {
       return;
     }
 
+    const retCalc = calcRetentionDate(form.expiryDate, form.retentionYears, form.postExpiryAction, form.rollingEndDate);
     const payload = {
       client_id: form.clientId,
       agreement_type: form.agreementType,
@@ -206,8 +207,10 @@ const AgreementsList = () => {
       status: form.status,
       notes: form.notes || null,
       life_of_copyright: form.lifeOfCopyright === "yes",
-      retention_date: form.lifeOfCopyright === "no" && form.retentionDate ? form.retentionDate : null,
+      retention_date: form.lifeOfCopyright === "no" && retCalc.retentionDate ? retCalc.retentionDate : null,
+      retention_years: form.retentionYears ? parseInt(form.retentionYears, 10) : null,
       post_expiry_action: form.postExpiryAction || "expires",
+      rolling_end_date: isRolling(form.postExpiryAction) && form.rollingEndDate ? form.rollingEndDate : null,
       workIds: form.selectedWorkIds,
     };
 
