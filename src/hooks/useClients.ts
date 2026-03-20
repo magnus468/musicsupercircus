@@ -10,7 +10,7 @@ export const useClients = (search?: string) => {
   return useQuery({
     queryKey: ["clients", search],
     queryFn: async () => {
-      let query = supabase.from("clients").select("*").order("first_name").order("last_name");
+      let query = supabase.from("clients").select("*");
       if (search && search.trim()) {
         const term = search.trim();
         const s = `%${term}%`;
@@ -25,7 +25,18 @@ export const useClients = (search?: string) => {
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data as Client[];
+      const clients = data as Client[];
+      // Sort: persons (both first_name and last_name) first, then companies
+      clients.sort((a, b) => {
+        const aIsPerson = a.first_name && a.last_name;
+        const bIsPerson = b.first_name && b.last_name;
+        if (aIsPerson && !bIsPerson) return -1;
+        if (!aIsPerson && bIsPerson) return 1;
+        const aName = `${a.first_name} ${a.last_name}`.trim().toLowerCase();
+        const bName = `${b.first_name} ${b.last_name}`.trim().toLowerCase();
+        return aName.localeCompare(bName, 'sv');
+      });
+      return clients;
     },
   });
 };
