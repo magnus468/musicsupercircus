@@ -176,28 +176,15 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Upphovsperson(er) *</Label>
+        <Label>Upphovsperson(er) & Förlag *</Label>
         <div className="flex gap-2 items-end">
-          <div className="flex-1 space-y-1">
-            <span className="text-xs text-muted-foreground">Förnamn</span>
-            <Input
-              value={newCreatorFirst}
-              onChange={(e) => setNewCreatorFirst(e.target.value)}
-              placeholder="Förnamn"
-            />
-          </div>
-          <div className="flex-1 space-y-1">
-            <span className="text-xs text-muted-foreground">Efternamn</span>
-            <Input
-              value={newCreatorLast}
-              onChange={(e) => setNewCreatorLast(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-              placeholder="Efternamn"
-            />
-          </div>
           <div className="w-20 space-y-1">
             <span className="text-xs text-muted-foreground">Roll</span>
-            <Select value={newCreatorRole} onValueChange={(v) => setNewCreatorRole(v as CreatorEntry["role"])}>
+            <Select value={newCreatorRole} onValueChange={(v) => {
+              setNewCreatorRole(v as CreatorEntry["role"]);
+              // Clear fields when switching between E and other roles
+              setNewCreatorFirst(""); setNewCreatorLast(""); setNewCreatorName("");
+            }}>
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ROLE_OPTIONS.map((r) => (
@@ -206,6 +193,37 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               </SelectContent>
             </Select>
           </div>
+          {isPublisherRole ? (
+            <div className="flex-1 space-y-1">
+              <span className="text-xs text-muted-foreground">Förlagsnamn</span>
+              <Input
+                value={newCreatorName}
+                onChange={(e) => setNewCreatorName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+                placeholder="Förlagsnamn"
+              />
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 space-y-1">
+                <span className="text-xs text-muted-foreground">Förnamn</span>
+                <Input
+                  value={newCreatorFirst}
+                  onChange={(e) => setNewCreatorFirst(e.target.value)}
+                  placeholder="Förnamn"
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <span className="text-xs text-muted-foreground">Efternamn</span>
+                <Input
+                  value={newCreatorLast}
+                  onChange={(e) => setNewCreatorLast(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
+                  placeholder="Efternamn"
+                />
+              </div>
+            </>
+          )}
           <div className="w-20 space-y-1">
             <span className="text-xs text-muted-foreground">Andel %</span>
             <Input
@@ -218,7 +236,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               placeholder="%"
             />
           </div>
-          <Button type="button" variant="secondary" onClick={addCreator} disabled={!newCreatorFirst.trim() && !newCreatorLast.trim()} className="h-10">
+          <Button type="button" variant="secondary" onClick={addCreator} disabled={isPublisherRole ? !newCreatorName.trim() : (!newCreatorFirst.trim() && !newCreatorLast.trim())} className="h-10">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
