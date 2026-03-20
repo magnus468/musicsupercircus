@@ -63,14 +63,9 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   );
   const [newCreatorFirst, setNewCreatorFirst] = useState("");
   const [newCreatorLast, setNewCreatorLast] = useState("");
+  const [newCreatorName, setNewCreatorName] = useState("");
   const [newCreatorRole, setNewCreatorRole] = useState<CreatorEntry["role"]>("CA");
   const [newCreatorShare, setNewCreatorShare] = useState("");
-  const [isCoPublisher, setIsCoPublisher] = useState(
-    work ? (work.co_publishers && work.co_publishers.length > 0) : false
-  );
-  const [publishingType, setPublishingType] = useState<"MSCE" | "MSCP">(work?.publishing_type === "MSCE" || work?.publishing_type === "MSCP" ? work.publishing_type : "MSCP");
-  const [selectedCoPublishers, setSelectedCoPublishers] = useState<string[]>(work?.co_publishers ?? []);
-  const [newCoPublisher, setNewCoPublisher] = useState("");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
