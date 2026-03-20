@@ -49,6 +49,7 @@ interface FormState {
   status: string;
   notes: string;
   lifeOfCopyright: string;
+  retentionYears: string;
   retentionDate: string;
   postExpiryAction: string;
   selectedWorkIds: string[];
@@ -65,11 +66,21 @@ const emptyForm: FormState = {
   status: "active",
   notes: "",
   lifeOfCopyright: "yes",
+  retentionYears: "",
   retentionDate: "",
   postExpiryAction: "expires",
   selectedWorkIds: [],
   workSearch: "",
   pdfFile: null,
+};
+
+const calcRetentionDate = (expiryDate: string, retentionYears: string): string => {
+  if (!expiryDate || !retentionYears) return "";
+  const years = parseInt(retentionYears, 10);
+  if (isNaN(years) || years <= 0) return "";
+  const d = new Date(expiryDate);
+  d.setFullYear(d.getFullYear() + years);
+  return d.toISOString().split("T")[0];
 };
 
 const AgreementsList = () => {
