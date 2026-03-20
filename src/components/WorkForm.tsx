@@ -77,6 +77,17 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const isEdit = !!work;
 
   const addCreator = async () => {
+    if (newCreatorRole === "E") {
+      const name = newCreatorName.trim();
+      if (!name) return;
+      if (!creatorsList.some((c) => c.name === name)) {
+        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, represented: true }]);
+      }
+      setNewCreatorName("");
+      setNewCreatorRole("CA");
+      setNewCreatorShare("");
+      return;
+    }
     const first = newCreatorFirst.trim();
     const last = newCreatorLast.trim();
     if (!first && !last) return;
