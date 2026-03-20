@@ -289,6 +289,9 @@ const AgreementsList = () => {
                 <TableCell>
                   <Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
                 </TableCell>
+                <TableCell>
+                  <Badge variant="outline">{(a as any).internal_publisher || "MSCP"}</Badge>
+                </TableCell>
                 <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
                 <TableCell>
