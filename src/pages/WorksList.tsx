@@ -170,7 +170,10 @@ const WorksList = () => {
                   ) : "—"}
                 </TableCell>
                 <TableCell className="max-w-[200px]">
-                  {(work.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || []).map((c) => c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim()).filter(Boolean).map((nameOnly, i, arr) => {
+                  {(work.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
+                    .map((c) => ({ raw: c, name: c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim(), parens: (c.match(/\(([^)]*)\)/) || [])[1] || "" }))
+                    .filter((c) => c.name && !c.parens.split(",").map(p => p.trim()).includes("E"))
+                    .map(({ name: nameOnly }, i, arr) => {
                     const clientId = clientMap.get(nameOnly.toLowerCase());
                     return (
                       <span key={i}>
