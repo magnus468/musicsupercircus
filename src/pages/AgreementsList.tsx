@@ -29,9 +29,10 @@ import { cn } from "@/lib/utils";
 
 const typeLabels: Record<string, string> = {
   original: "Original",
+  "co-publishing": "Co-publishing",
+  administration: "Administration",
   MSCE: "MSCE",
   MSCP: "MSCP",
-  administration: "Administration",
 };
 
 const statusLabels: Record<string, string> = {
