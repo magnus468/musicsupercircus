@@ -5,6 +5,7 @@ import {
   useUpdateAgreement,
   useDeleteAgreement,
   useAgreementWorks,
+  useAllAgreementWorkCounts,
   uploadAgreementFile,
   getAgreementSignedUrl,
   type Agreement,
@@ -114,6 +115,7 @@ const AgreementsList = () => {
   const { data: agreements, isLoading } = useAgreements();
   const { data: clients } = useClients();
   const { data: works } = useWorks();
+  const { data: workCounts } = useAllAgreementWorkCounts();
   const createAgreement = useCreateAgreement();
   const updateAgreement = useUpdateAgreement();
   const deleteAgreement = useDeleteAgreement();
@@ -314,6 +316,7 @@ const AgreementsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Klient</TableHead>
+              <TableHead>Verk</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead>Internt förlag</TableHead>
               <TableHead>Datum</TableHead>
@@ -330,6 +333,9 @@ const AgreementsList = () => {
             {agreements?.map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="font-medium">{a.client_name}</TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  {workCounts?.[a.id] || 0}
+                </TableCell>
                 <TableCell>
                   <Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
                 </TableCell>
@@ -403,7 +409,7 @@ const AgreementsList = () => {
             ))}
             {!isLoading && agreements?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                   Inga avtal registrerade
                 </TableCell>
               </TableRow>
