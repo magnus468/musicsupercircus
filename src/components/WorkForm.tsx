@@ -31,7 +31,7 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
 
 const serializeCreators = (creators: CreatorEntry[]): string => {
   return creators.map((c) => {
-    const parts = [c.role];
+    const parts: string[] = [c.role];
     if (c.share) parts.push(`${c.share}%`);
     return `${c.name} (${parts.join(", ")})`;
   }).join(", ");
