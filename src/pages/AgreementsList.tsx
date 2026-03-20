@@ -120,6 +120,7 @@ const AgreementsList = () => {
     setForm({
       clientId: a.client_id,
       agreementType: a.agreement_type,
+      internalPublisher: (a as any).internal_publisher || "MSCP",
       agreementDate: a.agreement_date,
       expiryDate: a.expiry_date || "",
       status: a.status,
