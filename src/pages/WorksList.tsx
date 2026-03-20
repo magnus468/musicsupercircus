@@ -162,7 +162,13 @@ const WorksList = () => {
                     {work.title}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground max-w-[150px] truncate">{work.project || "—"}</TableCell>
+                <TableCell className="text-muted-foreground max-w-[150px] truncate">
+                  {work.project ? (
+                    <Link to={`/projects/${encodeURIComponent(work.project)}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                      {work.project}
+                    </Link>
+                  ) : "—"}
+                </TableCell>
                 <TableCell className="max-w-[200px]">
                   {(work.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || []).map((c) => c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim()).filter(Boolean).map((nameOnly, i, arr) => {
                     const clientId = clientMap.get(nameOnly.toLowerCase());
