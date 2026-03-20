@@ -425,7 +425,7 @@ const AgreementsList = () => {
               </div>
               <div className="space-y-2">
                 <Label>Internt förlag</Label>
-                <Select value={form.agreementType === "MSCE" || form.agreementType === "MSCP" ? form.agreementType : "MSCP"} onValueChange={() => {}}>
+                <Select value={form.internalPublisher} onValueChange={(v) => setField("internalPublisher", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MSCE">MSCE</SelectItem>
