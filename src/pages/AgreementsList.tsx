@@ -558,24 +558,58 @@ const AgreementsList = () => {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Namn *</Label>
-              <Input
-                placeholder="Förnamn Efternamn"
-                value={newClientName}
-                onChange={(e) => setNewClientName(e.target.value)}
-              />
+              <Label>Typ</Label>
+              <Select value={newClientType} onValueChange={(v) => setNewClientType(v as "person" | "company")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="person">Person</SelectItem>
+                  <SelectItem value="company">Företag</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {newClientType === "person" ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label>Förnamn *</Label>
+                  <Input value={newClientFirstName} onChange={(e) => setNewClientFirstName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Efternamn</Label>
+                  <Input value={newClientLastName} onChange={(e) => setNewClientLastName(e.target.value)} />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label>Organisation *</Label>
+                  <Input value={newClientOrg} onChange={(e) => setNewClientOrg(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kontaktperson</Label>
+                  <Input value={newClientContact} onChange={(e) => setNewClientContact(e.target.value)} />
+                </div>
+              </>
+            )}
+
             <Button
               className="w-full"
-              disabled={!newClientName.trim() || createClient.isPending}
+              disabled={
+                createClient.isPending ||
+                (newClientType === "person" ? !newClientFirstName.trim() : !newClientOrg.trim())
+              }
               onClick={async () => {
-                const parts = newClientName.trim().split(/\s+/);
-                const firstName = parts[0] || "";
-                const lastName = parts.slice(1).join(" ") || "";
                 try {
-                  const result = await createClient.mutateAsync({ first_name: firstName, last_name: lastName });
+                  const payload = newClientType === "person"
+                    ? { first_name: newClientFirstName.trim(), last_name: newClientLastName.trim(), client_type: "person" as const }
+                    : { first_name: newClientOrg.trim(), organization: newClientOrg.trim(), contact_person: newClientContact.trim() || null, client_type: "company" as const };
+                  const result = await createClient.mutateAsync(payload);
                   setField("clientId", result.id);
-                  setNewClientName("");
+                  setNewClientFirstName("");
+                  setNewClientLastName("");
+                  setNewClientOrg("");
+                  setNewClientContact("");
+                  setNewClientType("person");
                   setShowNewClientDialog(false);
                   toast.success("Klient skapad");
                 } catch {
