@@ -56,7 +56,7 @@ interface FormState {
 
 const emptyForm: FormState = {
   clientId: "",
-  agreementType: "original",
+  agreementType: "MSCP",
   agreementDate: new Date().toISOString().split("T")[0],
   expiryDate: "",
   status: "active",
@@ -410,14 +410,12 @@ const AgreementsList = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Avtalstyp</Label>
+                <Label>Internt förlag</Label>
                 <Select value={form.agreementType} onValueChange={(v) => setField("agreementType", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="original">Original</SelectItem>
                     <SelectItem value="MSCE">MSCE</SelectItem>
                     <SelectItem value="MSCP">MSCP</SelectItem>
-                    <SelectItem value="administration">Administration</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
