@@ -13,6 +13,7 @@ import WorkDetail from "@/pages/WorkDetail";
 import ClientsList from "@/pages/ClientsList";
 import ClientDetail from "@/pages/ClientDetail";
 import AgreementsList from "@/pages/AgreementsList";
+import ProjectDetail from "@/pages/ProjectDetail";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
