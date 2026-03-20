@@ -518,6 +518,26 @@ const AgreementsList = () => {
               )}
             </div>
 
+            {isRolling(form.postExpiryAction) && (
+              <div className="space-y-2">
+                <Label>Rullande upphör</Label>
+                <Input
+                  type="date"
+                  value={form.rollingEndDate}
+                  onChange={(e) => {
+                    const endDate = e.target.value;
+                    const ret = calcRetentionDate(form.expiryDate, form.retentionYears, form.postExpiryAction, endDate);
+                    setForm((f) => ({ ...f, rollingEndDate: endDate, retentionDate: ret.retentionDate }));
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {form.rollingEndDate
+                    ? "Datum då det rullande avtalet upphör"
+                    : "Lämna tomt om rullande period fortfarande pågår"}
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Life of Copyright</Label>
               <Select value={form.lifeOfCopyright} onValueChange={(v) => setField("lifeOfCopyright", v)}>
@@ -529,34 +549,35 @@ const AgreementsList = () => {
               </Select>
             </div>
 
-            {form.lifeOfCopyright === "no" && (
-              <div className="space-y-2">
-                <Label>Retention (antal år)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  placeholder="Antal år"
-                  value={form.retentionYears}
-                  onChange={(e) => {
-                    const years = e.target.value;
-                    const computed = calcRetentionDate(form.expiryDate, years);
-                    setForm((f) => ({ ...f, retentionYears: years, retentionDate: computed }));
-                  }}
-                />
-                {form.retentionDate && (
-                  <p className="text-xs text-muted-foreground">
-                    Retention t.o.m: <span className="font-medium text-foreground">{form.retentionDate}</span>
-                    {form.postExpiryAction === "expires"
-                      ? " (beräknat från förfallodatum)"
-                      : form.postExpiryAction === "rolling_3"
-                        ? " (beräknat från förfallodatum, rullande 3 mån)"
-                        : form.postExpiryAction === "rolling_6"
-                          ? " (beräknat från förfallodatum, rullande 6 mån)"
+            {form.lifeOfCopyright === "no" && (() => {
+              const ret = calcRetentionDate(form.expiryDate, form.retentionYears, form.postExpiryAction, form.rollingEndDate);
+              return (
+                <div className="space-y-2">
+                  <Label>Retention (antal år)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="Antal år"
+                    value={form.retentionYears}
+                    onChange={(e) => {
+                      const years = e.target.value;
+                      const computed = calcRetentionDate(form.expiryDate, years, form.postExpiryAction, form.rollingEndDate);
+                      setForm((f) => ({ ...f, retentionYears: years, retentionDate: computed.retentionDate }));
+                    }}
+                  />
+                  {ret.retentionDate && (
+                    <p className="text-xs text-muted-foreground">
+                      Retention t.o.m: <span className="font-medium text-foreground">{ret.retentionDate}</span>
+                      {ret.isLocked
+                        ? " (låst)"
+                        : isRolling(form.postExpiryAction) && !form.rollingEndDate
+                          ? " (dynamiskt — uppdateras dagligen)"
                           : " (beräknat från förfallodatum)"}
-                  </p>
-                )}
-              </div>
-            )}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="space-y-2">
               <Label>Anteckningar</Label>
