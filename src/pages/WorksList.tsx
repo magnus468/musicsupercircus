@@ -105,9 +105,8 @@ const WorksList = () => {
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Internt förlag" />
           </SelectTrigger>
-          <SelectContent>
+           <SelectContent>
             <SelectItem value="all">Alla typer</SelectItem>
-            <SelectItem value="original">Original</SelectItem>
             <SelectItem value="MSCE">MSCE</SelectItem>
             <SelectItem value="MSCP">MSCP</SelectItem>
             <SelectItem value="administration">Administration</SelectItem>
