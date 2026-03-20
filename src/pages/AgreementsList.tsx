@@ -371,7 +371,12 @@ const AgreementsList = () => {
                     : (a as any).post_expiry_action}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={a.status === "active" ? "default" : "outline"}>
+                  <Badge className={
+                    a.status === "active"
+                      ? "bg-emerald-100 text-emerald-700 border-0"
+                      : "bg-muted text-muted-foreground border-0"
+                  }>
+                    <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
                     {statusLabels[a.status] || a.status}
                   </Badge>
                 </TableCell>

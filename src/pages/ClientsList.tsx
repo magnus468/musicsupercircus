@@ -198,7 +198,8 @@ const ClientsList = () => {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
             {!isLoading && clients?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
