@@ -353,24 +353,21 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>STIM-status</Label>
-          <Select value={stimStatus} onValueChange={(v) => setStimStatus(v as any)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="anmäld">Anmäld</SelectItem>
-              <SelectItem value="claimad">Claimad</SelectItem>
-              <SelectItem value="ej_anmäld">Ej anmäld</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>Andel (%)</Label>
+          <div className="h-10 flex items-center px-3 rounded-md border bg-muted text-sm">
+            {(() => {
+              const sum = creatorsList
+                .filter((c) => c.represented)
+                .reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0);
+              return sum > 0 ? `${sum}%` : "—";
+            })()}
+          </div>
+          <p className="text-xs text-muted-foreground">Summeras automatiskt från representerade upphovspersoner</p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="share">Andel (%)</Label>
-          <Input id="share" type="number" min="0" max="100" step="0.01" value={sharePercentage} onChange={(e) => setSharePercentage(e.target.value)} placeholder="t.ex. 50" />
+          <Label htmlFor="stimComment">Kommentar</Label>
+          <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="stimComment">Kommentar</Label>
-        <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
       </div>
       <Button type="submit" disabled={createWork.isPending || updateWork.isPending}>
         {isEdit ? "Spara ändringar" : "Lägg till verk"}
