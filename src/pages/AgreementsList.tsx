@@ -447,10 +447,23 @@ const AgreementsList = () => {
             </div>
 
             {form.lifeOfCopyright === "no" && (
-              <div className="space-y-2">
-                <Label>Retention (slutdatum)</Label>
-                <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label>Retention (slutdatum)</Label>
+                  <Input type="date" value={form.retentionDate} onChange={(e) => setField("retentionDate", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Vid förfall</Label>
+                  <Select value={form.postExpiryAction} onValueChange={(v) => setField("postExpiryAction", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="expires">Upphör</SelectItem>
+                      <SelectItem value="rolling_3">Rullande 3 mån uppsägning</SelectItem>
+                      <SelectItem value="rolling_6">Rullande 6 mån uppsägning</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
