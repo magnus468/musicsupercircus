@@ -75,6 +75,23 @@ export const useAgreementWorks = (agreementId?: string) => {
   });
 };
 
+export const useAllAgreementWorkCounts = () => {
+  return useQuery({
+    queryKey: ["agreement-work-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_works")
+        .select("agreement_id");
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data as any[]).forEach((d) => {
+        counts[d.agreement_id] = (counts[d.agreement_id] || 0) + 1;
+      });
+      return counts;
+    },
+  });
+};
+
 export const useCreateAgreement = () => {
   const qc = useQueryClient();
   return useMutation({
