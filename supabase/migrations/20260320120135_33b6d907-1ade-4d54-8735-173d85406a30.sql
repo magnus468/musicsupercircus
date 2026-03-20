@@ -1,0 +1,1 @@
+ALTER TABLE public.agreements ADD COLUMN internal_publisher text NOT NULL DEFAULT 'MSCP';

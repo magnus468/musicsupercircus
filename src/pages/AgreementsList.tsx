@@ -29,9 +29,10 @@ import { cn } from "@/lib/utils";
 
 const typeLabels: Record<string, string> = {
   original: "Original",
+  "co-publishing": "Co-publishing",
+  administration: "Administration",
   MSCE: "MSCE",
   MSCP: "MSCP",
-  administration: "Administration",
 };
 
 const statusLabels: Record<string, string> = {
@@ -42,6 +43,7 @@ const statusLabels: Record<string, string> = {
 interface FormState {
   clientId: string;
   agreementType: string;
+  internalPublisher: string;
   agreementDate: string;
   expiryDate: string;
   status: string;
@@ -56,7 +58,8 @@ interface FormState {
 
 const emptyForm: FormState = {
   clientId: "",
-  agreementType: "MSCP",
+  agreementType: "original",
+  internalPublisher: "MSCP",
   agreementDate: new Date().toISOString().split("T")[0],
   expiryDate: "",
   status: "active",
@@ -118,6 +121,7 @@ const AgreementsList = () => {
     setForm({
       clientId: a.client_id,
       agreementType: a.agreement_type,
+      internalPublisher: (a as any).internal_publisher || "MSCP",
       agreementDate: a.agreement_date,
       expiryDate: a.expiry_date || "",
       status: a.status,
@@ -156,6 +160,7 @@ const AgreementsList = () => {
     const payload = {
       client_id: form.clientId,
       agreement_type: form.agreementType,
+      internal_publisher: form.internalPublisher,
       agreement_date: form.agreementDate,
       expiry_date: form.expiryDate || null,
       status: form.status,
@@ -266,7 +271,8 @@ const AgreementsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Klient</TableHead>
-              <TableHead>Avtalstyp</TableHead>
+              <TableHead>Typ</TableHead>
+              <TableHead>Internt förlag</TableHead>
               <TableHead>Datum</TableHead>
               <TableHead>Förfaller</TableHead>
               <TableHead>LoC</TableHead>
@@ -283,6 +289,9 @@ const AgreementsList = () => {
                 <TableCell className="font-medium">{a.client_name}</TableCell>
                 <TableCell>
                   <Badge variant="secondary">{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">{(a as any).internal_publisher || "MSCP"}</Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
                 <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
@@ -341,7 +350,7 @@ const AgreementsList = () => {
             ))}
             {!isLoading && agreements?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
                   Inga avtal registrerade
                 </TableCell>
               </TableRow>
@@ -408,10 +417,21 @@ const AgreementsList = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label>Typ</Label>
+                <Select value={form.agreementType} onValueChange={(v) => setField("agreementType", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="original">Original</SelectItem>
+                    <SelectItem value="co-publishing">Co-publishing</SelectItem>
+                    <SelectItem value="administration">Administration</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Internt förlag</Label>
-                <Select value={form.agreementType} onValueChange={(v) => setField("agreementType", v)}>
+                <Select value={form.internalPublisher} onValueChange={(v) => setField("internalPublisher", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MSCE">MSCE</SelectItem>
