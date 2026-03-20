@@ -82,10 +82,10 @@ const WorksList = () => {
   };
 
   const publishingBadge = (type: string) => {
-    if (type === "original") return <Badge variant="secondary">Original</Badge>;
     if (type === "MSCE") return <Badge className="bg-primary/15 text-primary border-0">MSCE</Badge>;
     if (type === "MSCP") return <Badge className="bg-accent/15 text-accent-foreground border-0">MSCP</Badge>;
-    return <Badge className="bg-muted text-muted-foreground border-0">Administration</Badge>;
+    if (type === "administration") return <Badge className="bg-muted text-muted-foreground border-0">Administration</Badge>;
+    return <Badge variant="outline">—</Badge>;
   };
 
   const stimBadge = (status: string) => {
