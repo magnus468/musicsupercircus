@@ -124,6 +124,7 @@ const AgreementsList = () => {
       notes: a.notes || "",
       lifeOfCopyright: a.life_of_copyright ? "yes" : "no",
       retentionDate: a.retention_date || "",
+      postExpiryAction: (a as any).post_expiry_action || "expires",
       selectedWorkIds: [],
       workSearch: "",
       pdfFile: null,
