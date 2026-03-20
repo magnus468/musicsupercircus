@@ -63,6 +63,7 @@ const emptyForm: FormState = {
   notes: "",
   lifeOfCopyright: "yes",
   retentionDate: "",
+  postExpiryAction: "expires",
   selectedWorkIds: [],
   workSearch: "",
   pdfFile: null,
