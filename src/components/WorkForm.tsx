@@ -139,7 +139,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       title: title.trim(),
       project: project.trim() || null,
       creators: serializeCreators(creatorsList),
-      publishing_type: isCoPublisher ? publishingType : "original",
+      publishing_type: publishingType,
       co_publishers: isCoPublisher && selectedCoPublishers.length > 0 ? selectedCoPublishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
