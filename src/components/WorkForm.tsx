@@ -74,7 +74,6 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const updateWork = useUpdateWork();
   const createClient = useCreateClient();
   const { data: existingClients = [] } = useClients();
-  const { data: coPublisherOptions = [] } = useCoPublisherOptions();
   const isEdit = !!work;
 
   const addCreator = async () => {
