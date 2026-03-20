@@ -292,6 +292,13 @@ const AgreementsList = () => {
                 <TableCell className="text-muted-foreground">
                   {!a.life_of_copyright && a.retention_date ? a.retention_date : "—"}
                 </TableCell>
+                <TableCell className="text-muted-foreground text-xs">
+                  {!a.life_of_copyright
+                    ? ((a as any).post_expiry_action === "rolling_3" ? "Rullande 3 mån"
+                      : (a as any).post_expiry_action === "rolling_6" ? "Rullande 6 mån"
+                      : "Upphör")
+                    : "—"}
+                </TableCell>
                 <TableCell>
                   <Badge variant={a.status === "active" ? "default" : "outline"}>
                     {statusLabels[a.status] || a.status}
