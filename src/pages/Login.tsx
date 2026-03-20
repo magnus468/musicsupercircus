@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Music2 } from "lucide-react";
+import mscLogo from "@/assets/msc-logo.png";
 import { toast } from "sonner";
 
 const Login = () => {
