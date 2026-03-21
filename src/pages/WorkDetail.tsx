@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, Pencil } from "lucide-react";
+import WorkForm from "@/components/WorkForm";
 
 const WorkDetail = () => {
+  const [editing, setEditing] = useState(false);
   const { id } = useParams<{ id: string }>();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
@@ -49,9 +53,23 @@ const WorkDetail = () => {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <Button variant="ghost" size="sm" asChild className="gap-2">
-        <Link to="/works"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" asChild className="gap-2">
+          <Link to="/works"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
+        </Button>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditing(true)}>
+          <Pencil className="h-4 w-4" /> Redigera
+        </Button>
+      </div>
+
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Redigera verk</DialogTitle>
+          </DialogHeader>
+          <WorkForm work={work} onSuccess={() => setEditing(false)} />
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
