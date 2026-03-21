@@ -53,9 +53,23 @@ const WorkDetail = () => {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <Button variant="ghost" size="sm" asChild className="gap-2">
-        <Link to="/works"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" asChild className="gap-2">
+          <Link to="/works"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
+        </Button>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditing(true)}>
+          <Pencil className="h-4 w-4" /> Redigera
+        </Button>
+      </div>
+
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Redigera verk</DialogTitle>
+          </DialogHeader>
+          <WorkForm work={work} onSuccess={() => setEditing(false)} />
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
