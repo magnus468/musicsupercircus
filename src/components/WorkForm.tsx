@@ -65,6 +65,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [newCreatorName, setNewCreatorName] = useState("");
   const [newCreatorRole, setNewCreatorRole] = useState<CreatorEntry["role"]>("CA");
   const [newCreatorShare, setNewCreatorShare] = useState("");
+  const [newCreatorShareRow, setNewCreatorShareRow] = useState("");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
@@ -82,11 +83,12 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       const name = newCreatorName.trim();
       if (!name) return;
       if (!creatorsList.some((c) => c.name === name)) {
-        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, shareRow: "", represented: true }]);
+        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
       }
       setNewCreatorName("");
       setNewCreatorRole("CA");
       setNewCreatorShare("");
+      setNewCreatorShareRow("");
       return;
     }
     const first = newCreatorFirst.trim();
@@ -94,7 +96,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     if (!first && !last) return;
     const fullName = [first, last].filter(Boolean).join(" ");
     if (!creatorsList.some((c) => c.name === fullName)) {
-      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, shareRow: "", represented: true }]);
+      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
     }
     // Auto-create client if not exists
     const alreadyExists = existingClients.some(
@@ -111,6 +113,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     setNewCreatorLast("");
     setNewCreatorRole("CA");
     setNewCreatorShare("");
+    setNewCreatorShareRow("");
   };
 
   const removeCreator = (name: string) => {
@@ -240,6 +243,18 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               step="0.01"
               value={newCreatorShare}
               onChange={(e) => setNewCreatorShare(e.target.value)}
+              placeholder="%"
+            />
+          </div>
+          <div className="w-20 space-y-1">
+            <span className="text-xs text-muted-foreground">ROW %</span>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={newCreatorShareRow}
+              onChange={(e) => setNewCreatorShareRow(e.target.value)}
               placeholder="%"
             />
           </div>
