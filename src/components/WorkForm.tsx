@@ -60,12 +60,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [creatorsList, setCreatorsList] = useState<CreatorEntry[]>(
     work?.creators ? parseCreatorsString(work.creators) : []
   );
-  const [newCreatorFirst, setNewCreatorFirst] = useState("");
-  const [newCreatorLast, setNewCreatorLast] = useState("");
-  const [newCreatorName, setNewCreatorName] = useState("");
-  const [newCreatorRole, setNewCreatorRole] = useState<CreatorEntry["role"]>("CA");
-  const [newCreatorShare, setNewCreatorShare] = useState("");
-  const [newCreatorShareRow, setNewCreatorShareRow] = useState("");
+
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
@@ -78,78 +73,49 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const { data: existingClients = [] } = useClients();
   const isEdit = !!work;
 
-  const addCreator = async () => {
-    if (newCreatorRole === "E") {
-      const name = newCreatorName.trim();
-      if (!name) return;
-      if (!creatorsList.some((c) => c.name === name)) {
-        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
-      }
-      setNewCreatorName("");
-      setNewCreatorRole("CA");
-      setNewCreatorShare("");
-      setNewCreatorShareRow("");
-      return;
-    }
-    const first = newCreatorFirst.trim();
-    const last = newCreatorLast.trim();
-    if (!first && !last) return;
-    const fullName = [first, last].filter(Boolean).join(" ");
-    if (!creatorsList.some((c) => c.name === fullName)) {
-      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
-    }
-    // Auto-create client if not exists
-    const alreadyExists = existingClients.some(
-      (c) => c.first_name.toLowerCase() === (first || "").toLowerCase() && c.last_name.toLowerCase() === (last || "").toLowerCase()
-    );
-    if (!alreadyExists && (first || last)) {
-      try {
-        await createClient.mutateAsync({ first_name: first || last, last_name: first ? last : "" });
-      } catch {
-        // Silently ignore
-      }
-    }
-    setNewCreatorFirst("");
-    setNewCreatorLast("");
-    setNewCreatorRole("CA");
-    setNewCreatorShare("");
-    setNewCreatorShareRow("");
+  const addEmptyCreator = () => {
+    setCreatorsList((prev) => [...prev, { name: "", role: "CA", share: "", shareRow: "", represented: true }]);
   };
 
-  const removeCreator = (name: string) => {
-    setCreatorsList((prev) => prev.filter((c) => c.name !== name));
+  const removeCreatorByIndex = (index: number) => {
+    setCreatorsList((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateCreatorRole = (name: string, role: CreatorEntry["role"]) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, role } : c));
+  const updateCreatorField = (index: number, field: Partial<CreatorEntry>) => {
+    setCreatorsList((prev) => prev.map((c, i) => i === index ? { ...c, ...field } : c));
   };
-
-  const updateCreatorShare = (name: string, share: string) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, share } : c));
-  };
-
-  const updateCreatorShareRow = (name: string, shareRow: string) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, shareRow } : c));
-  };
-
-  const toggleCreatorRepresented = (name: string) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, represented: !c.represented } : c));
-  };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Extract co_publishers from creators with role E
-    const publishers = creatorsList.filter((c) => c.role === "E").map((c) => c.name);
+    // Filter out empty entries
+    const validCreators = creatorsList.filter((c) => c.name.trim());
+    // Auto-create clients for new person creators
+    for (const creator of validCreators) {
+      if (creator.role === "E") continue;
+      const parts = creator.name.trim().split(/\s+/);
+      const first = parts[0] || "";
+      const last = parts.slice(1).join(" ") || "";
+      const alreadyExists = existingClients.some(
+        (c) => c.first_name.toLowerCase() === first.toLowerCase() && c.last_name.toLowerCase() === (last || "").toLowerCase()
+      );
+      if (!alreadyExists && first) {
+        try {
+          await createClient.mutateAsync({ first_name: first, last_name: last });
+        } catch {
+          // Silently ignore
+        }
+      }
+    }
+    const publishers = validCreators.filter((c) => c.role === "E").map((c) => c.name);
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
-      creators: serializeCreators(creatorsList),
+      creators: serializeCreators(validCreators),
       publishing_type: publishers.length > 0 ? "MSCP" as const : "original" as const,
       co_publishers: publishers.length > 0 ? publishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
-      share_percentage: creatorsList.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
+      share_percentage: validCreators.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
       nordic_publisher_share: parseFloat(nordicPublisherShare) || 50,
       row_publisher_share: parseFloat(rowPublisherShare) || 50,
     };
@@ -161,8 +127,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       } else {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
-        setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast("");
-        setNewCreatorName(""); setNewCreatorRole("CA"); setNewCreatorShare("");
+        setTitle(""); setProject(""); setCreatorsList([]);
         setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
@@ -170,8 +135,6 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       toast.error("Något gick fel");
     }
   };
-
-  const isPublisherRole = newCreatorRole === "E";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
