@@ -17,18 +17,17 @@ interface CreatorEntry {
   represented: boolean;
 }
 
-// Parse "Name (CA, 50%)" format back to CreatorEntry
+// Parse "Name (CA, 50%, row:40%, repr)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
   if (!str) return [];
-  // Split on ", " only when followed by a name (uppercase letter) and not inside parentheses
   const parts = str.match(/[^,]+\([^)]*\)/g) || str.split(", ");
   return parts.map((part) => {
     const trimmed = part.trim().replace(/^,\s*/, "");
-    const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
+    const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
-      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", represented: !!match[4] };
+      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
     }
-    return { name: trimmed, role: "CA" as const, share: "", represented: false };
+    return { name: trimmed, role: "CA" as const, share: "", shareRow: "", represented: false };
   }).filter((c) => c.name);
 };
 
@@ -36,6 +35,7 @@ const serializeCreators = (creators: CreatorEntry[]): string => {
   return creators.map((c) => {
     const parts: string[] = [c.role];
     if (c.share) parts.push(`${c.share}%`);
+    if (c.shareRow) parts.push(`row:${c.shareRow}%`);
     if (c.represented) parts.push("repr");
     return `${c.name} (${parts.join(", ")})`;
   }).join(", ");
