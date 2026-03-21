@@ -194,24 +194,24 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               return (
                 <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                   <Select value={creator.role} onValueChange={(v) => updateCreatorField(idx, { role: v as CreatorEntry["role"] })}>
-                    <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-7 w-16 text-xs shrink-0"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {ROLE_OPTIONS.filter((r) => r.value !== "E").map((r) => (
                         <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input value={creator.name} onChange={(e) => updateCreatorField(idx, { name: e.target.value })} placeholder="Förnamn Efternamn" className="h-7 flex-1 text-xs" />
-                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+                  <Input value={creator.name} onChange={(e) => updateCreatorField(idx, { name: e.target.value })} placeholder="Förnamn Efternamn" className="h-7 min-w-0 flex-[3] text-xs" />
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground shrink-0">
                     <Checkbox checked={creator.represented} onCheckedChange={() => updateCreatorField(idx, { represented: !creator.represented })} className="h-3.5 w-3.5" />
                     Repr.
                   </label>
-                  <Input type="number" min="0" max="100" step="0.01" value={creator.share} onChange={(e) => updateCreatorField(idx, { share: e.target.value })} placeholder="Norden %" className="h-7 w-24 text-xs" />
-                  <Input type="number" min="0" max="100" step="0.01" value={creator.shareRow} onChange={(e) => updateCreatorField(idx, { shareRow: e.target.value })} placeholder="ROW %" className="h-7 w-24 text-xs" />
-                  <button type="button" onClick={() => addEmptyCreator("CA")} className="text-muted-foreground hover:text-primary">
+                  <Input type="number" min="0" max="100" step="0.01" value={creator.share} onChange={(e) => updateCreatorField(idx, { share: e.target.value })} placeholder="Norden %" className="h-7 w-20 shrink-0 text-xs" />
+                  <Input type="number" min="0" max="100" step="0.01" value={creator.shareRow} onChange={(e) => updateCreatorField(idx, { shareRow: e.target.value })} placeholder="ROW %" className="h-7 w-20 shrink-0 text-xs" />
+                  <button type="button" onClick={() => addEmptyCreator("CA")} className="text-muted-foreground hover:text-primary shrink-0">
                     <Plus className="h-3.5 w-3.5" />
                   </button>
-                  <button type="button" onClick={() => removeCreatorByIndex(idx)} className="text-muted-foreground hover:text-destructive">
+                  <button type="button" onClick={() => removeCreatorByIndex(idx)} className="text-muted-foreground hover:text-destructive shrink-0">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
