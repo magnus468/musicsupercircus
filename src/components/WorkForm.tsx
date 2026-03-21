@@ -299,6 +299,16 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
         </div>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="nordicShare">Förlagsandel Norden (%)</Label>
+          <Input id="nordicShare" type="number" min="0" max="100" step="0.01" value={nordicPublisherShare} onChange={(e) => setNordicPublisherShare(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="rowShare">Förlagsandel ROW (%)</Label>
+          <Input id="rowShare" type="number" min="0" max="100" step="0.01" value={rowPublisherShare} onChange={(e) => setRowPublisherShare(e.target.value)} />
+        </div>
+      </div>
       <Button type="submit" disabled={createWork.isPending || updateWork.isPending}>
         {isEdit ? "Spara ändringar" : "Lägg till verk"}
       </Button>

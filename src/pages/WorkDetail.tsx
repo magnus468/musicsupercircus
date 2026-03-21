@@ -78,6 +78,14 @@ const WorkDetail = () => {
                 <dd>{work.share_percentage}%</dd>
               </div>
             )}
+            <div>
+              <dt className="text-muted-foreground">Förlagsandel Norden</dt>
+              <dd>{work.nordic_publisher_share}%</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Förlagsandel ROW</dt>
+              <dd>{work.row_publisher_share}%</dd>
+            </div>
             {work.co_publishers && work.co_publishers.length > 0 && (
               <div>
                 <dt className="text-muted-foreground">Co-publishers</dt>
