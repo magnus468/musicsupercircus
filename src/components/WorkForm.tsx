@@ -275,8 +275,18 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
                   step="0.01"
                   value={creator.share}
                   onChange={(e) => updateCreatorShare(creator.name, e.target.value)}
-                  placeholder="%"
-                  className="h-7 w-20 text-xs"
+                  placeholder="Norden %"
+                  className="h-7 w-24 text-xs"
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={creator.shareRow}
+                  onChange={(e) => updateCreatorShareRow(creator.name, e.target.value)}
+                  placeholder="ROW %"
+                  className="h-7 w-24 text-xs"
                 />
                 <button type="button" onClick={() => removeCreator(creator.name)} className="text-muted-foreground hover:text-destructive">
                   <X className="h-3.5 w-3.5" />
