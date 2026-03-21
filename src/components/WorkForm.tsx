@@ -67,6 +67,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
+  const [nordicPublisherShare, setNordicPublisherShare] = useState((work as any)?.nordic_publisher_share?.toString() ?? "50");
+  const [rowPublisherShare, setRowPublisherShare] = useState((work as any)?.row_publisher_share?.toString() ?? "50");
 
   const createWork = useCreateWork();
   const updateWork = useUpdateWork();
