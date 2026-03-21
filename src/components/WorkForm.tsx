@@ -60,12 +60,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [creatorsList, setCreatorsList] = useState<CreatorEntry[]>(
     work?.creators ? parseCreatorsString(work.creators) : []
   );
-  const [newCreatorFirst, setNewCreatorFirst] = useState("");
-  const [newCreatorLast, setNewCreatorLast] = useState("");
-  const [newCreatorName, setNewCreatorName] = useState("");
-  const [newCreatorRole, setNewCreatorRole] = useState<CreatorEntry["role"]>("CA");
-  const [newCreatorShare, setNewCreatorShare] = useState("");
-  const [newCreatorShareRow, setNewCreatorShareRow] = useState("");
+
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
@@ -78,78 +73,49 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const { data: existingClients = [] } = useClients();
   const isEdit = !!work;
 
-  const addCreator = async () => {
-    if (newCreatorRole === "E") {
-      const name = newCreatorName.trim();
-      if (!name) return;
-      if (!creatorsList.some((c) => c.name === name)) {
-        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
-      }
-      setNewCreatorName("");
-      setNewCreatorRole("CA");
-      setNewCreatorShare("");
-      setNewCreatorShareRow("");
-      return;
-    }
-    const first = newCreatorFirst.trim();
-    const last = newCreatorLast.trim();
-    if (!first && !last) return;
-    const fullName = [first, last].filter(Boolean).join(" ");
-    if (!creatorsList.some((c) => c.name === fullName)) {
-      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
-    }
-    // Auto-create client if not exists
-    const alreadyExists = existingClients.some(
-      (c) => c.first_name.toLowerCase() === (first || "").toLowerCase() && c.last_name.toLowerCase() === (last || "").toLowerCase()
-    );
-    if (!alreadyExists && (first || last)) {
-      try {
-        await createClient.mutateAsync({ first_name: first || last, last_name: first ? last : "" });
-      } catch {
-        // Silently ignore
-      }
-    }
-    setNewCreatorFirst("");
-    setNewCreatorLast("");
-    setNewCreatorRole("CA");
-    setNewCreatorShare("");
-    setNewCreatorShareRow("");
+  const addEmptyCreator = () => {
+    setCreatorsList((prev) => [...prev, { name: "", role: "CA", share: "", shareRow: "", represented: true }]);
   };
 
-  const removeCreator = (name: string) => {
-    setCreatorsList((prev) => prev.filter((c) => c.name !== name));
+  const removeCreatorByIndex = (index: number) => {
+    setCreatorsList((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateCreatorRole = (name: string, role: CreatorEntry["role"]) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, role } : c));
+  const updateCreatorField = (index: number, field: Partial<CreatorEntry>) => {
+    setCreatorsList((prev) => prev.map((c, i) => i === index ? { ...c, ...field } : c));
   };
-
-  const updateCreatorShare = (name: string, share: string) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, share } : c));
-  };
-
-  const updateCreatorShareRow = (name: string, shareRow: string) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, shareRow } : c));
-  };
-
-  const toggleCreatorRepresented = (name: string) => {
-    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, represented: !c.represented } : c));
-  };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Extract co_publishers from creators with role E
-    const publishers = creatorsList.filter((c) => c.role === "E").map((c) => c.name);
+    // Filter out empty entries
+    const validCreators = creatorsList.filter((c) => c.name.trim());
+    // Auto-create clients for new person creators
+    for (const creator of validCreators) {
+      if (creator.role === "E") continue;
+      const parts = creator.name.trim().split(/\s+/);
+      const first = parts[0] || "";
+      const last = parts.slice(1).join(" ") || "";
+      const alreadyExists = existingClients.some(
+        (c) => c.first_name.toLowerCase() === first.toLowerCase() && c.last_name.toLowerCase() === (last || "").toLowerCase()
+      );
+      if (!alreadyExists && first) {
+        try {
+          await createClient.mutateAsync({ first_name: first, last_name: last });
+        } catch {
+          // Silently ignore
+        }
+      }
+    }
+    const publishers = validCreators.filter((c) => c.role === "E").map((c) => c.name);
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
-      creators: serializeCreators(creatorsList),
+      creators: serializeCreators(validCreators),
       publishing_type: publishers.length > 0 ? "MSCP" as const : "original" as const,
       co_publishers: publishers.length > 0 ? publishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
-      share_percentage: creatorsList.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
+      share_percentage: validCreators.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
       nordic_publisher_share: parseFloat(nordicPublisherShare) || 50,
       row_publisher_share: parseFloat(rowPublisherShare) || 50,
     };
@@ -161,8 +127,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       } else {
         await createWork.mutateAsync(data);
         toast.success("Verk tillagt");
-        setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast("");
-        setNewCreatorName(""); setNewCreatorRole("CA"); setNewCreatorShare("");
+        setTitle(""); setProject(""); setCreatorsList([]);
         setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
       }
       onSuccess?.();
@@ -170,8 +135,6 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       toast.error("Något gick fel");
     }
   };
-
-  const isPublisherRole = newCreatorRole === "E";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -186,128 +149,76 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Upphovsperson(er) & Förlag *</Label>
-        <div className="flex gap-2 items-end">
-          <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">Roll</span>
-            <Select value={newCreatorRole} onValueChange={(v) => {
-              setNewCreatorRole(v as CreatorEntry["role"]);
-              // Clear fields when switching between E and other roles
-              setNewCreatorFirst(""); setNewCreatorLast(""); setNewCreatorName("");
-            }}>
-              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ROLE_OPTIONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {isPublisherRole ? (
-            <div className="flex-1 space-y-1">
-              <span className="text-xs text-muted-foreground">Förlagsnamn</span>
-              <Input
-                value={newCreatorName}
-                onChange={(e) => setNewCreatorName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-                placeholder="Förlagsnamn"
-              />
-            </div>
-          ) : (
-            <>
-              <div className="flex-1 space-y-1">
-                <span className="text-xs text-muted-foreground">Förnamn</span>
-                <Input
-                  value={newCreatorFirst}
-                  onChange={(e) => setNewCreatorFirst(e.target.value)}
-                  placeholder="Förnamn"
-                />
-              </div>
-              <div className="flex-1 space-y-1">
-                <span className="text-xs text-muted-foreground">Efternamn</span>
-                <Input
-                  value={newCreatorLast}
-                  onChange={(e) => setNewCreatorLast(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-                  placeholder="Efternamn"
-                />
-              </div>
-            </>
-          )}
-          <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">Norden %</span>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={newCreatorShare}
-              onChange={(e) => setNewCreatorShare(e.target.value)}
-              placeholder="%"
-            />
-          </div>
-          <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">ROW %</span>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={newCreatorShareRow}
-              onChange={(e) => setNewCreatorShareRow(e.target.value)}
-              placeholder="%"
-            />
-          </div>
-          <Button type="button" variant="secondary" onClick={addCreator} disabled={isPublisherRole ? !newCreatorName.trim() : (!newCreatorFirst.trim() && !newCreatorLast.trim())} className="h-10">
-            <Plus className="h-4 w-4" />
+        <div className="flex items-center justify-between">
+          <Label>Upphovsperson(er) & Förlag *</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addEmptyCreator} className="h-7 gap-1 text-xs">
+            <Plus className="h-3.5 w-3.5" /> Lägg till
           </Button>
         </div>
         {creatorsList.length > 0 && (
-          <div className="space-y-1 mt-2">
-            {[...creatorsList].sort((a, b) => (a.role === "E" ? 1 : 0) - (b.role === "E" ? 1 : 0)).map((creator) => (
-              <div key={creator.name} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                <span className="flex-1 font-medium">{creator.name}</span>
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
-                  <Checkbox
-                    checked={creator.represented}
-                    onCheckedChange={() => toggleCreatorRepresented(creator.name)}
-                    className="h-3.5 w-3.5"
+          <div className="space-y-1">
+            {creatorsList.map((creator, idx) => {
+              const sortedIdx = idx; // keep original index for updates
+              const isE = creator.role === "E";
+              return (
+                <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                  <Select value={creator.role} onValueChange={(v) => updateCreatorField(sortedIdx, { role: v as CreatorEntry["role"] })}>
+                    <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ROLE_OPTIONS.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {isE ? (
+                    <Input
+                      value={creator.name}
+                      onChange={(e) => updateCreatorField(sortedIdx, { name: e.target.value })}
+                      placeholder="Förlagsnamn"
+                      className="h-7 flex-1 text-xs"
+                    />
+                  ) : (
+                    <Input
+                      value={creator.name}
+                      onChange={(e) => updateCreatorField(sortedIdx, { name: e.target.value })}
+                      placeholder="Förnamn Efternamn"
+                      className="h-7 flex-1 text-xs"
+                    />
+                  )}
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={creator.represented}
+                      onCheckedChange={() => updateCreatorField(sortedIdx, { represented: !creator.represented })}
+                      className="h-3.5 w-3.5"
+                    />
+                    Repr.
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={creator.share}
+                    onChange={(e) => updateCreatorField(sortedIdx, { share: e.target.value })}
+                    placeholder="Norden %"
+                    className="h-7 w-24 text-xs"
                   />
-                  Repr.
-                </label>
-                <Select value={creator.role} onValueChange={(v) => updateCreatorRole(creator.name, v as CreatorEntry["role"])}>
-                  <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={creator.share}
-                  onChange={(e) => updateCreatorShare(creator.name, e.target.value)}
-                  placeholder="Norden %"
-                  className="h-7 w-24 text-xs"
-                />
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={creator.shareRow}
-                  onChange={(e) => updateCreatorShareRow(creator.name, e.target.value)}
-                  placeholder="ROW %"
-                  className="h-7 w-24 text-xs"
-                />
-                <button type="button" onClick={() => removeCreator(creator.name)} className="text-muted-foreground hover:text-destructive">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={creator.shareRow}
+                    onChange={(e) => updateCreatorField(sortedIdx, { shareRow: e.target.value })}
+                    placeholder="ROW %"
+                    className="h-7 w-24 text-xs"
+                  />
+                  <button type="button" onClick={() => removeCreatorByIndex(sortedIdx)} className="text-muted-foreground hover:text-destructive">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
