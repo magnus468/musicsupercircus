@@ -67,6 +67,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
+  const [nordicPublisherShare, setNordicPublisherShare] = useState(work?.nordic_publisher_share?.toString() ?? "50");
+  const [rowPublisherShare, setRowPublisherShare] = useState(work?.row_publisher_share?.toString() ?? "50");
 
   const createWork = useCreateWork();
   const updateWork = useUpdateWork();
@@ -140,6 +142,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
       share_percentage: creatorsList.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
+      nordic_publisher_share: parseFloat(nordicPublisherShare) || 50,
+      row_publisher_share: parseFloat(rowPublisherShare) || 50,
     };
 
     try {
@@ -293,6 +297,16 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         <div className="space-y-2">
           <Label htmlFor="stimComment">Kommentar</Label>
           <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="nordicShare">Förlagsandel Norden (%)</Label>
+          <Input id="nordicShare" type="number" min="0" max="100" step="0.01" value={nordicPublisherShare} onChange={(e) => setNordicPublisherShare(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="rowShare">Förlagsandel ROW (%)</Label>
+          <Input id="rowShare" type="number" min="0" max="100" step="0.01" value={rowPublisherShare} onChange={(e) => setRowPublisherShare(e.target.value)} />
         </div>
       </div>
       <Button type="submit" disabled={createWork.isPending || updateWork.isPending}>
