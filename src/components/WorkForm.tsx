@@ -54,14 +54,42 @@ const ROLE_OPTIONS: { value: CreatorEntry["role"]; label: string }[] = [
   { value: "E", label: "E" },
 ];
 
+// Recalculate default shares for creators and publishers
+const recalcShares = (list: CreatorEntry[]): CreatorEntry[] => {
+  const creators = list.filter((c) => c.role !== "E");
+  const publishers = list.filter((c) => c.role === "E");
+
+  // Creators: total Nordic = 66.67%, total ROW = 50%
+  const assignShares = (items: CreatorEntry[], totalNordic: number, totalRow: number) => {
+    const n = items.length;
+    if (n === 0) return items;
+    const baseNordic = Math.floor((totalNordic / n) * 100) / 100;
+    const baseRow = Math.floor((totalRow / n) * 100) / 100;
+    const remainderNordic = Math.round((totalNordic - baseNordic * n) * 100) / 100;
+    const remainderRow = Math.round((totalRow - baseRow * n) * 100) / 100;
+    return items.map((c, i) => ({
+      ...c,
+      share: (i === 0 ? baseNordic + remainderNordic : baseNordic).toFixed(2).replace(/\.?0+$/, ''),
+      shareRow: (i === 0 ? baseRow + remainderRow : baseRow).toFixed(2).replace(/\.?0+$/, ''),
+    }));
+  };
+
+  const updatedCreators = assignShares(creators, 66.67, 50);
+  const updatedPublishers = assignShares(publishers, 33.33, 50);
+
+  // Rebuild in original order
+  let ci = 0, pi = 0;
+  return list.map((c) => c.role === "E" ? updatedPublishers[pi++] : updatedCreators[ci++]);
+};
+
 const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [title, setTitle] = useState(work?.title ?? "");
   const [project, setProject] = useState(work?.project ?? "");
   const [creatorsList, setCreatorsList] = useState<CreatorEntry[]>(
-    work?.creators ? parseCreatorsString(work.creators) : [
+    work?.creators ? parseCreatorsString(work.creators) : recalcShares([
       { name: "", role: "CA", share: "", shareRow: "", represented: true },
       { name: "", role: "E", share: "", shareRow: "", represented: true },
-    ]
+    ])
   );
 
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
@@ -77,15 +105,20 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const isEdit = !!work;
 
   const addEmptyCreator = () => {
-    setCreatorsList((prev) => [...prev, { name: "", role: "CA", share: "", shareRow: "", represented: true }]);
+    setCreatorsList((prev) => recalcShares([...prev, { name: "", role: "CA", share: "", shareRow: "", represented: true }]));
   };
 
   const removeCreatorByIndex = (index: number) => {
-    setCreatorsList((prev) => prev.filter((_, i) => i !== index));
+    setCreatorsList((prev) => recalcShares(prev.filter((_, i) => i !== index)));
   };
 
   const updateCreatorField = (index: number, field: Partial<CreatorEntry>) => {
-    setCreatorsList((prev) => prev.map((c, i) => i === index ? { ...c, ...field } : c));
+    setCreatorsList((prev) => {
+      const updated = prev.map((c, i) => i === index ? { ...c, ...field } : c);
+      // Recalc if role changed (affects group membership)
+      if ('role' in field) return recalcShares(updated);
+      return updated;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
