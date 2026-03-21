@@ -114,7 +114,8 @@ const WorkDetail = () => {
                 <tr className="border-b bg-muted/50">
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Namn</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Roll</th>
-                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Andel</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Norden</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">ROW</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Representerar</th>
                 </tr>
               </thead>
