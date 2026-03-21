@@ -225,11 +225,13 @@ const WorksList = () => {
       </div>
 
       <Dialog open={!!editWork} onOpenChange={(open) => !open && setEditWork(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Redigera verk</DialogTitle>
           </DialogHeader>
-          {editWork && <WorkForm work={editWork} onSuccess={() => setEditWork(null)} />}
+          <div className="overflow-y-auto flex-1 pr-1">
+            {editWork && <WorkForm work={editWork} onSuccess={() => setEditWork(null)} />}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
