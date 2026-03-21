@@ -184,79 +184,95 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Input id="project" value={project} onChange={(e) => setProject(e.target.value)} />
         </div>
       </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Upphovsperson(er) & Förlag *</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addEmptyCreator} className="h-7 gap-1 text-xs">
-            <Plus className="h-3.5 w-3.5" /> Lägg till
-          </Button>
-        </div>
-        {creatorsList.length > 0 && (
-          <div className="space-y-1">
-            {creatorsList.map((creator, idx) => {
-              const sortedIdx = idx; // keep original index for updates
-              const isE = creator.role === "E";
-              return (
-                <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                  <Select value={creator.role} onValueChange={(v) => updateCreatorField(sortedIdx, { role: v as CreatorEntry["role"] })}>
-                    <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ROLE_OPTIONS.map((r) => (
-                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {isE ? (
+      <div className="space-y-4">
+        {/* Upphovspersoner */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Upphovsperson(er) *</Label>
+            <Button type="button" variant="outline" size="sm" onClick={() => addEmptyCreator("CA")} className="h-7 gap-1 text-xs">
+              <Plus className="h-3.5 w-3.5" /> Upphovsperson
+            </Button>
+          </div>
+          {creatorsList.some((c) => c.role !== "E") && (
+            <div className="space-y-1">
+              {creatorsList.map((creator, idx) => {
+                if (creator.role === "E") return null;
+                return (
+                  <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                    <Select value={creator.role} onValueChange={(v) => updateCreatorField(idx, { role: v as CreatorEntry["role"] })}>
+                      <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ROLE_OPTIONS.filter((r) => r.value !== "E").map((r) => (
+                          <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Input
                       value={creator.name}
-                      onChange={(e) => updateCreatorField(sortedIdx, { name: e.target.value })}
-                      placeholder="Förlagsnamn"
-                      className="h-7 flex-1 text-xs"
-                    />
-                  ) : (
-                    <Input
-                      value={creator.name}
-                      onChange={(e) => updateCreatorField(sortedIdx, { name: e.target.value })}
+                      onChange={(e) => updateCreatorField(idx, { name: e.target.value })}
                       placeholder="Förnamn Efternamn"
                       className="h-7 flex-1 text-xs"
                     />
-                  )}
-                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
-                    <Checkbox
-                      checked={creator.represented}
-                      onCheckedChange={() => updateCreatorField(sortedIdx, { represented: !creator.represented })}
-                      className="h-3.5 w-3.5"
-                    />
-                    Repr.
-                  </label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={creator.share}
-                    onChange={(e) => updateCreatorField(sortedIdx, { share: e.target.value })}
-                    placeholder="Norden %"
-                    className="h-7 w-24 text-xs"
-                  />
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={creator.shareRow}
-                    onChange={(e) => updateCreatorField(sortedIdx, { shareRow: e.target.value })}
-                    placeholder="ROW %"
-                    className="h-7 w-24 text-xs"
-                  />
-                  <button type="button" onClick={() => removeCreatorByIndex(sortedIdx)} className="text-muted-foreground hover:text-destructive">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })}
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+                      <Checkbox
+                        checked={creator.represented}
+                        onCheckedChange={() => updateCreatorField(idx, { represented: !creator.represented })}
+                        className="h-3.5 w-3.5"
+                      />
+                      Repr.
+                    </label>
+                    <Input type="number" min="0" max="100" step="0.01" value={creator.share} onChange={(e) => updateCreatorField(idx, { share: e.target.value })} placeholder="Norden %" className="h-7 w-24 text-xs" />
+                    <Input type="number" min="0" max="100" step="0.01" value={creator.shareRow} onChange={(e) => updateCreatorField(idx, { shareRow: e.target.value })} placeholder="ROW %" className="h-7 w-24 text-xs" />
+                    <button type="button" onClick={() => removeCreatorByIndex(idx)} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Förlag */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Förlag</Label>
+            <Button type="button" variant="outline" size="sm" onClick={() => addEmptyCreator("E")} className="h-7 gap-1 text-xs">
+              <Plus className="h-3.5 w-3.5" /> Förlag
+            </Button>
           </div>
-        )}
+          {creatorsList.some((c) => c.role === "E") && (
+            <div className="space-y-1">
+              {creatorsList.map((creator, idx) => {
+                if (creator.role !== "E") return null;
+                return (
+                  <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                    <span className="text-xs text-muted-foreground w-8">E</span>
+                    <Input
+                      value={creator.name}
+                      onChange={(e) => updateCreatorField(idx, { name: e.target.value })}
+                      placeholder="Förlagsnamn"
+                      className="h-7 flex-1 text-xs"
+                    />
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+                      <Checkbox
+                        checked={creator.represented}
+                        onCheckedChange={() => updateCreatorField(idx, { represented: !creator.represented })}
+                        className="h-3.5 w-3.5"
+                      />
+                      Repr.
+                    </label>
+                    <Input type="number" min="0" max="100" step="0.01" value={creator.share} onChange={(e) => updateCreatorField(idx, { share: e.target.value })} placeholder="Norden %" className="h-7 w-24 text-xs" />
+                    <Input type="number" min="0" max="100" step="0.01" value={creator.shareRow} onChange={(e) => updateCreatorField(idx, { shareRow: e.target.value })} placeholder="ROW %" className="h-7 w-24 text-xs" />
+                    <button type="button" onClick={() => removeCreatorByIndex(idx)} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
