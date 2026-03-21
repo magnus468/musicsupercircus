@@ -137,6 +137,7 @@ const WorkDetail = () => {
                       </td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.role || "—"}</td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.share ? `${entry.share}%` : "—"}</td>
+                      <td className="px-4 py-2 text-muted-foreground">{entry.shareRow ? `${entry.shareRow}%` : "—"}</td>
                       <td className="px-4 py-2">
                         {entry.repr ? (
                           <Badge className="bg-primary/15 text-primary border-0">Ja</Badge>
