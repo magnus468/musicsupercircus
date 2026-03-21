@@ -156,6 +156,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         setTitle(""); setProject(""); setCreatorsList([]); setNewCreatorFirst(""); setNewCreatorLast("");
         setNewCreatorName(""); setNewCreatorRole("CA"); setNewCreatorShare("");
         setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
+        setNordicPublisherShare("50"); setRowPublisherShare("50");
       }
       onSuccess?.();
     } catch {
