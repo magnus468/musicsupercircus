@@ -83,11 +83,12 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       const name = newCreatorName.trim();
       if (!name) return;
       if (!creatorsList.some((c) => c.name === name)) {
-        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, shareRow: "", represented: true }]);
+        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
       }
       setNewCreatorName("");
       setNewCreatorRole("CA");
       setNewCreatorShare("");
+      setNewCreatorShareRow("");
       return;
     }
     const first = newCreatorFirst.trim();
