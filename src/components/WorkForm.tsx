@@ -58,7 +58,10 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [title, setTitle] = useState(work?.title ?? "");
   const [project, setProject] = useState(work?.project ?? "");
   const [creatorsList, setCreatorsList] = useState<CreatorEntry[]>(
-    work?.creators ? parseCreatorsString(work.creators) : []
+    work?.creators ? parseCreatorsString(work.creators) : [
+      { name: "", role: "CA", share: "", shareRow: "", represented: true },
+      { name: "", role: "E", share: "", shareRow: "", represented: true },
+    ]
   );
 
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
