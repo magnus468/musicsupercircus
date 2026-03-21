@@ -149,128 +149,76 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Upphovsperson(er) & Förlag *</Label>
-        <div className="flex gap-2 items-end">
-          <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">Roll</span>
-            <Select value={newCreatorRole} onValueChange={(v) => {
-              setNewCreatorRole(v as CreatorEntry["role"]);
-              // Clear fields when switching between E and other roles
-              setNewCreatorFirst(""); setNewCreatorLast(""); setNewCreatorName("");
-            }}>
-              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ROLE_OPTIONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {isPublisherRole ? (
-            <div className="flex-1 space-y-1">
-              <span className="text-xs text-muted-foreground">Förlagsnamn</span>
-              <Input
-                value={newCreatorName}
-                onChange={(e) => setNewCreatorName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-                placeholder="Förlagsnamn"
-              />
-            </div>
-          ) : (
-            <>
-              <div className="flex-1 space-y-1">
-                <span className="text-xs text-muted-foreground">Förnamn</span>
-                <Input
-                  value={newCreatorFirst}
-                  onChange={(e) => setNewCreatorFirst(e.target.value)}
-                  placeholder="Förnamn"
-                />
-              </div>
-              <div className="flex-1 space-y-1">
-                <span className="text-xs text-muted-foreground">Efternamn</span>
-                <Input
-                  value={newCreatorLast}
-                  onChange={(e) => setNewCreatorLast(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCreator(); } }}
-                  placeholder="Efternamn"
-                />
-              </div>
-            </>
-          )}
-          <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">Norden %</span>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={newCreatorShare}
-              onChange={(e) => setNewCreatorShare(e.target.value)}
-              placeholder="%"
-            />
-          </div>
-          <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">ROW %</span>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={newCreatorShareRow}
-              onChange={(e) => setNewCreatorShareRow(e.target.value)}
-              placeholder="%"
-            />
-          </div>
-          <Button type="button" variant="secondary" onClick={addCreator} disabled={isPublisherRole ? !newCreatorName.trim() : (!newCreatorFirst.trim() && !newCreatorLast.trim())} className="h-10">
-            <Plus className="h-4 w-4" />
+        <div className="flex items-center justify-between">
+          <Label>Upphovsperson(er) & Förlag *</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addEmptyCreator} className="h-7 gap-1 text-xs">
+            <Plus className="h-3.5 w-3.5" /> Lägg till
           </Button>
         </div>
         {creatorsList.length > 0 && (
-          <div className="space-y-1 mt-2">
-            {[...creatorsList].sort((a, b) => (a.role === "E" ? 1 : 0) - (b.role === "E" ? 1 : 0)).map((creator) => (
-              <div key={creator.name} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                <span className="flex-1 font-medium">{creator.name}</span>
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
-                  <Checkbox
-                    checked={creator.represented}
-                    onCheckedChange={() => toggleCreatorRepresented(creator.name)}
-                    className="h-3.5 w-3.5"
+          <div className="space-y-1">
+            {creatorsList.map((creator, idx) => {
+              const sortedIdx = idx; // keep original index for updates
+              const isE = creator.role === "E";
+              return (
+                <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                  <Select value={creator.role} onValueChange={(v) => updateCreatorField(sortedIdx, { role: v as CreatorEntry["role"] })}>
+                    <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ROLE_OPTIONS.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {isE ? (
+                    <Input
+                      value={creator.name}
+                      onChange={(e) => updateCreatorField(sortedIdx, { name: e.target.value })}
+                      placeholder="Förlagsnamn"
+                      className="h-7 flex-1 text-xs"
+                    />
+                  ) : (
+                    <Input
+                      value={creator.name}
+                      onChange={(e) => updateCreatorField(sortedIdx, { name: e.target.value })}
+                      placeholder="Förnamn Efternamn"
+                      className="h-7 flex-1 text-xs"
+                    />
+                  )}
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={creator.represented}
+                      onCheckedChange={() => updateCreatorField(sortedIdx, { represented: !creator.represented })}
+                      className="h-3.5 w-3.5"
+                    />
+                    Repr.
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={creator.share}
+                    onChange={(e) => updateCreatorField(sortedIdx, { share: e.target.value })}
+                    placeholder="Norden %"
+                    className="h-7 w-24 text-xs"
                   />
-                  Repr.
-                </label>
-                <Select value={creator.role} onValueChange={(v) => updateCreatorRole(creator.name, v as CreatorEntry["role"])}>
-                  <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={creator.share}
-                  onChange={(e) => updateCreatorShare(creator.name, e.target.value)}
-                  placeholder="Norden %"
-                  className="h-7 w-24 text-xs"
-                />
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={creator.shareRow}
-                  onChange={(e) => updateCreatorShareRow(creator.name, e.target.value)}
-                  placeholder="ROW %"
-                  className="h-7 w-24 text-xs"
-                />
-                <button type="button" onClick={() => removeCreator(creator.name)} className="text-muted-foreground hover:text-destructive">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={creator.shareRow}
+                    onChange={(e) => updateCreatorField(sortedIdx, { shareRow: e.target.value })}
+                    placeholder="ROW %"
+                    className="h-7 w-24 text-xs"
+                  />
+                  <button type="button" onClick={() => removeCreatorByIndex(sortedIdx)} className="text-muted-foreground hover:text-destructive">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
