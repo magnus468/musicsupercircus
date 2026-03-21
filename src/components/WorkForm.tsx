@@ -125,6 +125,10 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, share } : c));
   };
 
+  const updateCreatorShareRow = (name: string, shareRow: string) => {
+    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, shareRow } : c));
+  };
+
   const toggleCreatorRepresented = (name: string) => {
     setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, represented: !c.represented } : c));
   };
