@@ -25,12 +25,13 @@ const WorkDetail = () => {
     if (match) {
       const name = match[1].trim();
       const meta = match[2];
-      const roleMatch = meta.match(/^(CA|C|A|Arr)/i);
-      const shareMatch = meta.match(/(\d+(?:\.\d+)?)%/);
+      const roleMatch = meta.match(/^(CA|C|A|Arr|E)/i);
+      const shareMatch = meta.match(/(?<![w:])(\d+(?:\.\d+)?)%/);
+      const rowMatch = meta.match(/row:(\d+(?:\.\d+)?)%/);
       const repr = meta.includes("repr");
-      return { name, role: roleMatch?.[1] || "", share: shareMatch?.[1] || "", repr };
+      return { name, role: roleMatch?.[1] || "", share: shareMatch?.[1] || "", shareRow: rowMatch?.[1] || "", repr };
     }
-    return { name: trimmed, role: "", share: "", repr: false };
+    return { name: trimmed, role: "", share: "", shareRow: "", repr: false };
   });
 
   const publishingLabel = (type: string) => {
