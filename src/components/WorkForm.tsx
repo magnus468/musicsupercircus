@@ -246,6 +246,18 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               placeholder="%"
             />
           </div>
+          <div className="w-20 space-y-1">
+            <span className="text-xs text-muted-foreground">ROW %</span>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={newCreatorShareRow}
+              onChange={(e) => setNewCreatorShareRow(e.target.value)}
+              placeholder="%"
+            />
+          </div>
           <Button type="button" variant="secondary" onClick={addCreator} disabled={isPublisherRole ? !newCreatorName.trim() : (!newCreatorFirst.trim() && !newCreatorLast.trim())} className="h-10">
             <Plus className="h-4 w-4" />
           </Button>
