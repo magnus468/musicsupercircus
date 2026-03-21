@@ -104,8 +104,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const { data: existingClients = [] } = useClients();
   const isEdit = !!work;
 
-  const addEmptyCreator = () => {
-    setCreatorsList((prev) => recalcShares([...prev, { name: "", role: "CA", share: "", shareRow: "", represented: true }]));
+  const addEmptyCreator = (role: CreatorEntry["role"] = "CA") => {
+    setCreatorsList((prev) => recalcShares([...prev, { name: "", role, share: "", shareRow: "", represented: true }]));
   };
 
   const removeCreatorByIndex = (index: number) => {
