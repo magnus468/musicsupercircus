@@ -12,7 +12,8 @@ import { toast } from "sonner";
 interface CreatorEntry {
   name: string;
   role: "CA" | "C" | "A" | "Arr" | "E";
-  share: string; // percentage as string for input
+  share: string; // Nordic percentage as string for input
+  shareRow: string; // ROW percentage as string for input
   represented: boolean;
 }
 
