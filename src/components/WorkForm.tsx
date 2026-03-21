@@ -113,6 +113,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     setNewCreatorLast("");
     setNewCreatorRole("CA");
     setNewCreatorShare("");
+    setNewCreatorShareRow("");
   };
 
   const removeCreator = (name: string) => {
