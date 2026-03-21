@@ -65,6 +65,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [newCreatorName, setNewCreatorName] = useState("");
   const [newCreatorRole, setNewCreatorRole] = useState<CreatorEntry["role"]>("CA");
   const [newCreatorShare, setNewCreatorShare] = useState("");
+  const [newCreatorShareRow, setNewCreatorShareRow] = useState("");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
