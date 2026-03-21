@@ -60,7 +60,7 @@ const recalcShares = (list: CreatorEntry[]): CreatorEntry[] => {
   const publishers = list.filter((c) => c.role === "E");
 
   // Creators: total Nordic = 66.67%, total ROW = 50%
-  const assignShares = (items: CreatorEntry[], totalNordic: number, totalRow: number) => {
+  const assignEqualShares = (items: CreatorEntry[], totalNordic: number, totalRow: number) => {
     const n = items.length;
     if (n === 0) return items;
     const baseNordic = Math.floor((totalNordic / n) * 100) / 100;
@@ -74,8 +74,27 @@ const recalcShares = (list: CreatorEntry[]): CreatorEntry[] => {
     }));
   };
 
-  const updatedCreators = assignShares(creators, 66.67, 50);
-  const updatedPublishers = assignShares(publishers, 33.33, 50);
+  const updatedCreators = assignEqualShares(creators, 66.67, 50);
+
+  // Check if Embark Studios is among publishers for custom 30/70 split
+  const hasEmbark = publishers.some((p) => p.name.toLowerCase().includes("embark"));
+  let updatedPublishers: CreatorEntry[];
+
+  if (hasEmbark && publishers.length === 2) {
+    // Apply Embark agreement: internal publisher 30%, Embark 70%
+    const totalNordic = 33.33;
+    const totalRow = 50;
+    updatedPublishers = publishers.map((p) => {
+      const isEmbark = p.name.toLowerCase().includes("embark");
+      return {
+        ...p,
+        share: isEmbark ? (totalNordic * 0.7).toFixed(2).replace(/\.?0+$/, '') : (totalNordic * 0.3).toFixed(2).replace(/\.?0+$/, ''),
+        shareRow: isEmbark ? (totalRow * 0.7).toFixed(2).replace(/\.?0+$/, '') : (totalRow * 0.3).toFixed(2).replace(/\.?0+$/, ''),
+      };
+    });
+  } else {
+    updatedPublishers = assignEqualShares(publishers, 33.33, 50);
+  }
 
   // Rebuild in original order
   let ci = 0, pi = 0;
