@@ -96,7 +96,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     if (!first && !last) return;
     const fullName = [first, last].filter(Boolean).join(" ");
     if (!creatorsList.some((c) => c.name === fullName)) {
-      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, shareRow: "", represented: true }]);
+      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, shareRow: newCreatorShareRow, represented: true }]);
     }
     // Auto-create client if not exists
     const alreadyExists = existingClients.some(
