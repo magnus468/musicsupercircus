@@ -193,8 +193,10 @@ export type Database = {
           created_at: string
           creators: string
           id: string
+          nordic_publisher_share: number
           project: string | null
           publishing_type: Database["public"]["Enums"]["publishing_type"]
+          row_publisher_share: number
           share_percentage: number | null
           stim_comment: string | null
           stim_status: Database["public"]["Enums"]["stim_status"]
@@ -206,8 +208,10 @@ export type Database = {
           created_at?: string
           creators: string
           id?: string
+          nordic_publisher_share?: number
           project?: string | null
           publishing_type?: Database["public"]["Enums"]["publishing_type"]
+          row_publisher_share?: number
           share_percentage?: number | null
           stim_comment?: string | null
           stim_status?: Database["public"]["Enums"]["stim_status"]
@@ -219,8 +223,10 @@ export type Database = {
           created_at?: string
           creators?: string
           id?: string
+          nordic_publisher_share?: number
           project?: string | null
           publishing_type?: Database["public"]["Enums"]["publishing_type"]
+          row_publisher_share?: number
           share_percentage?: number | null
           stim_comment?: string | null
           stim_status?: Database["public"]["Enums"]["stim_status"]
