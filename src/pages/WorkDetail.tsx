@@ -10,6 +10,7 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import WorkForm from "@/components/WorkForm";
 
 const WorkDetail = () => {
+  const [editing, setEditing] = useState(false);
   const { id } = useParams<{ id: string }>();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
