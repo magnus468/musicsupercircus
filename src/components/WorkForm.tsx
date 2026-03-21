@@ -232,7 +232,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             </>
           )}
           <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">Andel %</span>
+            <span className="text-xs text-muted-foreground">Norden %</span>
             <Input
               type="number"
               min="0"
