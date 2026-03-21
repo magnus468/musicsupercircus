@@ -12,22 +12,22 @@ import { toast } from "sonner";
 interface CreatorEntry {
   name: string;
   role: "CA" | "C" | "A" | "Arr" | "E";
-  share: string; // percentage as string for input
+  share: string; // Nordic percentage as string for input
+  shareRow: string; // ROW percentage as string for input
   represented: boolean;
 }
 
-// Parse "Name (CA, 50%)" format back to CreatorEntry
+// Parse "Name (CA, 50%, row:40%, repr)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
   if (!str) return [];
-  // Split on ", " only when followed by a name (uppercase letter) and not inside parentheses
   const parts = str.match(/[^,]+\([^)]*\)/g) || str.split(", ");
   return parts.map((part) => {
     const trimmed = part.trim().replace(/^,\s*/, "");
-    const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
+    const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
-      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", represented: !!match[4] };
+      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
     }
-    return { name: trimmed, role: "CA" as const, share: "", represented: false };
+    return { name: trimmed, role: "CA" as const, share: "", shareRow: "", represented: false };
   }).filter((c) => c.name);
 };
 
@@ -35,6 +35,7 @@ const serializeCreators = (creators: CreatorEntry[]): string => {
   return creators.map((c) => {
     const parts: string[] = [c.role];
     if (c.share) parts.push(`${c.share}%`);
+    if (c.shareRow) parts.push(`row:${c.shareRow}%`);
     if (c.represented) parts.push("repr");
     return `${c.name} (${parts.join(", ")})`;
   }).join(", ");
@@ -81,7 +82,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       const name = newCreatorName.trim();
       if (!name) return;
       if (!creatorsList.some((c) => c.name === name)) {
-        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, represented: true }]);
+        setCreatorsList((prev) => [...prev, { name, role: "E", share: newCreatorShare, shareRow: "", represented: true }]);
       }
       setNewCreatorName("");
       setNewCreatorRole("CA");
@@ -93,7 +94,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     if (!first && !last) return;
     const fullName = [first, last].filter(Boolean).join(" ");
     if (!creatorsList.some((c) => c.name === fullName)) {
-      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, represented: true }]);
+      setCreatorsList((prev) => [...prev, { name: fullName, role: newCreatorRole, share: newCreatorShare, shareRow: "", represented: true }]);
     }
     // Auto-create client if not exists
     const alreadyExists = existingClients.some(
@@ -122,6 +123,10 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
   const updateCreatorShare = (name: string, share: string) => {
     setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, share } : c));
+  };
+
+  const updateCreatorShareRow = (name: string, shareRow: string) => {
+    setCreatorsList((prev) => prev.map((c) => c.name === name ? { ...c, shareRow } : c));
   };
 
   const toggleCreatorRepresented = (name: string) => {
@@ -227,7 +232,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             </>
           )}
           <div className="w-20 space-y-1">
-            <span className="text-xs text-muted-foreground">Andel %</span>
+            <span className="text-xs text-muted-foreground">Norden %</span>
             <Input
               type="number"
               min="0"
@@ -270,8 +275,18 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
                   step="0.01"
                   value={creator.share}
                   onChange={(e) => updateCreatorShare(creator.name, e.target.value)}
-                  placeholder="%"
-                  className="h-7 w-20 text-xs"
+                  placeholder="Norden %"
+                  className="h-7 w-24 text-xs"
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={creator.shareRow}
+                  onChange={(e) => updateCreatorShareRow(creator.name, e.target.value)}
+                  placeholder="ROW %"
+                  className="h-7 w-24 text-xs"
                 />
                 <button type="button" onClick={() => removeCreator(creator.name)} className="text-muted-foreground hover:text-destructive">
                   <X className="h-3.5 w-3.5" />
