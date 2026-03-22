@@ -111,8 +111,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [project, setProject] = useState(work?.project ?? "");
   const [creatorsList, setCreatorsList] = useState<CreatorEntry[]>(
     work?.creators ? parseCreatorsString(work.creators) : recalcShares([
-      { name: "", role: "CA", share: "", shareRow: "", represented: true },
-      { name: "", role: "E", share: "", shareRow: "", represented: true },
+      { firstName: "", lastName: "", role: "CA", share: "", shareRow: "", represented: true },
+      { firstName: "", lastName: "", role: "E", share: "", shareRow: "", represented: true },
     ])
   );
 
