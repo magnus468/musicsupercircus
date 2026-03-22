@@ -147,13 +147,12 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Filter out empty entries
-    const validCreators = creatorsList.filter((c) => c.name.trim());
+    const validCreators = creatorsList.filter((c) => fullName(c));
     // Auto-create clients for new person creators
     for (const creator of validCreators) {
       if (creator.role === "E") continue;
-      const parts = creator.name.trim().split(/\s+/);
-      const first = parts[0] || "";
-      const last = parts.slice(1).join(" ") || "";
+      const first = creator.firstName.trim();
+      const last = creator.lastName.trim();
       const alreadyExists = existingClients.some(
         (c) => c.first_name.toLowerCase() === first.toLowerCase() && c.last_name.toLowerCase() === (last || "").toLowerCase()
       );
