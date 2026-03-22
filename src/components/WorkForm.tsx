@@ -10,12 +10,15 @@ import { X, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreatorEntry {
-  name: string;
+  firstName: string;
+  lastName: string;
   role: "CA" | "C" | "A" | "Arr" | "E";
-  share: string; // Nordic percentage as string for input
-  shareRow: string; // ROW percentage as string for input
+  share: string;
+  shareRow: string;
   represented: boolean;
 }
+
+const fullName = (c: CreatorEntry) => `${c.firstName} ${c.lastName}`.trim();
 
 // Parse "Name (CA, 50%, row:40%, repr)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
