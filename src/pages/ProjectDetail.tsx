@@ -4,11 +4,13 @@ import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements } from "@/hooks/useAgreements";
+import { useProjectAgreements, useSaveProjectAgreements } from "@/hooks/useProjectAgreements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, FileText, Pencil, Check, X } from "lucide-react";
@@ -26,9 +28,13 @@ const ProjectDetail = () => {
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
   const updateProject = useUpdateProject();
+  const saveProjectAgreements = useSaveProjectAgreements();
   const navigate = useNavigate();
 
+  const { data: directAgreementIds } = useProjectAgreements(project?.id);
+
   const [editing, setEditing] = useState(false);
+  const [selectedAgreementIds, setSelectedAgreementIds] = useState<string[]>([]);
   const [form, setForm] = useState({
     name: "",
     project_number: "",
@@ -52,6 +58,7 @@ const ProjectDetail = () => {
       status: project.status || "",
       description: project.description || "",
     });
+    setSelectedAgreementIds(directAgreementIds ?? []);
     setEditing(true);
   };
 
@@ -74,6 +81,7 @@ const ProjectDetail = () => {
       },
       {
         onSuccess: () => {
+          saveProjectAgreements.mutate({ projectId: project.id, agreementIds: selectedAgreementIds });
           toast.success("Projektet uppdaterat");
           setEditing(false);
           if (newName !== projectName) {
@@ -106,6 +114,8 @@ const ProjectDetail = () => {
   allAgreementWorks?.forEach((aw) => {
     if (projectWorkIds.has(aw.work_id)) linkedAgreementIds.add(aw.agreement_id);
   });
+  // Also include directly linked agreements
+  directAgreementIds?.forEach((id) => linkedAgreementIds.add(id));
   const linkedAgreements = agreements?.filter((a) => linkedAgreementIds.has(a.id)) ?? [];
 
   const internalPublishers = new Set<string>();
@@ -187,6 +197,29 @@ const ProjectDetail = () => {
               <div className="col-span-full space-y-1">
                 <label className="text-xs text-muted-foreground">Beskrivning</label>
                 <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
+              </div>
+              <div className="col-span-full space-y-2">
+                <label className="text-xs text-muted-foreground">Kopplade förlagsavtal</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {agreements?.map((a) => (
+                    <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer rounded-md border border-input p-2 hover:bg-accent/50 transition-colors">
+                      <Checkbox
+                        checked={selectedAgreementIds.includes(a.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedAgreementIds((prev) =>
+                            checked ? [...prev, a.id] : prev.filter((id) => id !== a.id)
+                          );
+                        }}
+                      />
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span>{a.client_name} ({a.agreement_type})</span>
+                      <Badge variant="secondary" className="ml-auto text-xs">{a.internal_publisher}</Badge>
+                    </label>
+                  ))}
+                </div>
+                {(!agreements || agreements.length === 0) && (
+                  <p className="text-xs text-muted-foreground">Inga förlagsavtal tillgängliga</p>
+                )}
               </div>
             </div>
           ) : project ? (
