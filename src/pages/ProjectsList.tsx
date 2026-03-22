@@ -124,7 +124,6 @@ const ProjectTable = ({
                 {!projectPublishers.get(p.name)?.size && linked.length === 0 && !cleanPub && "—"}
               </span>
             </TableCell>
-            </TableCell>
             <TableCell>
               {p.status ? <Badge variant={statusVariant(p.status)}>{p.status}</Badge> : "—"}
             </TableCell>
