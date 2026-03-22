@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useProjects, Project } from "@/hooks/useProjects";
+import { useWorks } from "@/hooks/useWorks";
+import { useAgreements } from "@/hooks/useAgreements";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FolderOpen, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight } from "lucide-react";
+import { FolderOpen, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight, FileText } from "lucide-react";
 
 type SortKey = keyof Pick<Project, "project_number" | "name" | "client" | "supervisor" | "composer" | "publishing" | "status">;
 type SortDir = "asc" | "desc";
@@ -39,18 +43,22 @@ const SortIcon = ({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
     : <ArrowDown className="inline h-3 w-3 ml-1" />;
 };
 
+type AgreementLink = { id: string; client_name: string; agreement_type: string };
+
 const ProjectTable = ({
   items,
   sortKey,
   sortDir,
   onToggleSort,
   showHeader = true,
+  projectAgreements,
 }: {
   items: Project[];
   sortKey: SortKey;
   sortDir: SortDir;
   onToggleSort: (key: SortKey) => void;
   showHeader?: boolean;
+  projectAgreements: Map<string, AgreementLink[]>;
 }) => (
   <Table>
     {showHeader && (
@@ -70,35 +78,102 @@ const ProjectTable = ({
       </TableHeader>
     )}
     <TableBody>
-      {items.map((p) => (
-        <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50">
-          <TableCell className="text-muted-foreground whitespace-nowrap">{p.project_number || "—"}</TableCell>
-          <TableCell className="font-medium">
-            <Link
-              to={`/projects/${encodeURIComponent(p.name)}`}
-              className="text-primary underline underline-offset-2 hover:text-primary/80"
-            >
-              {p.name}
-            </Link>
-          </TableCell>
-          <TableCell className="text-muted-foreground">{p.client || "—"}</TableCell>
-          <TableCell className="text-muted-foreground">{p.supervisor || "—"}</TableCell>
-          <TableCell className="text-muted-foreground">{p.composer || "—"}</TableCell>
-          <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate">{p.publishing || "—"}</TableCell>
-          <TableCell>
-            {p.status ? <Badge variant={statusVariant(p.status)}>{p.status}</Badge> : "—"}
-          </TableCell>
-        </TableRow>
-      ))}
+      {items.map((p) => {
+        const linked = projectAgreements.get(p.name) ?? [];
+        const rawPub = p.publishing || "";
+        const cleanPub = rawPub.replace(/^(Ja\s+|Nej\s*)/i, "").trim();
+
+        return (
+          <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50">
+            <TableCell className="text-muted-foreground whitespace-nowrap">{p.project_number || "—"}</TableCell>
+            <TableCell className="font-medium">
+              <Link
+                to={`/projects/${encodeURIComponent(p.name)}`}
+                className="text-primary underline underline-offset-2 hover:text-primary/80"
+              >
+                {p.name}
+              </Link>
+            </TableCell>
+            <TableCell className="text-muted-foreground">{p.client || "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{p.supervisor || "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{p.composer || "—"}</TableCell>
+            <TableCell className="text-muted-foreground text-xs max-w-[200px]">
+              {linked.length > 0 ? (
+                <span className="flex flex-col gap-0.5">
+                  {linked.map((a) => (
+                    <Link
+                      key={a.id}
+                      to={`/agreements?highlight=${a.id}`}
+                      className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1 truncate"
+                    >
+                      <FileText className="h-3 w-3 shrink-0" />
+                      {a.client_name}
+                    </Link>
+                  ))}
+                </span>
+              ) : cleanPub ? (
+                cleanPub
+              ) : (
+                "—"
+              )}
+            </TableCell>
+            <TableCell>
+              {p.status ? <Badge variant={statusVariant(p.status)}>{p.status}</Badge> : "—"}
+            </TableCell>
+          </TableRow>
+        );
+      })}
     </TableBody>
   </Table>
 );
 
 const ProjectsList = () => {
   const { data: projects, isLoading } = useProjects();
+  const { data: works } = useWorks();
+  const { data: agreements } = useAgreements();
+  const { data: allAgreementWorks } = useQuery({
+    queryKey: ["all-agreement-works"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_works")
+        .select("agreement_id, work_id");
+      if (error) throw error;
+      return data as { agreement_id: string; work_id: string }[];
+    },
+  });
+
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [doneOpen, setDoneOpen] = useState(false);
+
+  const projectAgreements = useMemo(() => {
+    const map = new Map<string, AgreementLink[]>();
+    if (!works || !allAgreementWorks || !agreements) return map;
+
+    const workProject = new Map<string, string>();
+    works.forEach((w) => { if (w.project) workProject.set(w.id, w.project); });
+
+    const agMap = new Map(agreements.map((a) => [a.id, a]));
+
+    const projAgIds = new Map<string, Set<string>>();
+    allAgreementWorks.forEach((aw) => {
+      const proj = workProject.get(aw.work_id);
+      if (!proj) return;
+      if (!projAgIds.has(proj)) projAgIds.set(proj, new Set());
+      projAgIds.get(proj)!.add(aw.agreement_id);
+    });
+
+    projAgIds.forEach((agIds, proj) => {
+      const links: AgreementLink[] = [];
+      agIds.forEach((agId) => {
+        const ag = agMap.get(agId);
+        if (ag) links.push({ id: ag.id, client_name: ag.client_name || "Okänd", agreement_type: ag.agreement_type });
+      });
+      map.set(proj, links);
+    });
+
+    return map;
+  }, [works, allAgreementWorks, agreements]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -140,7 +215,7 @@ const ProjectsList = () => {
             <Card>
               <CardContent className="p-0">
                 <div className="rounded-lg overflow-x-auto">
-                  <ProjectTable items={active} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} />
+                  <ProjectTable items={active} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} />
                 </div>
               </CardContent>
             </Card>
@@ -156,7 +231,7 @@ const ProjectsList = () => {
                 <Card>
                   <CardContent className="p-0">
                     <div className="rounded-lg overflow-x-auto">
-                      <ProjectTable items={done} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} />
+                      <ProjectTable items={done} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} />
                     </div>
                   </CardContent>
                 </Card>
