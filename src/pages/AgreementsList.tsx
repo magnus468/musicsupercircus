@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   useAgreements,
   useCreateAgreement,
@@ -332,7 +333,11 @@ const AgreementsList = () => {
           <TableBody>
             {agreements?.map((a) => (
               <TableRow key={a.id}>
-                <TableCell className="font-medium">{a.client_name}</TableCell>
+                <TableCell className="font-medium">
+                  <Link to={`/clients/${a.client_id}`} className="text-primary underline-offset-4 hover:underline">
+                    {a.client_name}
+                  </Link>
+                </TableCell>
                 <TableCell className="text-center text-muted-foreground">
                   {workCounts?.[a.id] || 0}
                 </TableCell>
