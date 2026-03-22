@@ -177,6 +177,18 @@ const ProjectsList = () => {
     return map;
   }, [works, allAgreementWorks, agreements]);
 
+  const projectPublishers = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    if (!works) return map;
+    works.forEach((w) => {
+      if (!w.project) return;
+      if (!map.has(w.project)) map.set(w.project, new Set());
+      const label = w.publishing_type === "MSCE" ? "MSCE" : w.publishing_type === "MSCP" ? "MSCP" : w.publishing_type === "administration" ? "Administration" : null;
+      if (label) map.get(w.project)!.add(label);
+    });
+    return map;
+  }, [works]);
+
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
