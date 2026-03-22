@@ -52,6 +52,7 @@ const ProjectTable = ({
   onToggleSort,
   showHeader = true,
   projectAgreements,
+  projectPublishers,
 }: {
   items: Project[];
   sortKey: SortKey;
@@ -59,6 +60,7 @@ const ProjectTable = ({
   onToggleSort: (key: SortKey) => void;
   showHeader?: boolean;
   projectAgreements: Map<string, AgreementLink[]>;
+  projectPublishers: Map<string, Set<string>>;
 }) => (
   <Table>
     {showHeader && (
