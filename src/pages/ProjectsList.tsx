@@ -17,7 +17,7 @@ type SortDir = "asc" | "desc";
 const statusVariant = (status: string | null) => {
   switch (status) {
     case "Pågående": return "default";
-    case "Klart": return "secondary";
+    case "Avslutat": return "secondary";
     case "Under utveckling": return "outline";
     case "På paus": return "destructive";
     default: return "secondary";
@@ -210,8 +210,8 @@ const ProjectsList = () => {
     return sortDir === "asc" ? cmp : -cmp;
   };
 
-  const active = [...(projects ?? [])].filter((p) => p.status !== "Klart").sort(sortFn);
-  const done = [...(projects ?? [])].filter((p) => p.status === "Klart").sort(sortFn);
+  const active = [...(projects ?? [])].filter((p) => p.status !== "Avslutat").sort(sortFn);
+  const done = [...(projects ?? [])].filter((p) => p.status === "Avslutat").sort(sortFn);
 
   if (isLoading) return <p className="text-muted-foreground py-10 text-center">Laddar projekt...</p>;
 

@@ -16,7 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const STATUS_OPTIONS = ["Pågående", "Klart", "Under utveckling", "På paus"];
+const STATUS_OPTIONS = ["Pågående", "Avslutat", "Under utveckling", "På paus"];
 
 const ProjectDetail = () => {
   const { name } = useParams<{ name: string }>();
