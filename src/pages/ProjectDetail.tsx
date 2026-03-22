@@ -114,6 +114,8 @@ const ProjectDetail = () => {
   allAgreementWorks?.forEach((aw) => {
     if (projectWorkIds.has(aw.work_id)) linkedAgreementIds.add(aw.agreement_id);
   });
+  // Also include directly linked agreements
+  directAgreementIds?.forEach((id) => linkedAgreementIds.add(id));
   const linkedAgreements = agreements?.filter((a) => linkedAgreementIds.has(a.id)) ?? [];
 
   const internalPublishers = new Set<string>();
