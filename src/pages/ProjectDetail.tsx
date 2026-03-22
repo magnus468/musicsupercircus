@@ -30,6 +30,7 @@ const ProjectDetail = () => {
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
+    name: "",
     project_number: "",
     client: "",
     supervisor: "",
