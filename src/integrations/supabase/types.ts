@@ -187,6 +187,39 @@ export type Database = {
         }
         Relationships: []
       }
+      project_agreements: {
+        Row: {
+          agreement_id: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          agreement_id: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          agreement_id?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_agreements_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_agreements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           client: string | null
