@@ -28,10 +28,12 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
     const trimmed = part.trim().replace(/^,\s*/, "");
     const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
-      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
+      const nameParts = match[1].trim().split(/\s+/);
+      return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: match[2] as CreatorEntry["role"], share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
     }
-    return { name: trimmed, role: "CA" as const, share: "", shareRow: "", represented: false };
-  }).filter((c) => c.name);
+    const nameParts = trimmed.split(/\s+/);
+    return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: "CA" as const, share: "", shareRow: "", represented: false };
+  }).filter((c) => c.firstName || c.lastName);
 };
 
 const serializeCreators = (creators: CreatorEntry[]): string => {
@@ -40,7 +42,7 @@ const serializeCreators = (creators: CreatorEntry[]): string => {
     if (c.share) parts.push(`${c.share}%`);
     if (c.shareRow) parts.push(`row:${c.shareRow}%`);
     if (c.represented) parts.push("repr");
-    return `${c.name} (${parts.join(", ")})`;
+    return `${fullName(c)} (${parts.join(", ")})`;
   }).join(", ");
 };
 
