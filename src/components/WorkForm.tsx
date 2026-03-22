@@ -10,12 +10,15 @@ import { X, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreatorEntry {
-  name: string;
+  firstName: string;
+  lastName: string;
   role: "CA" | "C" | "A" | "Arr" | "E";
-  share: string; // Nordic percentage as string for input
-  shareRow: string; // ROW percentage as string for input
+  share: string;
+  shareRow: string;
   represented: boolean;
 }
+
+const fullName = (c: CreatorEntry) => `${c.firstName} ${c.lastName}`.trim();
 
 // Parse "Name (CA, 50%, row:40%, repr)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
@@ -25,10 +28,12 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
     const trimmed = part.trim().replace(/^,\s*/, "");
     const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
-      return { name: match[1].trim(), role: match[2] as CreatorEntry["role"], share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
+      const nameParts = match[1].trim().split(/\s+/);
+      return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: match[2] as CreatorEntry["role"], share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
     }
-    return { name: trimmed, role: "CA" as const, share: "", shareRow: "", represented: false };
-  }).filter((c) => c.name);
+    const nameParts = trimmed.split(/\s+/);
+    return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: "CA" as const, share: "", shareRow: "", represented: false };
+  }).filter((c) => c.firstName || c.lastName);
 };
 
 const serializeCreators = (creators: CreatorEntry[]): string => {
@@ -37,7 +42,7 @@ const serializeCreators = (creators: CreatorEntry[]): string => {
     if (c.share) parts.push(`${c.share}%`);
     if (c.shareRow) parts.push(`row:${c.shareRow}%`);
     if (c.represented) parts.push("repr");
-    return `${c.name} (${parts.join(", ")})`;
+    return `${fullName(c)} (${parts.join(", ")})`;
   }).join(", ");
 };
 
@@ -77,7 +82,7 @@ const recalcShares = (list: CreatorEntry[]): CreatorEntry[] => {
   const updatedCreators = assignEqualShares(creators, 66.67, 50);
 
   // Check if Embark Studios is among publishers for custom 30/70 split
-  const hasEmbark = publishers.some((p) => p.name.toLowerCase().includes("embark"));
+  const hasEmbark = publishers.some((p) => fullName(p).toLowerCase().includes("embark"));
   let updatedPublishers: CreatorEntry[];
 
   if (hasEmbark && publishers.length === 2) {
@@ -85,7 +90,7 @@ const recalcShares = (list: CreatorEntry[]): CreatorEntry[] => {
     const totalNordic = 33.33;
     const totalRow = 50;
     updatedPublishers = publishers.map((p) => {
-      const isEmbark = p.name.toLowerCase().includes("embark");
+      const isEmbark = fullName(p).toLowerCase().includes("embark");
       return {
         ...p,
         share: isEmbark ? (totalNordic * 0.7).toFixed(2).replace(/\.?0+$/, '') : (totalNordic * 0.3).toFixed(2).replace(/\.?0+$/, ''),
@@ -106,8 +111,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [project, setProject] = useState(work?.project ?? "");
   const [creatorsList, setCreatorsList] = useState<CreatorEntry[]>(
     work?.creators ? parseCreatorsString(work.creators) : recalcShares([
-      { name: "", role: "CA", share: "", shareRow: "", represented: true },
-      { name: "", role: "E", share: "", shareRow: "", represented: true },
+      { firstName: "", lastName: "", role: "CA", share: "", shareRow: "", represented: true },
+      { firstName: "", lastName: "", role: "E", share: "", shareRow: "", represented: true },
     ])
   );
 
@@ -124,7 +129,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const isEdit = !!work;
 
   const addEmptyCreator = (role: CreatorEntry["role"] = "CA") => {
-    setCreatorsList((prev) => recalcShares([...prev, { name: "", role, share: "", shareRow: "", represented: true }]));
+    setCreatorsList((prev) => recalcShares([...prev, { firstName: "", lastName: "", role, share: "", shareRow: "", represented: true }]));
   };
 
   const removeCreatorByIndex = (index: number) => {
@@ -134,8 +139,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const updateCreatorField = (index: number, field: Partial<CreatorEntry>) => {
     setCreatorsList((prev) => {
       const updated = prev.map((c, i) => i === index ? { ...c, ...field } : c);
-      // Recalc if role changed or publisher name changed (affects Embark logic)
-      if ('role' in field || ('name' in field && prev[index].role === 'E')) return recalcShares(updated);
+      if ('role' in field || (('firstName' in field || 'lastName' in field) && prev[index].role === 'E')) return recalcShares(updated);
       return updated;
     });
   };
@@ -143,13 +147,12 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Filter out empty entries
-    const validCreators = creatorsList.filter((c) => c.name.trim());
+    const validCreators = creatorsList.filter((c) => fullName(c));
     // Auto-create clients for new person creators
     for (const creator of validCreators) {
       if (creator.role === "E") continue;
-      const parts = creator.name.trim().split(/\s+/);
-      const first = parts[0] || "";
-      const last = parts.slice(1).join(" ") || "";
+      const first = creator.firstName.trim();
+      const last = creator.lastName.trim();
       const alreadyExists = existingClients.some(
         (c) => c.first_name.toLowerCase() === first.toLowerCase() && c.last_name.toLowerCase() === (last || "").toLowerCase()
       );
@@ -161,7 +164,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         }
       }
     }
-    const publishers = validCreators.filter((c) => c.role === "E").map((c) => c.name);
+    const publishers = validCreators.filter((c) => c.role === "E").map((c) => fullName(c));
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
@@ -220,7 +223,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input value={creator.name} onChange={(e) => updateCreatorField(idx, { name: e.target.value })} placeholder="Förnamn Efternamn" className="h-7 min-w-0 flex-[3] text-xs" />
+                  <Input value={creator.firstName} onChange={(e) => updateCreatorField(idx, { firstName: e.target.value })} placeholder="Förnamn" className="h-7 min-w-0 flex-[2] text-xs" />
+                  <Input value={creator.lastName} onChange={(e) => updateCreatorField(idx, { lastName: e.target.value })} placeholder="Efternamn" className="h-7 min-w-0 flex-[2] text-xs" />
                   <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground shrink-0">
                     <Checkbox checked={creator.represented} onCheckedChange={() => updateCreatorField(idx, { represented: !creator.represented })} className="h-3.5 w-3.5" />
                     Repr.
@@ -248,7 +252,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
               return (
                 <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                   <span className="text-xs text-muted-foreground w-8 shrink-0">E</span>
-                  <Input value={creator.name} onChange={(e) => updateCreatorField(idx, { name: e.target.value })} placeholder="Förlagsnamn" className="h-7 min-w-0 flex-[3] text-xs" />
+                  <Input value={creator.firstName} onChange={(e) => updateCreatorField(idx, { firstName: e.target.value })} placeholder="Förlagsnamn" className="h-7 min-w-0 flex-[3] text-xs" />
                   <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground shrink-0">
                     <Checkbox checked={creator.represented} onCheckedChange={() => updateCreatorField(idx, { represented: !creator.represented })} className="h-3.5 w-3.5" />
                     Repr.
