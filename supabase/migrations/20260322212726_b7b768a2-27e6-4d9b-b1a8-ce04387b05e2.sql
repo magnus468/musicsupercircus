@@ -1,0 +1,1 @@
+UPDATE works SET project = 'Innan vi lyfter / Blir du ledsen om jag dör' WHERE id = '293b9a1c-9042-4507-9862-a152c6eb31ba' AND project = 'Andreas Tengblad';

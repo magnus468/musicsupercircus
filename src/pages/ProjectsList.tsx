@@ -148,6 +148,16 @@ const ProjectsList = () => {
       return data as { agreement_id: string; work_id: string }[];
     },
   });
+  const { data: allProjectAgreements } = useQuery({
+    queryKey: ["all-project-agreements"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_agreements")
+        .select("project_id, agreement_id");
+      if (error) throw error;
+      return data as { project_id: string; agreement_id: string }[];
+    },
+  });
 
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -170,6 +180,17 @@ const ProjectsList = () => {
       projAgIds.get(proj)!.add(aw.agreement_id);
     });
 
+    // Also include direct project_agreements links
+    if (allProjectAgreements && projects) {
+      const projectIdToName = new Map(projects.map((p) => [p.id, p.name]));
+      allProjectAgreements.forEach((pa) => {
+        const projName = projectIdToName.get(pa.project_id);
+        if (!projName) return;
+        if (!projAgIds.has(projName)) projAgIds.set(projName, new Set());
+        projAgIds.get(projName)!.add(pa.agreement_id);
+      });
+    }
+
     projAgIds.forEach((agIds, proj) => {
       const links: AgreementLink[] = [];
       agIds.forEach((agId) => {
@@ -180,7 +201,7 @@ const ProjectsList = () => {
     });
 
     return map;
-  }, [works, allAgreementWorks, agreements]);
+  }, [works, allAgreementWorks, agreements, allProjectAgreements, projects]);
 
   const projectPublishers = useMemo(() => {
     const map = new Map<string, Set<string>>();
@@ -191,9 +212,26 @@ const ProjectsList = () => {
       const label = w.publishing_type === "MSCE" ? "MSCE" : w.publishing_type === "MSCP" ? "MSCP" : w.publishing_type === "administration" ? "Administration" : null;
       if (label) map.get(w.project)!.add(label);
     });
-    return map;
-  }, [works]);
 
+    // Also derive publisher badges from direct project_agreements
+    if (allProjectAgreements && projects && agreements) {
+      const projectIdToName = new Map(projects.map((p) => [p.id, p.name]));
+      const agMap = new Map(agreements.map((a) => [a.id, a]));
+      allProjectAgreements.forEach((pa) => {
+        const projName = projectIdToName.get(pa.project_id);
+        if (!projName) return;
+        const ag = agMap.get(pa.agreement_id);
+        if (!ag) return;
+        const pub = ag.internal_publisher;
+        if (pub === "MSCE" || pub === "MSCP") {
+          if (!map.has(projName)) map.set(projName, new Set());
+          map.get(projName)!.add(pub);
+        }
+      });
+    }
+
+    return map;
+  }, [works, allProjectAgreements, projects, agreements]);
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
