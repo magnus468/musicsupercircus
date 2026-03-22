@@ -223,7 +223,8 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input value={creator.name} onChange={(e) => updateCreatorField(idx, { name: e.target.value })} placeholder="Förnamn Efternamn" className="h-7 min-w-0 flex-[3] text-xs" />
+                  <Input value={creator.firstName} onChange={(e) => updateCreatorField(idx, { firstName: e.target.value })} placeholder="Förnamn" className="h-7 min-w-0 flex-[2] text-xs" />
+                  <Input value={creator.lastName} onChange={(e) => updateCreatorField(idx, { lastName: e.target.value })} placeholder="Efternamn" className="h-7 min-w-0 flex-[2] text-xs" />
                   <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground shrink-0">
                     <Checkbox checked={creator.represented} onCheckedChange={() => updateCreatorField(idx, { represented: !creator.represented })} className="h-3.5 w-3.5" />
                     Repr.
