@@ -210,8 +210,8 @@ const ProjectsList = () => {
     return sortDir === "asc" ? cmp : -cmp;
   };
 
-  const active = [...(projects ?? [])].filter((p) => p.status !== "Klart").sort(sortFn);
-  const done = [...(projects ?? [])].filter((p) => p.status === "Klart").sort(sortFn);
+  const active = [...(projects ?? [])].filter((p) => p.status !== "Avslutat").sort(sortFn);
+  const done = [...(projects ?? [])].filter((p) => p.status === "Avslutat").sort(sortFn);
 
   if (isLoading) return <p className="text-muted-foreground py-10 text-center">Laddar projekt...</p>;
 
