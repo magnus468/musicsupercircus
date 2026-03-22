@@ -26,6 +26,7 @@ const ProjectDetail = () => {
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
   const updateProject = useUpdateProject();
+  const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
