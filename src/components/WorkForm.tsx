@@ -90,7 +90,7 @@ const recalcShares = (list: CreatorEntry[]): CreatorEntry[] => {
     const totalNordic = 33.33;
     const totalRow = 50;
     updatedPublishers = publishers.map((p) => {
-      const isEmbark = p.name.toLowerCase().includes("embark");
+      const isEmbark = fullName(p).toLowerCase().includes("embark");
       return {
         ...p,
         share: isEmbark ? (totalNordic * 0.7).toFixed(2).replace(/\.?0+$/, '') : (totalNordic * 0.3).toFixed(2).replace(/\.?0+$/, ''),
