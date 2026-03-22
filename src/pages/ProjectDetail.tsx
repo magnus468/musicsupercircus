@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { useProject } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,8 @@ import { ArrowLeft } from "lucide-react";
 const ProjectDetail = () => {
   const { name } = useParams<{ name: string }>();
   const projectName = decodeURIComponent(name || "");
-  const { data: works, isLoading } = useWorks();
+  const { data: project, isLoading: projectLoading } = useProject(projectName);
+  const { data: works, isLoading: worksLoading } = useWorks();
   const { data: clients } = useClients();
 
   const clientMap = new Map<string, string>();
@@ -18,18 +20,43 @@ const ProjectDetail = () => {
 
   const projectWorks = works?.filter((w) => w.project === projectName) ?? [];
 
-  if (isLoading) return <p className="text-muted-foreground">Laddar...</p>;
+  if (projectLoading || worksLoading) return <p className="text-muted-foreground">Laddar...</p>;
 
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild className="gap-2">
-        <Link to="/works"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
+        <Link to="/projects"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>{projectName}</CardTitle>
-          <p className="text-sm text-muted-foreground">{projectWorks.length} verk</p>
+          <div className="flex items-center gap-3">
+            <CardTitle>{projectName}</CardTitle>
+            {project?.status && <Badge variant="secondary">{project.status}</Badge>}
+          </div>
+          {project && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm mt-2">
+              {project.project_number && (
+                <div><span className="text-muted-foreground">Nr:</span> {project.project_number}</div>
+              )}
+              {project.client && (
+                <div><span className="text-muted-foreground">Kund:</span> {project.client}</div>
+              )}
+              {project.supervisor && (
+                <div><span className="text-muted-foreground">Supervisor:</span> {project.supervisor}</div>
+              )}
+              {project.composer && (
+                <div><span className="text-muted-foreground">Kompositör:</span> {project.composer}</div>
+              )}
+              {project.publishing && (
+                <div><span className="text-muted-foreground">Förlag:</span> {project.publishing}</div>
+              )}
+            </div>
+          )}
+          {project?.description && (
+            <p className="text-sm text-muted-foreground mt-2 italic">{project.description}</p>
+          )}
+          <p className="text-sm text-muted-foreground mt-1">{projectWorks.length} verk</p>
         </CardHeader>
         <CardContent>
           {projectWorks.length === 0 ? (

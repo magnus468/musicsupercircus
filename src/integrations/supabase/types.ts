@@ -187,6 +187,48 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          client: string | null
+          composer: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          project_number: string | null
+          publishing: string | null
+          status: string | null
+          supervisor: string | null
+          updated_at: string
+        }
+        Insert: {
+          client?: string | null
+          composer?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          project_number?: string | null
+          publishing?: string | null
+          status?: string | null
+          supervisor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client?: string | null
+          composer?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          project_number?: string | null
+          publishing?: string | null
+          status?: string | null
+          supervisor?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       works: {
         Row: {
           co_publishers: string[] | null
