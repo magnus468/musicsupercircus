@@ -100,6 +100,12 @@ const ProjectDetail = () => {
   });
   const linkedAgreements = agreements?.filter((a) => linkedAgreementIds.has(a.id)) ?? [];
 
+  const internalPublishers = new Set<string>();
+  projectWorks.forEach((w) => {
+    const label = w.publishing_type === "MSCE" ? "MSCE" : w.publishing_type === "MSCP" ? "MSCP" : w.publishing_type === "administration" ? "Administration" : null;
+    if (label) internalPublishers.add(label);
+  });
+
   if (projectLoading || worksLoading) return <p className="text-muted-foreground">Laddar...</p>;
 
   return (
@@ -174,22 +180,31 @@ const ProjectDetail = () => {
                 {project.client && <div><span className="text-muted-foreground">Kund:</span> {project.client}</div>}
                 {project.supervisor && <div><span className="text-muted-foreground">Supervisor:</span> {project.supervisor}</div>}
                 {project.composer && <div><span className="text-muted-foreground">Kompositör:</span> {project.composer}</div>}
-                {linkedAgreements.length > 0 ? (
-                  <div>
+                {(internalPublishers.size > 0 || linkedAgreements.length > 0 || project.publishing) && (
+                  <div className="sm:col-span-2">
                     <span className="text-muted-foreground">Förlag:</span>{" "}
-                    {linkedAgreements.map((a, i) => (
-                      <span key={a.id}>
-                        <Link to={`/agreements?highlight=${a.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1">
+                    <span className="inline-flex flex-wrap items-center gap-2">
+                      {internalPublishers.size > 0 && (
+                        [...internalPublishers].map((pub) => (
+                          <Badge key={pub} variant="secondary">{pub}</Badge>
+                        ))
+                      )}
+                      {linkedAgreements.length > 0 && linkedAgreements.map((a) => (
+                        <Link
+                          key={a.id}
+                          to={`/agreements?highlight=${a.id}`}
+                          className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1 text-sm"
+                        >
                           <FileText className="h-3 w-3" />
                           {a.client_name} ({a.agreement_type})
                         </Link>
-                        {i < linkedAgreements.length - 1 && ", "}
-                      </span>
-                    ))}
+                      ))}
+                      {internalPublishers.size === 0 && linkedAgreements.length === 0 && project.publishing && (
+                        <span>{project.publishing}</span>
+                      )}
+                    </span>
                   </div>
-                ) : project.publishing ? (
-                  <div><span className="text-muted-foreground">Förlag:</span> {project.publishing}</div>
-                ) : null}
+                )}
               </div>
               {project.description && <p className="text-sm text-muted-foreground mt-2 italic">{project.description}</p>}
             </>
