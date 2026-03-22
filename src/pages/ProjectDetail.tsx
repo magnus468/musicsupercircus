@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
-import { useAgreements } from "@/hooks/useAgreements";
+import { useAgreements, useUpdateAgreement } from "@/hooks/useAgreements";
 import { useProjectAgreements, useSaveProjectAgreements } from "@/hooks/useProjectAgreements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ const ProjectDetail = () => {
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
   const updateProject = useUpdateProject();
+  const updateAgreement = useUpdateAgreement();
   const saveProjectAgreements = useSaveProjectAgreements();
   const navigate = useNavigate();
 
@@ -212,8 +213,21 @@ const ProjectDetail = () => {
                         }}
                       />
                       <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span>{a.client_name} ({a.agreement_type})</span>
-                      <Badge variant="secondary" className="ml-auto text-xs">{a.internal_publisher}</Badge>
+                      <span className="flex-1">{a.client_name} ({a.agreement_type})</span>
+                      <Select
+                        value={a.internal_publisher}
+                        onValueChange={(v) => {
+                          updateAgreement.mutate({ id: a.id, internal_publisher: v });
+                        }}
+                      >
+                        <SelectTrigger className="w-24 h-7 text-xs" onClick={(e) => e.stopPropagation()}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="MSCE">MSCE</SelectItem>
+                          <SelectItem value="MSCP">MSCP</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </label>
                   ))}
                 </div>
