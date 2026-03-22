@@ -139,8 +139,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const updateCreatorField = (index: number, field: Partial<CreatorEntry>) => {
     setCreatorsList((prev) => {
       const updated = prev.map((c, i) => i === index ? { ...c, ...field } : c);
-      // Recalc if role changed or publisher name changed (affects Embark logic)
-      if ('role' in field || ('name' in field && prev[index].role === 'E')) return recalcShares(updated);
+      if ('role' in field || (('firstName' in field || 'lastName' in field) && prev[index].role === 'E')) return recalcShares(updated);
       return updated;
     });
   };
