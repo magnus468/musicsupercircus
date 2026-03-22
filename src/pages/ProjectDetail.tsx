@@ -43,6 +43,7 @@ const ProjectDetail = () => {
   const startEditing = () => {
     if (!project) return;
     setForm({
+      name: project.name,
       project_number: project.project_number || "",
       client: project.client || "",
       supervisor: project.supervisor || "",
