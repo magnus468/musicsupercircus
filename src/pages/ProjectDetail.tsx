@@ -31,7 +31,10 @@ const ProjectDetail = () => {
   const saveProjectAgreements = useSaveProjectAgreements();
   const navigate = useNavigate();
 
+  const { data: directAgreementIds } = useProjectAgreements(project?.id);
+
   const [editing, setEditing] = useState(false);
+  const [selectedAgreementIds, setSelectedAgreementIds] = useState<string[]>([]);
   const [form, setForm] = useState({
     name: "",
     project_number: "",
@@ -55,6 +58,7 @@ const ProjectDetail = () => {
       status: project.status || "",
       description: project.description || "",
     });
+    setSelectedAgreementIds(directAgreementIds ?? []);
     setEditing(true);
   };
 
