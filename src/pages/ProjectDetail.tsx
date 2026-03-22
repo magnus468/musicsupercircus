@@ -2,11 +2,14 @@ import { useParams, Link } from "react-router-dom";
 import { useProject } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
+import { useAgreements, useAllAgreementWorkCounts } from "@/hooks/useAgreements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProjectDetail = () => {
   const { name } = useParams<{ name: string }>();
@@ -14,11 +17,34 @@ const ProjectDetail = () => {
   const { data: project, isLoading: projectLoading } = useProject(projectName);
   const { data: works, isLoading: worksLoading } = useWorks();
   const { data: clients } = useClients();
+  const { data: agreements } = useAgreements();
+
+  // Get all agreement_works to find which agreements link to this project's works
+  const { data: allAgreementWorks } = useQuery({
+    queryKey: ["all-agreement-works"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_works")
+        .select("agreement_id, work_id");
+      if (error) throw error;
+      return data as { agreement_id: string; work_id: string }[];
+    },
+  });
 
   const clientMap = new Map<string, string>();
   clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
 
   const projectWorks = works?.filter((w) => w.project === projectName) ?? [];
+  const projectWorkIds = new Set(projectWorks.map((w) => w.id));
+
+  // Find agreements linked to this project's works
+  const linkedAgreementIds = new Set<string>();
+  allAgreementWorks?.forEach((aw) => {
+    if (projectWorkIds.has(aw.work_id)) {
+      linkedAgreementIds.add(aw.agreement_id);
+    }
+  });
+  const linkedAgreements = agreements?.filter((a) => linkedAgreementIds.has(a.id)) ?? [];
 
   if (projectLoading || worksLoading) return <p className="text-muted-foreground">Laddar...</p>;
 
@@ -48,9 +74,25 @@ const ProjectDetail = () => {
               {project.composer && (
                 <div><span className="text-muted-foreground">Kompositör:</span> {project.composer}</div>
               )}
-              {project.publishing && (
+              {linkedAgreements.length > 0 ? (
+                <div>
+                  <span className="text-muted-foreground">Förlag:</span>{" "}
+                  {linkedAgreements.map((a, i) => (
+                    <span key={a.id}>
+                      <Link
+                        to={`/agreements?highlight=${a.id}`}
+                        className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1"
+                      >
+                        <FileText className="h-3 w-3" />
+                        {a.client_name} ({a.agreement_type})
+                      </Link>
+                      {i < linkedAgreements.length - 1 && ", "}
+                    </span>
+                  ))}
+                </div>
+              ) : project.publishing ? (
                 <div><span className="text-muted-foreground">Förlag:</span> {project.publishing}</div>
-              )}
+              ) : null}
             </div>
           )}
           {project?.description && (
