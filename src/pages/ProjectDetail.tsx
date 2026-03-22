@@ -196,6 +196,29 @@ const ProjectDetail = () => {
                 <label className="text-xs text-muted-foreground">Beskrivning</label>
                 <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} />
               </div>
+              <div className="col-span-full space-y-2">
+                <label className="text-xs text-muted-foreground">Kopplade förlagsavtal</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {agreements?.map((a) => (
+                    <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer rounded-md border border-input p-2 hover:bg-accent/50 transition-colors">
+                      <Checkbox
+                        checked={selectedAgreementIds.includes(a.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedAgreementIds((prev) =>
+                            checked ? [...prev, a.id] : prev.filter((id) => id !== a.id)
+                          );
+                        }}
+                      />
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span>{a.client_name} ({a.agreement_type})</span>
+                      <Badge variant="secondary" className="ml-auto text-xs">{a.internal_publisher}</Badge>
+                    </label>
+                  ))}
+                </div>
+                {(!agreements || agreements.length === 0) && (
+                  <p className="text-xs text-muted-foreground">Inga förlagsavtal tillgängliga</p>
+                )}
+              </div>
             </div>
           ) : project ? (
             <>
