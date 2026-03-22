@@ -28,6 +28,7 @@ const ProjectDetail = () => {
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
   const updateProject = useUpdateProject();
+  const updateAgreement = useUpdateAgreement();
   const saveProjectAgreements = useSaveProjectAgreements();
   const navigate = useNavigate();
 
