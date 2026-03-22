@@ -10,6 +10,7 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, color: "text-blue-400" },
   { to: "/works", label: "Verklista", icon: List, color: "text-emerald-400" },
   { to: "/works/new", label: "Nytt verk", icon: Plus, color: "text-amber-400" },
+  { to: "/projects", label: "Projekt", icon: FolderOpen, color: "text-cyan-400" },
   { to: "/clients", label: "Klienter", icon: Users, color: "text-violet-400" },
   { to: "/agreements", label: "Förlagsavtal", icon: FileText, color: "text-rose-400" },
 ];
