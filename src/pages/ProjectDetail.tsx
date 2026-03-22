@@ -100,6 +100,12 @@ const ProjectDetail = () => {
   });
   const linkedAgreements = agreements?.filter((a) => linkedAgreementIds.has(a.id)) ?? [];
 
+  const internalPublishers = new Set<string>();
+  projectWorks.forEach((w) => {
+    const label = w.publishing_type === "MSCE" ? "MSCE" : w.publishing_type === "MSCP" ? "MSCP" : w.publishing_type === "administration" ? "Administration" : null;
+    if (label) internalPublishers.add(label);
+  });
+
   if (projectLoading || worksLoading) return <p className="text-muted-foreground">Laddar...</p>;
 
   return (
