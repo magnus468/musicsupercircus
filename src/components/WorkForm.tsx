@@ -82,7 +82,7 @@ const recalcShares = (list: CreatorEntry[]): CreatorEntry[] => {
   const updatedCreators = assignEqualShares(creators, 66.67, 50);
 
   // Check if Embark Studios is among publishers for custom 30/70 split
-  const hasEmbark = publishers.some((p) => p.name.toLowerCase().includes("embark"));
+  const hasEmbark = publishers.some((p) => fullName(p).toLowerCase().includes("embark"));
   let updatedPublishers: CreatorEntry[];
 
   if (hasEmbark && publishers.length === 2) {
