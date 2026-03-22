@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
-import { useAgreements } from "@/hooks/useAgreements";
+import { useAgreements, useUpdateAgreement } from "@/hooks/useAgreements";
 import { useProjectAgreements, useSaveProjectAgreements } from "@/hooks/useProjectAgreements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
