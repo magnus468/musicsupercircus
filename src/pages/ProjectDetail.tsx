@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
@@ -26,9 +26,11 @@ const ProjectDetail = () => {
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
   const updateProject = useUpdateProject();
+  const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
+    name: "",
     project_number: "",
     client: "",
     supervisor: "",
@@ -41,6 +43,7 @@ const ProjectDetail = () => {
   const startEditing = () => {
     if (!project) return;
     setForm({
+      name: project.name,
       project_number: project.project_number || "",
       client: project.client || "",
       supervisor: project.supervisor || "",
@@ -55,10 +58,12 @@ const ProjectDetail = () => {
   const cancelEditing = () => setEditing(false);
 
   const saveEditing = () => {
-    if (!project) return;
+    if (!project || !form.name.trim()) return;
+    const newName = form.name.trim();
     updateProject.mutate(
       {
         id: project.id,
+        name: newName,
         project_number: form.project_number || null,
         client: form.client || null,
         supervisor: form.supervisor || null,
@@ -71,6 +76,9 @@ const ProjectDetail = () => {
         onSuccess: () => {
           toast.success("Projektet uppdaterat");
           setEditing(false);
+          if (newName !== projectName) {
+            navigate(`/projects/${encodeURIComponent(newName)}`, { replace: true });
+          }
         },
         onError: () => toast.error("Kunde inte spara"),
       }
@@ -118,7 +126,15 @@ const ProjectDetail = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CardTitle>{projectName}</CardTitle>
+              {editing ? (
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="text-xl font-semibold h-auto py-1"
+                />
+              ) : (
+                <CardTitle>{projectName}</CardTitle>
+              )}
               {!editing && project?.status && <Badge variant="secondary">{project.status}</Badge>}
             </div>
             {!editing ? (
