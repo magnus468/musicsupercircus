@@ -99,10 +99,16 @@ const ProjectTable = ({
             <TableCell className="text-muted-foreground">{p.client || "—"}</TableCell>
             <TableCell className="text-muted-foreground">{p.supervisor || "—"}</TableCell>
             <TableCell className="text-muted-foreground">{p.composer || "—"}</TableCell>
-            <TableCell className="text-muted-foreground text-xs max-w-[200px]">
-              {linked.length > 0 ? (
-                <span className="flex flex-col gap-0.5">
-                  {linked.map((a) => (
+            <TableCell className="text-muted-foreground text-xs max-w-[250px]">
+              <span className="flex flex-wrap items-center gap-1.5">
+                {(() => {
+                  const pubs = projectPublishers.get(p.name);
+                  return pubs && pubs.size > 0
+                    ? [...pubs].map((pub) => <Badge key={pub} variant="secondary" className="text-[10px] px-1.5 py-0">{pub}</Badge>)
+                    : null;
+                })()}
+                {linked.length > 0 ? (
+                  linked.map((a) => (
                     <Link
                       key={a.id}
                       to={`/agreements?highlight=${a.id}`}
@@ -111,13 +117,13 @@ const ProjectTable = ({
                       <FileText className="h-3 w-3 shrink-0" />
                       {a.client_name}
                     </Link>
-                  ))}
-                </span>
-              ) : cleanPub ? (
-                cleanPub
-              ) : (
-                "—"
-              )}
+                  ))
+                ) : cleanPub ? (
+                  <span>{cleanPub}</span>
+                ) : null}
+                {!projectPublishers.get(p.name)?.size && linked.length === 0 && !cleanPub && "—"}
+              </span>
+            </TableCell>
             </TableCell>
             <TableCell>
               {p.status ? <Badge variant={statusVariant(p.status)}>{p.status}</Badge> : "—"}
