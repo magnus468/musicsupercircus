@@ -17,7 +17,7 @@ type SortDir = "asc" | "desc";
 const statusVariant = (status: string | null) => {
   switch (status) {
     case "Pågående": return "default";
-    case "Klart": return "secondary";
+    case "Avslutat": return "secondary";
     case "Under utveckling": return "outline";
     case "På paus": return "destructive";
     default: return "secondary";
