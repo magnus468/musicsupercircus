@@ -58,10 +58,12 @@ const ProjectDetail = () => {
   const cancelEditing = () => setEditing(false);
 
   const saveEditing = () => {
-    if (!project) return;
+    if (!project || !form.name.trim()) return;
+    const newName = form.name.trim();
     updateProject.mutate(
       {
         id: project.id,
+        name: newName,
         project_number: form.project_number || null,
         client: form.client || null,
         supervisor: form.supervisor || null,
@@ -74,6 +76,9 @@ const ProjectDetail = () => {
         onSuccess: () => {
           toast.success("Projektet uppdaterat");
           setEditing(false);
+          if (newName !== projectName) {
+            navigate(`/projects/${encodeURIComponent(newName)}`, { replace: true });
+          }
         },
         onError: () => toast.error("Kunde inte spara"),
       }
