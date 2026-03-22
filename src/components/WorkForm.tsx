@@ -164,7 +164,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         }
       }
     }
-    const publishers = validCreators.filter((c) => c.role === "E").map((c) => c.name);
+    const publishers = validCreators.filter((c) => c.role === "E").map((c) => fullName(c));
     const data: WorkInsert = {
       title: title.trim(),
       project: project.trim() || null,
