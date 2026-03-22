@@ -81,6 +81,7 @@ const ProjectDetail = () => {
       },
       {
         onSuccess: () => {
+          saveProjectAgreements.mutate({ projectId: project.id, agreementIds: selectedAgreementIds });
           toast.success("Projektet uppdaterat");
           setEditing(false);
           if (newName !== projectName) {
