@@ -126,7 +126,15 @@ const ProjectDetail = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CardTitle>{projectName}</CardTitle>
+              {editing ? (
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="text-xl font-semibold h-auto py-1"
+                />
+              ) : (
+                <CardTitle>{projectName}</CardTitle>
+              )}
               {!editing && project?.status && <Badge variant="secondary">{project.status}</Badge>}
             </div>
             {!editing ? (
