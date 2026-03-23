@@ -218,7 +218,7 @@ const ClientsList = () => {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{renderCell(client, "last_name")}</TableCell>
+                <TableCell>{isPerson ? renderCell(client, "last_name") : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
                 <TableCell className="text-center">
                   {(() => {
                     const count = workCounts?.[client.id] ?? 0;
