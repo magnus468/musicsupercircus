@@ -252,16 +252,17 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
 
         {/* Förlag */}
-        <div className="flex items-center gap-4">
-          <Label>Förlag</Label>
-          <Select value={publishingType} onValueChange={(v) => setPublishingType(v as "MSCE" | "MSCP")}>
-            <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MSCE">MSCE</SelectItem>
-              <SelectItem value="MSCP">MSCP</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-4">
+            <Label>Förlag</Label>
+            <Select value={publishingType} onValueChange={(v) => setPublishingType(v as "MSCE" | "MSCP")}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MSCE">MSCE</SelectItem>
+                <SelectItem value="MSCP">MSCP</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1">
             {creatorsList.map((creator, idx) => {
               if (creator.role !== "E") return null;
