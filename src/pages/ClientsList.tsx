@@ -148,13 +148,13 @@ const ClientsList = () => {
             <TableRow>
               <TableHead>Förnamn</TableHead>
               <TableHead>Efternamn</TableHead>
+              <TableHead className="text-center">Verk</TableHead>
               <TableHead>E-post</TableHead>
               <TableHead>Telefon</TableHead>
               <TableHead>Organisation</TableHead>
               <TableHead>Land</TableHead>
               <TableHead>Stad</TableHead>
               <TableHead>IPI-nummer</TableHead>
-              <TableHead className="text-center">Verk</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
