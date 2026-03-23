@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Trash2, Plus, Eye, Check, X, User, Building2, Music } from "lucide-react";
+import { Search, Trash2, Plus, Eye, Check, X, User, Building2, Music, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ClientForm from "@/components/ClientForm";
