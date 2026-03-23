@@ -194,7 +194,7 @@ const ClientsList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clients?.map((client) => {
+            {sortedClients.map((client) => {
               const isPerson = !!(client.first_name && client.last_name);
               const initials = isPerson
                 ? `${client.first_name.charAt(0)}${client.last_name.charAt(0)}`.toUpperCase()
