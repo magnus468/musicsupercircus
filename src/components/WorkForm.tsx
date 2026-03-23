@@ -29,8 +29,14 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
     const trimmed = part.trim();
     const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
-      const nameParts = match[1].trim().split(/\s+/);
-      return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: match[2] as CreatorEntry["role"], share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
+      const role = match[2] as CreatorEntry["role"];
+      const fullName = match[1].trim();
+      // Publishers use firstName for full name, persons split first/last
+      if (role === "E") {
+        return { firstName: fullName, lastName: "", role, share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
+      }
+      const nameParts = fullName.split(/\s+/);
+      return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role, share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
     }
     const nameParts = trimmed.split(/\s+/);
     return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: "CA" as const, share: "", shareRow: "", represented: false };
