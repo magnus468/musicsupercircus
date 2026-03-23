@@ -11,7 +11,7 @@ import WorkForm from "@/components/WorkForm";
 
 const WorkDetail = () => {
   const [editing, setEditing] = useState(false);
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{id: string;}>();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
 
@@ -77,12 +77,12 @@ const WorkDetail = () => {
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2 text-sm">
-            {work.project && (
-              <div>
+            {work.project &&
+            <div>
                 <dt className="text-muted-foreground">Projekt</dt>
                 <dd>{work.project}</dd>
               </div>
-            )}
+            }
             <div>
               <dt className="text-muted-foreground">Internt förlag</dt>
               <dd><Badge variant="secondary">{publishingLabel(work.publishing_type)}</Badge></dd>
@@ -91,32 +91,32 @@ const WorkDetail = () => {
               <dt className="text-muted-foreground">STIM-status</dt>
               <dd><Badge variant="outline">{stimLabel(work.stim_status)}</Badge></dd>
             </div>
-            {work.share_percentage != null && (
-              <div>
+            {work.share_percentage != null &&
+            <div>
                 <dt className="text-muted-foreground">Andel</dt>
                 <dd>{work.share_percentage}%</dd>
               </div>
-            )}
+            }
             <div>
-              <dt className="text-muted-foreground">Förlagsandel Norden</dt>
+              <dt className="text-muted-foreground">
+</dt>
               <dd>{work.nordic_publisher_share}%</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Förlagsandel ROW</dt>
+              <dt className="text-muted-foreground">
+</dt>
               <dd>{work.row_publisher_share}%</dd>
             </div>
-            {work.co_publishers && work.co_publishers.length > 0 && (
-              <div>
+            {work.co_publishers && work.co_publishers.length > 0 && <div>
                 <dt className="text-muted-foreground">Co-publishers</dt>
                 <dd>{work.co_publishers.join(", ")}</dd>
-              </div>
-            )}
-            {work.stim_comment && (
-              <div className="sm:col-span-2">
+              </div>}
+            {work.stim_comment &&
+            <div className="sm:col-span-2">
                 <dt className="text-muted-foreground">STIM-kommentar</dt>
                 <dd className="whitespace-pre-line">{work.stim_comment}</dd>
               </div>
-            )}
+            }
           </dl>
         </CardContent>
       </Card>
@@ -147,32 +147,32 @@ const WorkDetail = () => {
                   return (
                     <tr key={i} className="border-b last:border-0">
                       <td className="px-4 py-2 font-medium">
-                        {clientId ? (
-                          <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                        {clientId ?
+                        <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
                             {entry.name}
-                          </Link>
-                        ) : entry.name}
+                          </Link> :
+                        entry.name}
                       </td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.role || "—"}</td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.share ? `${entry.share}%` : "—"}</td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.shareRow ? `${entry.shareRow}%` : "—"}</td>
                       <td className="px-4 py-2">
-                        {entry.repr ? (
-                          <Badge className="bg-primary/15 text-primary border-0">Ja</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">Nej</span>
-                        )}
+                        {entry.repr ?
+                        <Badge className="bg-primary/15 text-primary border-0">Ja</Badge> :
+
+                        <span className="text-muted-foreground">Nej</span>
+                        }
                       </td>
-                    </tr>
-                  );
+                    </tr>);
+
                 })}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 };
 
 export default WorkDetail;
