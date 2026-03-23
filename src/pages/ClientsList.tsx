@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useClients, useDeleteClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { useClientWorkCounts } from "@/hooks/useClientWorkCounts";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Trash2, Plus, Eye, Check, X, User, Building2, Music } from "lucide-react";
+import { Search, Trash2, Plus, Eye, Check, X, User, Building2, Music, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ClientForm from "@/components/ClientForm";
@@ -85,6 +85,31 @@ const ClientsList = () => {
   const { data: workCounts } = useClientWorkCounts();
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [sortField, setSortField] = useState<"last_name" | "works" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (field: "last_name" | "works") => {
+    if (sortField === field) {
+      if (sortDir === "asc") setSortDir("desc");
+      else { setSortField(null); setSortDir("asc"); }
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const sortedClients = useMemo(() => {
+    if (!clients) return [];
+    if (!sortField) return clients;
+    const list = [...clients];
+    const dir = sortDir === "asc" ? 1 : -1;
+    if (sortField === "last_name") {
+      list.sort((a, b) => dir * (a.last_name || "").localeCompare(b.last_name || "", "sv"));
+    } else {
+      list.sort((a, b) => dir * ((workCounts?.[a.id] ?? 0) - (workCounts?.[b.id] ?? 0)));
+    }
+    return list;
+  }, [clients, sortField, sortDir, workCounts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Vill du verkligen ta bort denna klient?")) return;
@@ -147,8 +172,18 @@ const ClientsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Förnamn</TableHead>
-              <TableHead>Efternamn</TableHead>
-              <TableHead className="text-center">Verk</TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("last_name")}>
+                <div className="flex items-center gap-1">
+                  Efternamn
+                  {sortField === "last_name" ? (sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                </div>
+              </TableHead>
+              <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleSort("works")}>
+                <div className="flex items-center justify-center gap-1">
+                  Verk
+                  {sortField === "works" ? (sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                </div>
+              </TableHead>
               <TableHead>E-post</TableHead>
               <TableHead>Telefon</TableHead>
               <TableHead>Organisation</TableHead>
@@ -159,7 +194,7 @@ const ClientsList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clients?.map((client) => {
+            {sortedClients.map((client) => {
               const isPerson = !!(client.first_name && client.last_name);
               const initials = isPerson
                 ? `${client.first_name.charAt(0)}${client.last_name.charAt(0)}`.toUpperCase()
