@@ -123,6 +123,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     ])
   );
 
+  const [publishingType, setPublishingType] = useState<"MSCE" | "MSCP">(work?.publishing_type === "MSCE" ? "MSCE" : "MSCP");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
@@ -176,7 +177,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       title: title.trim(),
       project: project.trim() || null,
       creators: serializeCreators(validCreators),
-      publishing_type: publishers.length > 0 ? "MSCP" as const : "original" as const,
+      publishing_type: publishers.length > 0 ? publishingType : "original" as const,
       co_publishers: publishers.length > 0 ? publishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
@@ -252,7 +253,16 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
         {/* Förlag */}
         <div className="space-y-2">
-          <Label>Förlag</Label>
+          <div className="flex items-center gap-4">
+            <Label>Förlag</Label>
+            <Select value={publishingType} onValueChange={(v) => setPublishingType(v as "MSCE" | "MSCP")}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MSCE">MSCE</SelectItem>
+                <SelectItem value="MSCP">MSCP</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1">
             {creatorsList.map((creator, idx) => {
               if (creator.role !== "E") return null;
