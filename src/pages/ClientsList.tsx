@@ -184,12 +184,6 @@ const ClientsList = () => {
                   </div>
                 </TableCell>
                 <TableCell>{renderCell(client, "last_name")}</TableCell>
-                <TableCell>{renderCell(client, "email")}</TableCell>
-                <TableCell>{renderCell(client, "phone")}</TableCell>
-                <TableCell>{renderCell(client, "organization")}</TableCell>
-                <TableCell>{renderCell(client, "country")}</TableCell>
-                <TableCell>{renderCell(client, "city")}</TableCell>
-                <TableCell>{renderCell(client, "ipi_number", true)}</TableCell>
                 <TableCell className="text-center">
                   {(() => {
                     const count = workCounts?.[client.id] ?? 0;
@@ -203,6 +197,12 @@ const ClientsList = () => {
                     );
                   })()}
                 </TableCell>
+                <TableCell>{renderCell(client, "email")}</TableCell>
+                <TableCell>{renderCell(client, "phone")}</TableCell>
+                <TableCell>{renderCell(client, "organization")}</TableCell>
+                <TableCell>{renderCell(client, "country")}</TableCell>
+                <TableCell>{renderCell(client, "city")}</TableCell>
+                <TableCell>{renderCell(client, "ipi_number", true)}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
