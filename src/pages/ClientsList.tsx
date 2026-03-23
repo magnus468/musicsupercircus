@@ -172,8 +172,18 @@ const ClientsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Förnamn</TableHead>
-              <TableHead>Efternamn</TableHead>
-              <TableHead className="text-center">Verk</TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("last_name")}>
+                <div className="flex items-center gap-1">
+                  Efternamn
+                  {sortField === "last_name" ? (sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                </div>
+              </TableHead>
+              <TableHead className="text-center cursor-pointer select-none" onClick={() => toggleSort("works")}>
+                <div className="flex items-center justify-center gap-1">
+                  Verk
+                  {sortField === "works" ? (sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                </div>
+              </TableHead>
               <TableHead>E-post</TableHead>
               <TableHead>Telefon</TableHead>
               <TableHead>Organisation</TableHead>
