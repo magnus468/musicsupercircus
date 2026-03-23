@@ -97,16 +97,6 @@ const WorkDetail = () => {
                 <dd>{work.share_percentage}%</dd>
               </div>
             }
-            <div>
-              <dt className="text-muted-foreground">
-</dt>
-              <dd>{work.nordic_publisher_share}%</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">
-</dt>
-              <dd>{work.row_publisher_share}%</dd>
-            </div>
             {work.co_publishers && work.co_publishers.length > 0 && <div>
                 <dt className="text-muted-foreground">Co-publishers</dt>
                 <dd>{work.co_publishers.join(", ")}</dd>
