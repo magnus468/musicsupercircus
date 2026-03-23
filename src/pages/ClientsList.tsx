@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useClients, useDeleteClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { useClientWorkCounts } from "@/hooks/useClientWorkCounts";
 import { Input } from "@/components/ui/input";
