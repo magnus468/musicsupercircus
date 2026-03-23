@@ -85,6 +85,31 @@ const ClientsList = () => {
   const { data: workCounts } = useClientWorkCounts();
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [sortField, setSortField] = useState<"last_name" | "works" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (field: "last_name" | "works") => {
+    if (sortField === field) {
+      if (sortDir === "asc") setSortDir("desc");
+      else { setSortField(null); setSortDir("asc"); }
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const sortedClients = useMemo(() => {
+    if (!clients) return [];
+    if (!sortField) return clients;
+    const list = [...clients];
+    const dir = sortDir === "asc" ? 1 : -1;
+    if (sortField === "last_name") {
+      list.sort((a, b) => dir * (a.last_name || "").localeCompare(b.last_name || "", "sv"));
+    } else {
+      list.sort((a, b) => dir * ((workCounts?.[a.id] ?? 0) - (workCounts?.[b.id] ?? 0)));
+    }
+    return list;
+  }, [clients, sortField, sortDir, workCounts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Vill du verkligen ta bort denna klient?")) return;
