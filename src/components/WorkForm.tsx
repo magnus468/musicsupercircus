@@ -123,6 +123,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     ])
   );
 
+  const [publishingType, setPublishingType] = useState<"MSCE" | "MSCP">(work?.publishing_type === "MSCE" ? "MSCE" : "MSCP");
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
