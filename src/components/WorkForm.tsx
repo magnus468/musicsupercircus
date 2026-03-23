@@ -23,9 +23,10 @@ const fullName = (c: CreatorEntry) => `${c.firstName} ${c.lastName}`.trim();
 // Parse "Name (CA, 50%, row:40%, repr)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
   if (!str) return [];
-  const parts = str.match(/[^,]+\([^)]*\)/g) || str.split(", ");
+  // Split on "), " to correctly handle names with spaces/commas
+  const parts = str.split(/\),\s*/).map((p, i, arr) => i < arr.length - 1 ? p + ")" : p);
   return parts.map((part) => {
-    const trimmed = part.trim().replace(/^,\s*/, "");
+    const trimmed = part.trim();
     const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {
       const nameParts = match[1].trim().split(/\s+/);
