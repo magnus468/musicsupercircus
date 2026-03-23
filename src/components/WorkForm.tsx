@@ -177,7 +177,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       title: title.trim(),
       project: project.trim() || null,
       creators: serializeCreators(validCreators),
-      publishing_type: publishers.length > 0 ? "MSCP" as const : "original" as const,
+      publishing_type: publishers.length > 0 ? publishingType : "original" as const,
       co_publishers: publishers.length > 0 ? publishers : null,
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
