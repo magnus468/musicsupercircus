@@ -40,6 +40,33 @@ const typeLabels: Record<string, string> = {
 const statusLabels: Record<string, string> = {
   active: "Aktivt",
   expired: "Avslutat",
+  retention_expired: "Retention utgången",
+};
+
+const computeDisplayStatus = (a: Agreement): { label: string; color: string; dotColor: string } => {
+  const today = new Date().toISOString().split("T")[0];
+
+  // Check retention expiry first (red)
+  if (!a.life_of_copyright) {
+    const ret = calcRetentionDate(
+      a.expiry_date || "",
+      ((a as any).retention_years || "").toString(),
+      (a as any).post_expiry_action || "expires",
+      (a as any).rolling_end_date || "",
+    );
+    if (ret.retentionDate && ret.retentionDate <= today) {
+      return { label: "Retention utgången", color: "bg-red-100 text-red-700 border-0", dotColor: "bg-red-500" };
+    }
+  }
+
+  // Check expiry date passed with no rolling extension (orange)
+  const postExpiry = (a as any).post_expiry_action || "expires";
+  if (a.expiry_date && a.expiry_date <= today && !isRolling(postExpiry)) {
+    return { label: "Avslutat", color: "bg-orange-100 text-orange-700 border-0", dotColor: "bg-orange-500" };
+  }
+
+  // Default: active (green)
+  return { label: "Aktivt", color: "bg-emerald-100 text-emerald-700 border-0", dotColor: "bg-emerald-500" };
 };
 
 interface FormState {
@@ -376,14 +403,15 @@ const AgreementsList = () => {
                     : (a as any).post_expiry_action}
                 </TableCell>
                 <TableCell>
-                  <Badge className={
-                    a.status === "active"
-                      ? "bg-emerald-100 text-emerald-700 border-0"
-                      : "bg-muted text-muted-foreground border-0"
-                  }>
-                    <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
-                    {statusLabels[a.status] || a.status}
-                  </Badge>
+                  {(() => {
+                    const ds = computeDisplayStatus(a);
+                    return (
+                      <Badge className={ds.color}>
+                        <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${ds.dotColor}`} />
+                        {ds.label}
+                      </Badge>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>
                   {a.file_path ? (
