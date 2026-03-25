@@ -9,6 +9,10 @@ export type ClientUpdate = TablesUpdate<"clients">;
 export const useClients = (search?: string) => {
   return useQuery({
     queryKey: ["clients", search],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     queryFn: async () => {
       let query = supabase.from("clients").select("*");
       if (search && search.trim()) {
@@ -45,6 +49,9 @@ export const useClient = (id?: string) => {
   return useQuery({
     queryKey: ["clients", id],
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data, error } = await supabase.from("clients").select("*").eq("id", id!).single();
       if (error) throw error;
