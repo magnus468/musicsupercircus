@@ -9,6 +9,10 @@ export type WorkUpdate = TablesUpdate<"works">;
 export const useWorks = (search?: string) => {
   return useQuery({
     queryKey: ["works", search],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     queryFn: async () => {
       let query = supabase.from("works").select("*").order("created_at", { ascending: false });
       if (search && search.trim()) {
@@ -68,6 +72,9 @@ export const useDeleteWork = () => {
 export const useWorksStats = () => {
   return useQuery({
     queryKey: ["works-stats"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data, error } = await supabase.from("works").select("*");
       if (error) throw error;
@@ -106,6 +113,9 @@ export const useWorksStats = () => {
 export const useCoPublisherOptions = () => {
   return useQuery({
     queryKey: ["co-publisher-options"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const [worksRes, clientsRes] = await Promise.all([
         supabase.from("works").select("co_publishers"),
