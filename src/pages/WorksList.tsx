@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useWorks, useDeleteWork, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,18 @@ type SortDir = "asc" | "desc";
 
 const WorksList = () => {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [stimFilter, setStimFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const { data: works, isLoading } = useWorks(search);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data: works, isLoading } = useWorks(debouncedSearch);
   const { data: clients } = useClients();
   const deleteWork = useDeleteWork();
   const [editWork, setEditWork] = useState<Work | null>(null);
