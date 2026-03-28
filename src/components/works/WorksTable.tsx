@@ -100,7 +100,7 @@ const WorksTable = memo(({
               <span className="flex items-center">STIM<SortIcon active={sortKey === "stim_status"} direction={sortDir} /></span>
             </TableHead>
             <TableHead className="cursor-pointer select-none" onClick={() => onToggleSort("share_percentage")}>
-              <span className="flex items-center">Andel<SortIcon active={sortKey === "share_percentage"} direction={sortDir} /></span>
+              <span className="flex items-center">Andel (N/ROW)<SortIcon active={sortKey === "share_percentage"} direction={sortDir} /></span>
             </TableHead>
             <TableHead className="w-20"></TableHead>
           </TableRow>
