@@ -146,8 +146,12 @@ const WorksTable = memo(({
                 </div>
               </TableCell>
               <TableCell>{stimBadge(work.stim_status)}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {work.share_percentage != null ? `${work.share_percentage}%` : "—"}
+              <TableCell className="text-muted-foreground text-xs">
+                {(() => {
+                  const { nordic, row } = computeControlledShare(work.creators);
+                  if (nordic === 0 && row === 0) return "—";
+                  return `${nordic}% / ${row}%`;
+                })()}
               </TableCell>
               <TableCell>
                 <div className="flex gap-1">
