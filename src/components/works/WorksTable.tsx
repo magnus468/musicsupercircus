@@ -21,13 +21,34 @@ interface WorksTableProps {
   onDelete: (id: string) => void;
 }
 
-const creatorItems = (creators: string) => {
+const parseCreatorParts = (creators: string) => {
   return (creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
     .map((c) => ({
       name: c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim(),
       parens: (c.match(/\(([^)]*)\)/) || [])[1] || "",
-    }))
+    }));
+};
+
+const creatorItems = (creators: string) => {
+  return parseCreatorParts(creators)
     .filter((c) => c.name && !c.parens.split(",").map((part) => part.trim()).includes("E"));
+};
+
+const computeControlledShare = (creators: string): { nordic: number; row: number } => {
+  const parts = parseCreatorParts(creators);
+  let nordic = 0;
+  let row = 0;
+  for (const { parens } of parts) {
+    const tags = parens.split(",").map((t) => t.trim());
+    if (!tags.includes("repr")) continue;
+    for (const tag of tags) {
+      const nordicMatch = tag.match(/^(\d+(?:\.\d+)?)%$/);
+      if (nordicMatch) nordic += parseFloat(nordicMatch[1]);
+      const rowMatch = tag.match(/^row:(\d+(?:\.\d+)?)%$/);
+      if (rowMatch) row += parseFloat(rowMatch[1]);
+    }
+  }
+  return { nordic: Math.round(nordic * 100) / 100, row: Math.round(row * 100) / 100 };
 };
 
 const publishingBadge = (type: string) => {
@@ -79,7 +100,7 @@ const WorksTable = memo(({
               <span className="flex items-center">STIM<SortIcon active={sortKey === "stim_status"} direction={sortDir} /></span>
             </TableHead>
             <TableHead className="cursor-pointer select-none" onClick={() => onToggleSort("share_percentage")}>
-              <span className="flex items-center">Andel<SortIcon active={sortKey === "share_percentage"} direction={sortDir} /></span>
+              <span className="flex items-center">Andel (N/ROW)<SortIcon active={sortKey === "share_percentage"} direction={sortDir} /></span>
             </TableHead>
             <TableHead className="w-20"></TableHead>
           </TableRow>
@@ -125,8 +146,12 @@ const WorksTable = memo(({
                 </div>
               </TableCell>
               <TableCell>{stimBadge(work.stim_status)}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {work.share_percentage != null ? `${work.share_percentage}%` : "—"}
+              <TableCell className="text-muted-foreground text-xs">
+                {(() => {
+                  const { nordic, row } = computeControlledShare(work.creators);
+                  if (nordic === 0 && row === 0) return "—";
+                  return `${nordic}% / ${row}%`;
+                })()}
               </TableCell>
               <TableCell>
                 <div className="flex gap-1">
