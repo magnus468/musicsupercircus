@@ -36,10 +36,10 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
         return { firstName: fullName, lastName: "", role, share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
       }
       const nameParts = fullName.split(/\s+/);
-      return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role, share: match[3] || "", shareRow: match[4] || "", represented: !!match[5] };
+      return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: role === "E" ? role : "CA", share: match[3] || "", shareRow: match[4] || "", represented: role !== "E" ? true : !!match[5] };
     }
     const nameParts = trimmed.split(/\s+/);
-    return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: "CA" as const, share: "", shareRow: "", represented: false };
+    return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: "CA" as const, share: "", shareRow: "", represented: true };
   }).filter((c) => c.firstName || c.lastName);
 };
 
