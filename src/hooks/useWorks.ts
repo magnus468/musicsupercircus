@@ -88,9 +88,12 @@ export const useWorksStats = () => {
       works.forEach((w) => {
         byType[w.publishing_type]++;
         byStimStatus[w.stim_status]++;
-        w.creators.split(/[,/]/).forEach((c) => {
-          const name = c.trim();
-          if (name) byCreator[name] = (byCreator[name] || 0) + 1;
+        // Split on "), " to handle creators with commas inside parentheses
+        w.creators.split(/\),\s*/).forEach((part) => {
+          const name = part.replace(/\s*\([^)]*$/, "").trim();
+          if (name && !name.match(/^\d/) && !name.startsWith("row:")) {
+            byCreator[name] = (byCreator[name] || 0) + 1;
+          }
         });
         w.co_publishers?.forEach((cp) => {
           coPublishers[cp] = (coPublishers[cp] || 0) + 1;
