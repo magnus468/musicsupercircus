@@ -150,6 +150,7 @@ const WorksTable = memo(({
                 {(() => {
                   const { nordic, row } = computeControlledShare(work.creators);
                   if (nordic === 0 && row === 0) return "—";
+                  if (nordic === row) return `${nordic}%`;
                   return `${nordic}% / ${row}%`;
                 })()}
               </TableCell>
