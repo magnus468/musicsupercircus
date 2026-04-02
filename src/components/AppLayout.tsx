@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText, FolderOpen } from "lucide-react";
+import { LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText, FolderOpen, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import mscLogoBlack from "@/assets/msc-logo-black.jpg";
@@ -13,6 +13,7 @@ const navItems = [
   { to: "/projects", label: "Projekt", icon: FolderOpen, color: "text-cyan-400" },
   { to: "/clients", label: "Klienter", icon: Users, color: "text-violet-400" },
   { to: "/agreements", label: "Förlagsavtal", icon: FileText, color: "text-rose-400" },
+  { to: "/review", label: "Granska verk", icon: AlertTriangle, color: "text-orange-400" },
 ];
 
 const AppLayout = ({ children }: { children: ReactNode }) => {

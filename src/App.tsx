@@ -15,6 +15,7 @@ import ClientDetail from "@/pages/ClientDetail";
 import AgreementsList from "@/pages/AgreementsList";
 import ProjectDetail from "@/pages/ProjectDetail";
 import ProjectsList from "@/pages/ProjectsList";
+import ReviewWorks from "@/pages/ReviewWorks";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/clients" element={<ProtectedRoute><ClientsList /></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
             <Route path="/agreements" element={<ProtectedRoute><AgreementsList /></ProtectedRoute>} />
+            <Route path="/review" element={<ProtectedRoute><ReviewWorks /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
