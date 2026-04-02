@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
+import { useAgreements, useAgreementWorks } from "@/hooks/useAgreements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,11 +15,26 @@ const WorkDetail = () => {
   const { id } = useParams<{id: string;}>();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
+  const { data: agreements } = useAgreements();
+  const { data: linkedAgreementIds } = useAgreementWorks(id);
 
   const work = works?.find((w) => w.id === id);
 
   const clientMap = new Map<string, string>();
   clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
+
+  // Map co-publisher name (lowercase) → linked agreement
+  const coPublisherAgreementMap = useMemo(() => {
+    const map = new Map<string, { id: string; client_name: string; agreement_type: string }>();
+    if (!agreements || !linkedAgreementIds) return map;
+    const linked = agreements.filter((a) => linkedAgreementIds.includes(a.id));
+    linked.forEach((a) => {
+      if (a.client_name) {
+        map.set(a.client_name.toLowerCase(), { id: a.id, client_name: a.client_name, agreement_type: a.agreement_type });
+      }
+    });
+    return map;
+  }, [agreements, linkedAgreementIds]);
 
   if (isLoading) return <p className="text-muted-foreground">Laddar...</p>;
   if (!work) return <p className="text-muted-foreground">Verket hittades inte.</p>;
@@ -99,7 +115,26 @@ const WorkDetail = () => {
             }
             {work.co_publishers && work.co_publishers.length > 0 && <div>
                 <dt className="text-muted-foreground">Co-publishers</dt>
-                <dd>{work.co_publishers.join(", ")}</dd>
+                <dd className="space-x-1">
+                  {work.co_publishers.map((cp, i) => {
+                    const agreement = coPublisherAgreementMap.get(cp.toLowerCase());
+                    return (
+                      <span key={cp}>
+                        {agreement ? (
+                          <Link
+                            to={`/agreements?highlight=${agreement.id}`}
+                            className="text-primary underline underline-offset-2 hover:text-primary/80"
+                          >
+                            {cp}
+                          </Link>
+                        ) : (
+                          <span>{cp}</span>
+                        )}
+                        {i < work.co_publishers!.length - 1 && ", "}
+                      </span>
+                    );
+                  })}
+                </dd>
               </div>}
             {work.stim_comment &&
             <div className="sm:col-span-2">

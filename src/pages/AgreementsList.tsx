@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   useAgreements,
   useCreateAgreement,
@@ -140,6 +140,8 @@ const calcRetentionDate = (
 };
 
 const AgreementsList = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
   const { data: agreements, isLoading } = useAgreements();
   const { data: clients } = useClients();
   const { data: works } = useWorks();
@@ -161,6 +163,19 @@ const AgreementsList = () => {
   const [newClientLastName, setNewClientLastName] = useState("");
   const [newClientOrg, setNewClientOrg] = useState("");
   const [newClientContact, setNewClientContact] = useState("");
+  const highlightRef = useRef<HTMLTableRowElement>(null);
+
+  // Scroll to highlighted agreement
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Clear highlight param after a delay
+      const timer = setTimeout(() => {
+        setSearchParams({}, { replace: true });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightId, agreements, setSearchParams]);
 
   const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
 
@@ -359,7 +374,11 @@ const AgreementsList = () => {
           </TableHeader>
           <TableBody>
             {agreements?.map((a) => (
-              <TableRow key={a.id}>
+              <TableRow
+                key={a.id}
+                ref={a.id === highlightId ? highlightRef : undefined}
+                className={a.id === highlightId ? "bg-primary/10 animate-pulse" : ""}
+              >
                 <TableCell className="font-medium">
                   <Link to={`/clients/${a.client_id}`} className="text-primary underline-offset-4 hover:underline">
                     {a.client_name}
