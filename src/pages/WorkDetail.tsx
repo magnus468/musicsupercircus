@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
+import { useAgreements, useAgreementWorks } from "@/hooks/useAgreements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
