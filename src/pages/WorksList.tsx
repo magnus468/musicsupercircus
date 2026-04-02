@@ -81,6 +81,10 @@ const WorksList = () => {
             aVal = a.share_percentage ?? -1;
             bVal = b.share_percentage ?? -1;
             break;
+          case "created_at":
+            aVal = a.created_at;
+            bVal = b.created_at;
+            break;
         }
 
         if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
