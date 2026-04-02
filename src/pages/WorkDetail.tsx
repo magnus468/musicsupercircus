@@ -2,39 +2,81 @@ import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
-import { useAgreements, useAgreementWorks } from "@/hooks/useAgreements";
+import { useAgreements, useAgreementWorks, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, Pencil } from "lucide-react";
 import WorkForm from "@/components/WorkForm";
+import CoPublisherAgreementDialog from "@/components/CoPublisherAgreementDialog";
+import AgreementPdfPreview from "@/components/AgreementPdfPreview";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+/** Fetch all agreement_works rows so we can show linked works per agreement */
+const useAllAgreementWorks = () => {
+  return useQuery({
+    queryKey: ["all-agreement-works"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_works")
+        .select("agreement_id, work_id");
+      if (error) throw error;
+      const map: Record<string, string[]> = {};
+      (data as any[]).forEach((d) => {
+        if (!map[d.agreement_id]) map[d.agreement_id] = [];
+        map[d.agreement_id].push(d.work_id);
+      });
+      return map;
+    },
+  });
+};
 
 const WorkDetail = () => {
   const [editing, setEditing] = useState(false);
+  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{id: string;}>();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
   const { data: linkedAgreementIds } = useAgreementWorks(id);
+  const { data: allAgreementWorks } = useAllAgreementWorks();
 
   const work = works?.find((w) => w.id === id);
 
   const clientMap = new Map<string, string>();
   clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
 
-  // Map co-publisher name (lowercase) → linked agreement
+  // Map co-publisher name (lowercase) → full agreement object
   const coPublisherAgreementMap = useMemo(() => {
-    const map = new Map<string, { id: string; client_name: string; agreement_type: string }>();
+    const map = new Map<string, Agreement>();
     if (!agreements || !linkedAgreementIds) return map;
     const linked = agreements.filter((a) => linkedAgreementIds.includes(a.id));
     linked.forEach((a) => {
       if (a.client_name) {
-        map.set(a.client_name.toLowerCase(), { id: a.id, client_name: a.client_name, agreement_type: a.agreement_type });
+        map.set(a.client_name.toLowerCase(), a);
       }
     });
     return map;
   }, [agreements, linkedAgreementIds]);
+
+  const handleViewPdf = async (agreement: Agreement) => {
+    if (!agreement.file_path) return;
+    try {
+      const url = await getAgreementSignedUrl(agreement.file_path);
+      setPdfViewerUrl(url);
+    } catch {
+      toast.error("Kunde inte öppna avtalet");
+    }
+  };
+
+  const closePdfViewer = () => {
+    if (pdfViewerUrl?.startsWith("blob:")) URL.revokeObjectURL(pdfViewerUrl);
+    setPdfViewerUrl(null);
+  };
 
   if (isLoading) return <p className="text-muted-foreground">Laddar...</p>;
   if (!work) return <p className="text-muted-foreground">Verket hittades inte.</p>;
@@ -121,12 +163,12 @@ const WorkDetail = () => {
                     return (
                       <span key={cp}>
                         {agreement ? (
-                          <Link
-                            to={`/agreements?highlight=${agreement.id}`}
-                            className="text-primary underline underline-offset-2 hover:text-primary/80"
+                          <button
+                            onClick={() => setSelectedAgreement(agreement)}
+                            className="text-primary underline underline-offset-2 hover:text-primary/80 cursor-pointer"
                           >
                             {cp}
-                          </Link>
+                          </button>
                         ) : (
                           <span>{cp}</span>
                         )}
@@ -184,20 +226,40 @@ const WorkDetail = () => {
                       <td className="px-4 py-2">
                         {entry.repr ?
                         <Badge className="bg-primary/15 text-primary border-0">Ja</Badge> :
-
                         <span className="text-muted-foreground">Nej</span>
                         }
                       </td>
                     </tr>);
-
                 })}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
-    </div>);
 
+      {/* Co-publisher agreement dialog */}
+      <CoPublisherAgreementDialog
+        agreement={selectedAgreement}
+        allWorks={works || []}
+        agreementWorkIds={selectedAgreement ? (allAgreementWorks?.[selectedAgreement.id] || []) : []}
+        open={!!selectedAgreement}
+        onOpenChange={(open) => !open && setSelectedAgreement(null)}
+        onViewPdf={handleViewPdf}
+      />
+
+      {/* PDF viewer dialog */}
+      <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => !open && closePdfViewer()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Avtalsdokument</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-[60vh]">
+            {pdfViewerUrl && <AgreementPdfPreview url={pdfViewerUrl} />}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 };
 
 export default WorkDetail;
