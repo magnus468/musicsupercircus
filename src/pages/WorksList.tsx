@@ -7,7 +7,7 @@ import WorksFilters from "@/components/works/WorksFilters";
 import WorksTable from "@/components/works/WorksTable";
 import { toast } from "sonner";
 
-type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_status" | "share_percentage";
+type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_status" | "share_percentage" | "created_at";
 type SortDir = "asc" | "desc";
 
 const WorksList = () => {
