@@ -15,11 +15,26 @@ const WorkDetail = () => {
   const { id } = useParams<{id: string;}>();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
+  const { data: agreements } = useAgreements();
+  const { data: linkedAgreementIds } = useAgreementWorks(id);
 
   const work = works?.find((w) => w.id === id);
 
   const clientMap = new Map<string, string>();
   clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
+
+  // Map co-publisher name (lowercase) → linked agreement
+  const coPublisherAgreementMap = useMemo(() => {
+    const map = new Map<string, { id: string; client_name: string; agreement_type: string }>();
+    if (!agreements || !linkedAgreementIds) return map;
+    const linked = agreements.filter((a) => linkedAgreementIds.includes(a.id));
+    linked.forEach((a) => {
+      if (a.client_name) {
+        map.set(a.client_name.toLowerCase(), { id: a.id, client_name: a.client_name, agreement_type: a.agreement_type });
+      }
+    });
+    return map;
+  }, [agreements, linkedAgreementIds]);
 
   if (isLoading) return <p className="text-muted-foreground">Laddar...</p>;
   if (!work) return <p className="text-muted-foreground">Verket hittades inte.</p>;
