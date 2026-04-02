@@ -140,6 +140,8 @@ const calcRetentionDate = (
 };
 
 const AgreementsList = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
   const { data: agreements, isLoading } = useAgreements();
   const { data: clients } = useClients();
   const { data: works } = useWorks();
@@ -161,6 +163,19 @@ const AgreementsList = () => {
   const [newClientLastName, setNewClientLastName] = useState("");
   const [newClientOrg, setNewClientOrg] = useState("");
   const [newClientContact, setNewClientContact] = useState("");
+  const highlightRef = useRef<HTMLTableRowElement>(null);
+
+  // Scroll to highlighted agreement
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Clear highlight param after a delay
+      const timer = setTimeout(() => {
+        setSearchParams({}, { replace: true });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightId, agreements, setSearchParams]);
 
   const { data: editWorkIds } = useAgreementWorks(editingAgreement?.id);
 
