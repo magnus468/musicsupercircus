@@ -84,12 +84,11 @@ const computeDisplayStatus = (agreement: Agreement): { label: string; variant: "
   return { label: "Aktivt", variant: "default" };
 };
 
-const ClientDetail = () => {
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const { data: client, isLoading: loadingClient } = useClient(id);
   const { data: allWorks, isLoading: loadingWorks } = useWorks();
   const { data: agreements, isLoading: loadingAgreements } = useAgreements();
-  const { data: workCounts } = useAllAgreementWorkCounts();
 
   const clientAgreements = agreements?.filter((a) => a.client_id === id) ?? [];
   const clientAgreementIds = clientAgreements.map((a) => a.id);
