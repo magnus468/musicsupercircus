@@ -380,7 +380,7 @@ const AgreementsList = () => {
                 className={a.id === highlightId ? "bg-primary/10 animate-pulse" : ""}
               >
                 <TableCell className="font-medium">
-                  <Link to={`/clients/${a.client_id}`} className="text-primary underline-offset-4 hover:underline">
+                  <Link to={`/clients/${a.client_id}?agreement=${a.id}`} className="text-primary underline-offset-4 hover:underline">
                     {a.client_name}
                   </Link>
                 </TableCell>

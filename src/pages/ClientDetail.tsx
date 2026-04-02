@@ -1,7 +1,7 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
-import { useAgreements, useAllAgreementWorkCounts, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
+import { useAgreements, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,11 +87,16 @@ const computeDisplayStatus = (agreement: Agreement): { label: string; variant: "
 const ClientDetail = () => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const selectedAgreementId = searchParams.get("agreement");
   const { data: client, isLoading: loadingClient } = useClient(id);
-  const { data: allWorks, isLoading: loadingWorks } = useWorks();
+  const { data: allWorks } = useWorks();
   const { data: agreements, isLoading: loadingAgreements } = useAgreements();
 
-  const clientAgreements = agreements?.filter((a) => a.client_id === id) ?? [];
+  const clientAgreements = (agreements?.filter((a) => a.client_id === id) ?? []).filter((agreement) => {
+    if (!selectedAgreementId) return true;
+    return agreement.id === selectedAgreementId;
+  });
   const clientAgreementIds = clientAgreements.map((a) => a.id);
 
   // Fetch agreement_works mapping per agreement
