@@ -90,27 +90,34 @@ const ClientDetail = () => {
   const clientAgreements = agreements?.filter((a) => a.client_id === id) ?? [];
   const clientAgreementIds = clientAgreements.map((a) => a.id);
 
-  const { data: agreementWorkIds } = useQuery({
-    queryKey: ["client-agreement-work-ids", id, clientAgreementIds],
+  // Fetch agreement_works mapping per agreement
+  const { data: agreementWorksMap } = useQuery({
+    queryKey: ["client-agreement-works-map", id, clientAgreementIds],
     enabled: clientAgreementIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agreement_works")
-        .select("work_id")
+        .select("agreement_id, work_id")
         .in("agreement_id", clientAgreementIds);
       if (error) throw error;
-      return data.map((d: any) => d.work_id as string);
+      const map: Record<string, string[]> = {};
+      (data as any[]).forEach((d) => {
+        if (!map[d.agreement_id]) map[d.agreement_id] = [];
+        map[d.agreement_id].push(d.work_id);
+      });
+      return map;
     },
   });
 
   const fullName = client ? `${client.first_name} ${client.last_name}`.trim() : "";
 
-  const agreementWorkIdSet = new Set(agreementWorkIds ?? []);
+  // All work IDs linked to any of this client's agreements
+  const allLinkedWorkIds = new Set(Object.values(agreementWorksMap ?? {}).flat());
   const clientWorks = allWorks?.filter((w) => {
     const creatorNames = (w.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
       .map((c) => c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim().toLowerCase());
     const matchByName = client && creatorNames.includes(fullName.toLowerCase());
-    const matchByAgreement = agreementWorkIdSet.has(w.id);
+    const matchByAgreement = allLinkedWorkIds.has(w.id);
     return matchByName || matchByAgreement;
   }) ?? [];
 
