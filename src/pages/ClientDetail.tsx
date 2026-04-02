@@ -84,6 +84,7 @@ const computeDisplayStatus = (agreement: Agreement): { label: string; variant: "
   return { label: "Aktivt", variant: "default" };
 };
 
+const ClientDetail = () => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const { data: client, isLoading: loadingClient } = useClient(id);
