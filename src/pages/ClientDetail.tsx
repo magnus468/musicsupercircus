@@ -1,7 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
-import { useAgreements, useAllAgreementWorkCounts, type Agreement } from "@/hooks/useAgreements";
+import { useAgreements, useAllAgreementWorkCounts, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
+import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
