@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText, FolderOpen } from "lucide-react";
+import { LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText, FolderOpen, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import mscLogoBlack from "@/assets/msc-logo-black.jpg";
