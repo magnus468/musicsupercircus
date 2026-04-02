@@ -115,7 +115,26 @@ const WorkDetail = () => {
             }
             {work.co_publishers && work.co_publishers.length > 0 && <div>
                 <dt className="text-muted-foreground">Co-publishers</dt>
-                <dd>{work.co_publishers.join(", ")}</dd>
+                <dd className="space-x-1">
+                  {work.co_publishers.map((cp, i) => {
+                    const agreement = coPublisherAgreementMap.get(cp.toLowerCase());
+                    return (
+                      <span key={cp}>
+                        {agreement ? (
+                          <Link
+                            to={`/agreements?highlight=${agreement.id}`}
+                            className="text-primary underline underline-offset-2 hover:text-primary/80"
+                          >
+                            {cp}
+                          </Link>
+                        ) : (
+                          <span>{cp}</span>
+                        )}
+                        {i < work.co_publishers!.length - 1 && ", "}
+                      </span>
+                    );
+                  })}
+                </dd>
               </div>}
             {work.stim_comment &&
             <div className="sm:col-span-2">
