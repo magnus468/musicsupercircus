@@ -15,8 +15,8 @@ const WorksList = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [stimFilter, setStimFilter] = useState<string>("all");
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortKey, setSortKey] = useState<SortKey | null>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [editWork, setEditWork] = useState<Work | null>(null);
 
   useEffect(() => {
