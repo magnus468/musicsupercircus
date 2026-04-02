@@ -374,7 +374,11 @@ const AgreementsList = () => {
           </TableHeader>
           <TableBody>
             {agreements?.map((a) => (
-              <TableRow key={a.id}>
+              <TableRow
+                key={a.id}
+                ref={a.id === highlightId ? highlightRef : undefined}
+                className={a.id === highlightId ? "bg-primary/10 animate-pulse" : ""}
+              >
                 <TableCell className="font-medium">
                   <Link to={`/clients/${a.client_id}`} className="text-primary underline-offset-4 hover:underline">
                     {a.client_name}
