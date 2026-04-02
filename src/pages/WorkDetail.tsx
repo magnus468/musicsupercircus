@@ -254,7 +254,7 @@ const WorkDetail = () => {
             <DialogTitle>Avtalsdokument</DialogTitle>
           </DialogHeader>
           <div className="flex-1 min-h-[60vh]">
-            {pdfViewerUrl && <AgreementPdfPreview url={pdfViewerUrl} />}
+            {pdfViewerUrl && <AgreementPdfPreview fileUrl={pdfViewerUrl} />}
           </div>
         </DialogContent>
       </Dialog>
