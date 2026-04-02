@@ -1,14 +1,18 @@
 import { useParams, Link } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
-import { useAgreements, useAllAgreementWorkCounts, type Agreement } from "@/hooks/useAgreements";
+import { useAgreements, useAllAgreementWorkCounts, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
+import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, MapPin, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const typeLabels: Record<string, string> = {
   original: "Original",
@@ -81,36 +85,43 @@ const computeDisplayStatus = (agreement: Agreement): { label: string; variant: "
 };
 
 const ClientDetail = () => {
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const { data: client, isLoading: loadingClient } = useClient(id);
   const { data: allWorks, isLoading: loadingWorks } = useWorks();
   const { data: agreements, isLoading: loadingAgreements } = useAgreements();
-  const { data: workCounts } = useAllAgreementWorkCounts();
 
   const clientAgreements = agreements?.filter((a) => a.client_id === id) ?? [];
   const clientAgreementIds = clientAgreements.map((a) => a.id);
 
-  const { data: agreementWorkIds } = useQuery({
-    queryKey: ["client-agreement-work-ids", id, clientAgreementIds],
+  // Fetch agreement_works mapping per agreement
+  const { data: agreementWorksMap } = useQuery({
+    queryKey: ["client-agreement-works-map", id, clientAgreementIds],
     enabled: clientAgreementIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agreement_works")
-        .select("work_id")
+        .select("agreement_id, work_id")
         .in("agreement_id", clientAgreementIds);
       if (error) throw error;
-      return data.map((d: any) => d.work_id as string);
+      const map: Record<string, string[]> = {};
+      (data as any[]).forEach((d) => {
+        if (!map[d.agreement_id]) map[d.agreement_id] = [];
+        map[d.agreement_id].push(d.work_id);
+      });
+      return map;
     },
   });
 
   const fullName = client ? `${client.first_name} ${client.last_name}`.trim() : "";
 
-  const agreementWorkIdSet = new Set(agreementWorkIds ?? []);
+  // All work IDs linked to any of this client's agreements
+  const allLinkedWorkIds = new Set(Object.values(agreementWorksMap ?? {}).flat());
   const clientWorks = allWorks?.filter((w) => {
     const creatorNames = (w.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
       .map((c) => c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim().toLowerCase());
     const matchByName = client && creatorNames.includes(fullName.toLowerCase());
-    const matchByAgreement = agreementWorkIdSet.has(w.id);
+    const matchByAgreement = allLinkedWorkIds.has(w.id);
     return matchByName || matchByAgreement;
   }) ?? [];
 
@@ -151,116 +162,159 @@ const ClientDetail = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Förlagsavtal ({clientAgreements.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingAgreements ? (
-            <p className="text-muted-foreground text-sm">Laddar avtal...</p>
-          ) : clientAgreements.length === 0 ? (
+      {loadingAgreements ? (
+        <p className="text-muted-foreground text-sm">Laddar avtal...</p>
+      ) : clientAgreements.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
             <p className="text-muted-foreground text-sm">Inga förlagsavtal kopplade till denna klient.</p>
-          ) : (
-            <div className="rounded-lg border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Verk</TableHead>
-                    <TableHead>Typ</TableHead>
-                    <TableHead>Internt förlag</TableHead>
-                    <TableHead>Datum</TableHead>
-                    <TableHead>Förfaller</TableHead>
-                    <TableHead>LoC</TableHead>
-                    <TableHead>Retention</TableHead>
-                    <TableHead>Vid förfall</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clientAgreements.map((agreement) => {
-                    const retention = !agreement.life_of_copyright
-                      ? calcRetentionDate(
-                          agreement.expiry_date || "",
-                          (agreement.retention_years || "").toString(),
-                          agreement.post_expiry_action || "expires",
-                          agreement.rolling_end_date || "",
-                        )
-                      : null;
-                    const status = computeDisplayStatus(agreement);
+          </CardContent>
+        </Card>
+      ) : (
+        clientAgreements.map((agreement) => {
+          const status = computeDisplayStatus(agreement);
+          const retention = !agreement.life_of_copyright
+            ? calcRetentionDate(
+                agreement.expiry_date || "",
+                (agreement.retention_years || "").toString(),
+                agreement.post_expiry_action || "expires",
+                agreement.rolling_end_date || "",
+              )
+            : null;
+          const linkedWorkIds = agreementWorksMap?.[agreement.id] ?? [];
+          const linkedWorks = allWorks?.filter((w) => linkedWorkIds.includes(w.id)) ?? [];
 
-                    return (
-                      <TableRow key={agreement.id}>
-                        <TableCell className="text-muted-foreground">{workCounts?.[agreement.id] || 0}</TableCell>
-                        <TableCell>
-                          <Badge variant={agreement.agreement_type === "original" ? "secondary" : "outline"}>
-                            {typeLabels[agreement.agreement_type] || agreement.agreement_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{agreement.internal_publisher || "MSCP"}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{agreement.agreement_date}</TableCell>
-                        <TableCell className="text-muted-foreground">{agreement.expiry_date || "—"}</TableCell>
-                        <TableCell>
-                          {agreement.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {retention?.retentionDate ? (
-                            <span>
-                              {retention.retentionDate}
-                              {!retention.isLocked && <Badge variant="outline" className="ml-1">dynamiskt</Badge>}
-                            </span>
-                          ) : "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">{getPostExpiryLabel(agreement.post_expiry_action)}</TableCell>
-                        <TableCell>
-                          <Badge variant={status.variant}>{status.label}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          return (
+            <Card key={agreement.id}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base">
+                    Förlagsavtal — {typeLabels[agreement.agreement_type] || agreement.agreement_type}
+                  </CardTitle>
+                  <Badge variant={status.variant}>{status.label}</Badge>
+                </div>
+                {agreement.file_path && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={async () => {
+                      try {
+                        const url = await getAgreementSignedUrl(agreement.file_path!);
+                        setPdfViewerUrl(url);
+                      } catch {
+                        toast.error("Kunde inte öppna avtalet");
+                      }
+                    }}
+                  >
+                    <FileText className="h-4 w-4" /> Visa avtal
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <dl className="grid gap-3 sm:grid-cols-3 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Internt förlag</dt>
+                    <dd><Badge variant="outline">{agreement.internal_publisher || "MSCP"}</Badge></dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Avtalsdatum</dt>
+                    <dd>{agreement.agreement_date}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Förfallodatum</dt>
+                    <dd>{agreement.expiry_date || "—"}</dd>
+                  </div>
+                  {agreement.share_percentage != null && (
+                    <div>
+                      <dt className="text-muted-foreground">Andel</dt>
+                      <dd>{agreement.share_percentage}%</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt className="text-muted-foreground">Life of Copyright</dt>
+                    <dd>{agreement.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Vid förfall</dt>
+                    <dd>{getPostExpiryLabel(agreement.post_expiry_action)}</dd>
+                  </div>
+                  {retention?.retentionDate && (
+                    <div>
+                      <dt className="text-muted-foreground">Retention t.o.m.</dt>
+                      <dd className="flex items-center gap-1">
+                        {retention.retentionDate}
+                        {!retention.isLocked && <Badge variant="outline" className="text-xs">dynamiskt</Badge>}
+                      </dd>
+                    </div>
+                  )}
+                  {agreement.retention_years != null && (
+                    <div>
+                      <dt className="text-muted-foreground">Retention (år)</dt>
+                      <dd>{agreement.retention_years}</dd>
+                    </div>
+                  )}
+                  {agreement.notes && (
+                    <div className="sm:col-span-3">
+                      <dt className="text-muted-foreground">Anteckningar</dt>
+                      <dd className="whitespace-pre-line">{agreement.notes}</dd>
+                    </div>
+                  )}
+                </dl>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Verk ({clientWorks.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingWorks ? (
-            <p className="text-muted-foreground text-sm">Laddar verk...</p>
-          ) : clientWorks.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Inga verk kopplade till denna klient.</p>
-          ) : (
-            <div className="rounded-lg border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Titel</TableHead>
-                    <TableHead>Projekt</TableHead>
-                    <TableHead>Förlag</TableHead>
-                    <TableHead>STIM</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clientWorks.map((w) => (
-                    <TableRow key={w.id}>
-                      <TableCell className="font-medium">{w.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{w.project || "—"}</TableCell>
-                      <TableCell><Badge variant="secondary">{w.publishing_type}</Badge></TableCell>
-                      <TableCell><Badge variant="outline">{w.stim_status}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                {linkedWorks.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Kopplade verk ({linkedWorks.length})</h4>
+                    <div className="rounded-lg border overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Titel</TableHead>
+                            <TableHead>Projekt</TableHead>
+                            <TableHead>Förlag</TableHead>
+                            <TableHead>STIM</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {linkedWorks.map((w) => (
+                            <TableRow key={w.id}>
+                              <TableCell className="font-medium">
+                                <Link to={`/works/${w.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                                  {w.title}
+                                </Link>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">{w.project || "—"}</TableCell>
+                              <TableCell><Badge variant="secondary">{w.publishing_type}</Badge></TableCell>
+                              <TableCell><Badge variant="outline">{w.stim_status}</Badge></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })
+      )}
+
+      {/* PDF viewer dialog */}
+      <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => {
+        if (!open) {
+          if (pdfViewerUrl?.startsWith("blob:")) URL.revokeObjectURL(pdfViewerUrl);
+          setPdfViewerUrl(null);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Avtalsdokument</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-[60vh]">
+            {pdfViewerUrl && <AgreementPdfPreview fileUrl={pdfViewerUrl} />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
