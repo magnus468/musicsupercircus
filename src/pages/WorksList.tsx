@@ -7,7 +7,7 @@ import WorksFilters from "@/components/works/WorksFilters";
 import WorksTable from "@/components/works/WorksTable";
 import { toast } from "sonner";
 
-type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_status" | "share_percentage";
+type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_status" | "share_percentage" | "created_at";
 type SortDir = "asc" | "desc";
 
 const WorksList = () => {
@@ -15,8 +15,8 @@ const WorksList = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [stimFilter, setStimFilter] = useState<string>("all");
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortKey, setSortKey] = useState<SortKey | null>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [editWork, setEditWork] = useState<Work | null>(null);
 
   useEffect(() => {
@@ -80,6 +80,10 @@ const WorksList = () => {
           case "share_percentage":
             aVal = a.share_percentage ?? -1;
             bVal = b.share_percentage ?? -1;
+            break;
+          case "created_at":
+            aVal = a.created_at;
+            bVal = b.created_at;
             break;
         }
 
