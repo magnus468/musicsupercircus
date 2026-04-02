@@ -51,17 +51,39 @@ const WorkDetail = () => {
   clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
 
   // Map co-publisher name (lowercase) → full agreement object
+  // First try agreements linked to this work, then fall back to any agreement matching the name
   const coPublisherAgreementMap = useMemo(() => {
     const map = new Map<string, Agreement>();
-    if (!agreements || !linkedAgreementIds) return map;
-    const linked = agreements.filter((a) => linkedAgreementIds.includes(a.id));
-    linked.forEach((a) => {
+    if (!agreements) return map;
+
+    // Build a name→agreement map from ALL agreements
+    const allByName = new Map<string, Agreement>();
+    agreements.forEach((a) => {
       if (a.client_name) {
-        map.set(a.client_name.toLowerCase(), a);
+        allByName.set(a.client_name.toLowerCase(), a);
       }
     });
+
+    // Prefer linked agreements if available
+    if (linkedAgreementIds?.length) {
+      const linked = agreements.filter((a) => linkedAgreementIds.includes(a.id));
+      linked.forEach((a) => {
+        if (a.client_name) {
+          map.set(a.client_name.toLowerCase(), a);
+        }
+      });
+    }
+
+    // Fill in any co-publishers not yet matched from all agreements
+    work?.co_publishers?.forEach((cp) => {
+      const key = cp.toLowerCase();
+      if (!map.has(key) && allByName.has(key)) {
+        map.set(key, allByName.get(key)!);
+      }
+    });
+
     return map;
-  }, [agreements, linkedAgreementIds]);
+  }, [agreements, linkedAgreementIds, work?.co_publishers]);
 
   const handleViewPdf = async (agreement: Agreement) => {
     if (!agreement.file_path) return;
