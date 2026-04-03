@@ -13,6 +13,7 @@ const navItems = [
   { to: "/projects", label: "Projekt", icon: FolderOpen, color: "text-cyan-400" },
   { to: "/clients", label: "Klienter", icon: Users, color: "text-violet-400" },
   { to: "/agreements", label: "Förlagsavtal", icon: FileText, color: "text-rose-400" },
+  { to: "/settlements", label: "Avräkningar", icon: Receipt, color: "text-teal-400" },
   { to: "/review", label: "Granska verk", icon: AlertTriangle, color: "text-orange-400" },
 ];
 
