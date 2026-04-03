@@ -262,6 +262,84 @@ export type Database = {
         }
         Relationships: []
       }
+      settlements: {
+        Row: {
+          agreement_key: string | null
+          amount: number
+          composers: string | null
+          country: string | null
+          created_at: string
+          distribution: string | null
+          distribution_key: string | null
+          episode_title: string | null
+          from_date: string | null
+          id: string
+          ipi_name_number: string | null
+          member_number: string | null
+          number_of_uses: number | null
+          production_title: string | null
+          recipient_name: string | null
+          role: string | null
+          share: number | null
+          source: string | null
+          sub_source: string | null
+          to_date: string | null
+          type_of_right: string | null
+          work_key: string | null
+          work_title: string
+        }
+        Insert: {
+          agreement_key?: string | null
+          amount?: number
+          composers?: string | null
+          country?: string | null
+          created_at?: string
+          distribution?: string | null
+          distribution_key?: string | null
+          episode_title?: string | null
+          from_date?: string | null
+          id?: string
+          ipi_name_number?: string | null
+          member_number?: string | null
+          number_of_uses?: number | null
+          production_title?: string | null
+          recipient_name?: string | null
+          role?: string | null
+          share?: number | null
+          source?: string | null
+          sub_source?: string | null
+          to_date?: string | null
+          type_of_right?: string | null
+          work_key?: string | null
+          work_title: string
+        }
+        Update: {
+          agreement_key?: string | null
+          amount?: number
+          composers?: string | null
+          country?: string | null
+          created_at?: string
+          distribution?: string | null
+          distribution_key?: string | null
+          episode_title?: string | null
+          from_date?: string | null
+          id?: string
+          ipi_name_number?: string | null
+          member_number?: string | null
+          number_of_uses?: number | null
+          production_title?: string | null
+          recipient_name?: string | null
+          role?: string | null
+          share?: number | null
+          source?: string | null
+          sub_source?: string | null
+          to_date?: string | null
+          type_of_right?: string | null
+          work_key?: string | null
+          work_title?: string
+        }
+        Relationships: []
+      }
       works: {
         Row: {
           co_publishers: string[] | null
