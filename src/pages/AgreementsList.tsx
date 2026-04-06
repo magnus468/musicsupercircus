@@ -297,15 +297,14 @@ const AgreementsList = () => {
   };
 
   const handleFileUpload = async (agreementId: string, file: File) => {
-    setUploading(agreementId);
+    setUploading(true);
     try {
       await uploadAgreementFile(file, agreementId);
-      toast.success("Avtal uppladdat");
-      window.location.reload();
+      toast.success("Dokument uppladdat");
     } catch {
       toast.error("Kunde inte ladda upp filen");
     }
-    setUploading(null);
+    setUploading(false);
   };
 
   const handleDownload = async (filePath: string) => {
