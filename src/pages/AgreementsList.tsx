@@ -530,13 +530,13 @@ const AgreementsList = () => {
                       : "Lägg till"}
                   </Button>
                 </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(a)}>
-                      <Pencil className="h-3.5 w-3.5" />
+                <TableCell className="pr-2">
+                  <div className="flex gap-0.5">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(a)}>
+                      <Pencil className="h-3 w-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(a.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(a.id)}>
+                      <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
                 </TableCell>
