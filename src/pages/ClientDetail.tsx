@@ -1,7 +1,13 @@
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
-import { useAgreements, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
+import {
+  useAgreements,
+  useDeleteAgreement,
+  useAgreementFiles,
+  getAgreementSignedUrl,
+  type Agreement,
+} from "@/hooks/useAgreements";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, MapPin, FileText } from "lucide-react";
+import { ArrowLeft, MapPin, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
