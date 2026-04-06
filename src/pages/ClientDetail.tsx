@@ -233,23 +233,25 @@ const ClientDetail = () => {
                   </CardTitle>
                   <Badge variant={status.variant}>{status.label}</Badge>
                 </div>
-                {agreement.file_path && (
+                <div className="flex items-center gap-2">
+                  <AgreementFileButtons agreementId={agreement.id} onViewPdf={setPdfViewerUrl} />
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
                     onClick={async () => {
+                      if (!confirm("Vill du verkligen ta bort detta avtal?")) return;
                       try {
-                        const url = await getAgreementSignedUrl(agreement.file_path!);
-                        setPdfViewerUrl(url);
+                        await deleteAgreement.mutateAsync(agreement.id);
+                        toast.success("Avtal borttaget");
                       } catch {
-                        toast.error("Kunde inte öppna avtalet");
+                        toast.error("Kunde inte ta bort avtalet");
                       }
                     }}
                   >
-                    <FileText className="h-4 w-4" /> Visa avtal
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <dl className="grid gap-3 sm:grid-cols-3 text-sm">
