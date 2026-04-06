@@ -692,7 +692,7 @@ const AgreementsList = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Signerat avtal (PDF)</Label>
+              <Label>Dokument (PDF)</Label>
               <div className="flex items-center gap-3">
                 <label className="flex-1 cursor-pointer">
                   <input
@@ -704,11 +704,7 @@ const AgreementsList = () => {
                   <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors hover:bg-accent/50">
                     <Upload className="h-4 w-4 text-muted-foreground" />
                     <span className={form.pdfFile ? "text-foreground" : "text-muted-foreground"}>
-                      {form.pdfFile
-                        ? form.pdfFile.name
-                        : editingAgreement?.file_path
-                          ? `Byt ut: ${editingAgreement.file_name || editingAgreement.file_path}`
-                          : "Välj PDF-fil..."}
+                      {form.pdfFile ? form.pdfFile.name : "Lägg till dokument..."}
                     </span>
                   </div>
                 </label>
@@ -718,6 +714,11 @@ const AgreementsList = () => {
                   </Button>
                 )}
               </div>
+              {editingAgreement && (
+                <p className="text-xs text-muted-foreground">
+                  Fler dokument kan hanteras via "Dokument"-knappen i listan efter att avtalet sparats.
+                </p>
+              )}
             </div>
 
             <Button onClick={handleSave} disabled={isSaving} className="w-full">
