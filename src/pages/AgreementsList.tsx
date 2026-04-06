@@ -142,6 +142,84 @@ const calcRetentionDate = (
   d.setFullYear(d.getFullYear() + years);
   return { retentionDate: d.toISOString().split("T")[0], isLocked: true };
 };
+import { useQueryClient } from "@tanstack/react-query";
+
+const AgreementFilesDialog = ({
+  agreementId,
+  onClose,
+  onUpload,
+  onDownload,
+  uploading,
+}: {
+  agreementId: string | null;
+  onClose: () => void;
+  onUpload: (agreementId: string, file: File) => Promise<void>;
+  onDownload: (filePath: string) => Promise<void>;
+  uploading: boolean;
+}) => {
+  const { data: files, isLoading } = useAgreementFiles(agreementId || undefined);
+  const qc = useQueryClient();
+
+  const handleDelete = async (file: AgreementFile) => {
+    if (!confirm(`Ta bort "${file.file_name}"?`)) return;
+    try {
+      await deleteAgreementFile(file.id, file.file_path);
+      qc.invalidateQueries({ queryKey: ["agreement-files"] });
+      qc.invalidateQueries({ queryKey: ["agreement-file-counts"] });
+      toast.success("Dokument borttaget");
+    } catch {
+      toast.error("Kunde inte ta bort dokumentet");
+    }
+  };
+
+  return (
+    <Dialog open={!!agreementId} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Dokument</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          {isLoading && <p className="text-sm text-muted-foreground">Laddar...</p>}
+          {!isLoading && files?.length === 0 && (
+            <p className="text-sm text-muted-foreground">Inga dokument uppladdade.</p>
+          )}
+          {files?.map((f) => (
+            <div key={f.id} className="flex items-center gap-2 rounded-md border px-3 py-2">
+              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="flex-1 truncate text-sm">{f.file_name}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => onDownload(f.file_path)}>
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive" onClick={() => handleDelete(f)}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              className="hidden"
+              accept=".pdf,.doc,.docx"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file && agreementId) {
+                  await onUpload(agreementId, file);
+                  qc.invalidateQueries({ queryKey: ["agreement-files"] });
+                  qc.invalidateQueries({ queryKey: ["agreement-file-counts"] });
+                }
+                e.target.value = "";
+              }}
+            />
+            <div className="flex items-center justify-center gap-2 rounded-md border border-dashed px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent/50">
+              <Upload className="h-4 w-4" />
+              {uploading ? "Laddar upp..." : "Ladda upp dokument"}
+            </div>
+          </label>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const AgreementsList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
