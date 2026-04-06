@@ -29,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
-import { Check, ChevronsUpDown, Download, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronsUpDown, Download, FileText, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
