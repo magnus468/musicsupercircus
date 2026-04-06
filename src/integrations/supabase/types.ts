@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      agreement_files: {
+        Row: {
+          agreement_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+        }
+        Insert: {
+          agreement_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+        }
+        Update: {
+          agreement_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_files_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agreement_works: {
         Row: {
           agreement_id: string
