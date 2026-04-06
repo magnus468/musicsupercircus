@@ -439,26 +439,17 @@ const AgreementsList = () => {
                   })()}
                 </TableCell>
                 <TableCell>
-                  {a.file_path ? (
-                    <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => handleDownload(a.file_path)}>
-                      <Download className="h-3 w-3" /> Öppna
-                    </Button>
-                  ) : (
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(a.id, file);
-                        }}
-                      />
-                      <Button variant="outline" size="sm" className="pointer-events-none h-7 gap-1.5 text-xs" disabled={uploading === a.id}>
-                        <Upload className="h-3 w-3" /> {uploading === a.id ? "Laddar..." : "Ladda upp"}
-                      </Button>
-                    </label>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 text-xs"
+                    onClick={() => setShowFilesDialog(a.id)}
+                  >
+                    <FileText className="h-3 w-3" />
+                    {(fileCounts?.[a.id] || 0) > 0
+                      ? `${fileCounts[a.id]} dok`
+                      : "Lägg till"}
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
