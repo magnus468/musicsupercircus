@@ -464,7 +464,7 @@ const AgreementsList = () => {
                 ref={a.id === highlightId ? highlightRef : undefined}
                 className={a.id === highlightId ? "bg-primary/10 animate-pulse" : ""}
               >
-                <TableCell className="font-medium">
+                <TableCell className="font-medium whitespace-nowrap">
                   <Link to={`/clients/${a.client_id}?agreement=${a.id}`} className="text-primary underline-offset-4 hover:underline">
                     {a.client_name}
                   </Link>
@@ -473,17 +473,17 @@ const AgreementsList = () => {
                   {workCounts?.[a.id] || 0}
                 </TableCell>
                 <TableCell>
-                  <Badge className={
+                  <Badge className={cn("text-[10px]",
                     a.agreement_type === "co-publishing" ? "bg-violet-100 text-violet-700 border-0"
                     : a.agreement_type === "administration" ? "bg-amber-100 text-amber-700 border-0"
                     : "bg-secondary text-secondary-foreground border-0"
-                  }>{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
+                  )}>{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{(a as any).internal_publisher || "MSCP"}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{(a as any).internal_publisher || "MSCP"}</Badge>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
-                <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
+                <TableCell className="text-muted-foreground whitespace-nowrap">{a.agreement_date}</TableCell>
+                <TableCell className="text-muted-foreground whitespace-nowrap">{a.expiry_date || "—"}</TableCell>
                 <TableCell>
                   {a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}
                 </TableCell>
