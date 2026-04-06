@@ -516,7 +516,6 @@ const AgreementsList = () => {
                                 <Check className={cn("mr-2 h-4 w-4", form.clientId === c.id ? "opacity-100" : "opacity-0")} />
                                 {label}
                               </CommandItem>
-                              </CommandItem>
                             );
                           })}
                         </CommandGroup>
