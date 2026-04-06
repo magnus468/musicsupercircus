@@ -440,21 +440,21 @@ const AgreementsList = () => {
 
       <div className="overflow-hidden rounded-lg border bg-card">
         <div className="overflow-x-auto">
-        <Table>
+        <Table className="text-xs">
           <TableHeader>
             <TableRow>
-              <TableHead>Klient</TableHead>
-              <TableHead>Verk</TableHead>
-              <TableHead>Typ</TableHead>
-              <TableHead>Internt förlag</TableHead>
-              <TableHead>Datum</TableHead>
-              <TableHead>Förfaller</TableHead>
-              <TableHead>LoC</TableHead>
-              <TableHead>Retention</TableHead>
-              <TableHead>Vid förfall</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Dokument</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="whitespace-nowrap">Klient</TableHead>
+              <TableHead className="whitespace-nowrap">Verk</TableHead>
+              <TableHead className="whitespace-nowrap">Typ</TableHead>
+              <TableHead className="whitespace-nowrap">Förlag</TableHead>
+              <TableHead className="whitespace-nowrap">Datum</TableHead>
+              <TableHead className="whitespace-nowrap">Förfaller</TableHead>
+              <TableHead className="whitespace-nowrap">LoC</TableHead>
+              <TableHead className="whitespace-nowrap">Retention</TableHead>
+              <TableHead className="whitespace-nowrap">Vid förfall</TableHead>
+              <TableHead className="whitespace-nowrap">Status</TableHead>
+              <TableHead className="whitespace-nowrap">Dokument</TableHead>
+              <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -464,7 +464,7 @@ const AgreementsList = () => {
                 ref={a.id === highlightId ? highlightRef : undefined}
                 className={a.id === highlightId ? "bg-primary/10 animate-pulse" : ""}
               >
-                <TableCell className="font-medium">
+                <TableCell className="font-medium whitespace-nowrap">
                   <Link to={`/clients/${a.client_id}?agreement=${a.id}`} className="text-primary underline-offset-4 hover:underline">
                     {a.client_name}
                   </Link>
@@ -473,17 +473,17 @@ const AgreementsList = () => {
                   {workCounts?.[a.id] || 0}
                 </TableCell>
                 <TableCell>
-                  <Badge className={
+                  <Badge className={cn("text-[10px]",
                     a.agreement_type === "co-publishing" ? "bg-violet-100 text-violet-700 border-0"
                     : a.agreement_type === "administration" ? "bg-amber-100 text-amber-700 border-0"
                     : "bg-secondary text-secondary-foreground border-0"
-                  }>{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
+                  )}>{typeLabels[a.agreement_type] || a.agreement_type}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{(a as any).internal_publisher || "MSCP"}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{(a as any).internal_publisher || "MSCP"}</Badge>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{a.agreement_date}</TableCell>
-                <TableCell className="text-muted-foreground">{a.expiry_date || "—"}</TableCell>
+                <TableCell className="text-muted-foreground whitespace-nowrap">{a.agreement_date}</TableCell>
+                <TableCell className="text-muted-foreground whitespace-nowrap">{a.expiry_date || "—"}</TableCell>
                 <TableCell>
                   {a.life_of_copyright ? <Badge variant="secondary">Ja</Badge> : <span className="text-muted-foreground">Nej</span>}
                 </TableCell>
@@ -530,13 +530,13 @@ const AgreementsList = () => {
                       : "Lägg till"}
                   </Button>
                 </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(a)}>
-                      <Pencil className="h-3.5 w-3.5" />
+                <TableCell className="pr-2">
+                  <div className="flex gap-0.5">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(a)}>
+                      <Pencil className="h-3 w-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(a.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(a.id)}>
+                      <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
                 </TableCell>
