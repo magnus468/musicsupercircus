@@ -753,6 +753,15 @@ const AgreementsList = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Files management dialog */}
+      <AgreementFilesDialog
+        agreementId={showFilesDialog}
+        onClose={() => setShowFilesDialog(null)}
+        onUpload={handleFileUpload}
+        onDownload={handleDownload}
+        uploading={uploading}
+      />
+
       {/* Quick-add client dialog */}
       <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
         <DialogContent className="max-w-sm">
