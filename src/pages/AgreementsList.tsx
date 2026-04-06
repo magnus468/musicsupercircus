@@ -486,7 +486,7 @@ const AgreementsList = () => {
             <div className="space-y-2">
               <Label>Klient *</Label>
               <div className="flex gap-2">
-                <Popover>
+                <Popover modal={true}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" role="combobox" className="flex-1 justify-between font-normal">
                       {form.clientId
