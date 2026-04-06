@@ -440,21 +440,21 @@ const AgreementsList = () => {
 
       <div className="overflow-hidden rounded-lg border bg-card">
         <div className="overflow-x-auto">
-        <Table>
+        <Table className="text-xs">
           <TableHeader>
             <TableRow>
-              <TableHead>Klient</TableHead>
-              <TableHead>Verk</TableHead>
-              <TableHead>Typ</TableHead>
-              <TableHead>Internt förlag</TableHead>
-              <TableHead>Datum</TableHead>
-              <TableHead>Förfaller</TableHead>
-              <TableHead>LoC</TableHead>
-              <TableHead>Retention</TableHead>
-              <TableHead>Vid förfall</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Dokument</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="whitespace-nowrap">Klient</TableHead>
+              <TableHead className="whitespace-nowrap">Verk</TableHead>
+              <TableHead className="whitespace-nowrap">Typ</TableHead>
+              <TableHead className="whitespace-nowrap">Förlag</TableHead>
+              <TableHead className="whitespace-nowrap">Datum</TableHead>
+              <TableHead className="whitespace-nowrap">Förfaller</TableHead>
+              <TableHead className="whitespace-nowrap">LoC</TableHead>
+              <TableHead className="whitespace-nowrap">Retention</TableHead>
+              <TableHead className="whitespace-nowrap">Vid förfall</TableHead>
+              <TableHead className="whitespace-nowrap">Status</TableHead>
+              <TableHead className="whitespace-nowrap">Dokument</TableHead>
+              <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
