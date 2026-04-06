@@ -438,7 +438,8 @@ const AgreementsList = () => {
         {isLoading ? "Laddar..." : `${agreements?.length ?? 0} avtal`}
       </p>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-lg border bg-card">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
