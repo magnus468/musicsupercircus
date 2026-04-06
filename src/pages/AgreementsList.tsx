@@ -7,9 +7,13 @@ import {
   useDeleteAgreement,
   useAgreementWorks,
   useAllAgreementWorkCounts,
+  useAgreementFiles,
+  useAllAgreementFileCounts,
   uploadAgreementFile,
+  deleteAgreementFile,
   getAgreementSignedUrl,
   type Agreement,
+  type AgreementFile,
 } from "@/hooks/useAgreements";
 import { useClients, useCreateClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
