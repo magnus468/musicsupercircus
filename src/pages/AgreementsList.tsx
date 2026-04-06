@@ -184,7 +184,7 @@ const AgreementFilesDialog = ({
             <p className="text-sm text-muted-foreground">Inga dokument uppladdade.</p>
           )}
           {files?.map((f) => (
-            <div key={f.id} className="flex items-center gap-2 rounded-md border px-3 py-2">
+            <div key={f.id} className="flex items-center gap-2 overflow-hidden rounded-md border px-3 py-2">
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="flex-1 truncate text-sm">{f.file_name}</span>
               <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => onDownload(f.file_path)}>
