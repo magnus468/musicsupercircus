@@ -146,26 +146,68 @@ export const useDeleteAgreement = () => {
   });
 };
 
+export interface AgreementFile {
+  id: string;
+  agreement_id: string;
+  file_path: string;
+  file_name: string;
+  created_at: string;
+}
+
+export const useAgreementFiles = (agreementId?: string) => {
+  return useQuery({
+    queryKey: ["agreement-files", agreementId],
+    enabled: !!agreementId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_files")
+        .select("*")
+        .eq("agreement_id", agreementId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as AgreementFile[];
+    },
+  });
+};
+
+export const useAllAgreementFileCounts = () => {
+  return useQuery({
+    queryKey: ["agreement-file-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_files")
+        .select("agreement_id");
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data as any[]).forEach((d) => {
+        counts[d.agreement_id] = (counts[d.agreement_id] || 0) + 1;
+      });
+      return counts;
+    },
+  });
+};
+
 export const uploadAgreementFile = async (file: File, agreementId: string) => {
   const ext = file.name.split(".").pop();
-  const path = `${agreementId}.${ext}`;
+  const ts = Date.now();
+  const path = `${agreementId}/${ts}.${ext}`;
   const { error: uploadError } = await supabase.storage
     .from("agreements")
     .upload(path, file, { upsert: true });
   if (uploadError) throw uploadError;
 
-  const { error: updateError } = await supabase
-    .from("agreements")
-    .update({ file_path: path, file_name: file.name } as any)
-    .eq("id", agreementId);
-  if (updateError) throw updateError;
+  const { error: insertError } = await supabase
+    .from("agreement_files")
+    .insert({ agreement_id: agreementId, file_path: path, file_name: file.name });
+  if (insertError) throw insertError;
 
   return path;
 };
 
-export const getAgreementFileUrl = (filePath: string) => {
-  const { data } = supabase.storage.from("agreements").getPublicUrl(filePath);
-  return data.publicUrl;
+export const deleteAgreementFile = async (fileId: string, filePath: string) => {
+  await supabase.storage.from("agreements").remove([filePath]);
+  const { error } = await supabase.from("agreement_files").delete().eq("id", fileId);
+  if (error) throw error;
 };
 
 export const getAgreementSignedUrl = async (filePath: string) => {

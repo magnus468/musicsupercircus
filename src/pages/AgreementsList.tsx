@@ -7,9 +7,13 @@ import {
   useDeleteAgreement,
   useAgreementWorks,
   useAllAgreementWorkCounts,
+  useAgreementFiles,
+  useAllAgreementFileCounts,
   uploadAgreementFile,
+  deleteAgreementFile,
   getAgreementSignedUrl,
   type Agreement,
+  type AgreementFile,
 } from "@/hooks/useAgreements";
 import { useClients, useCreateClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
@@ -25,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
-import { Check, ChevronsUpDown, Download, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronsUpDown, Download, FileText, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -138,6 +142,84 @@ const calcRetentionDate = (
   d.setFullYear(d.getFullYear() + years);
   return { retentionDate: d.toISOString().split("T")[0], isLocked: true };
 };
+import { useQueryClient } from "@tanstack/react-query";
+
+const AgreementFilesDialog = ({
+  agreementId,
+  onClose,
+  onUpload,
+  onDownload,
+  uploading,
+}: {
+  agreementId: string | null;
+  onClose: () => void;
+  onUpload: (agreementId: string, file: File) => Promise<void>;
+  onDownload: (filePath: string) => Promise<void>;
+  uploading: boolean;
+}) => {
+  const { data: files, isLoading } = useAgreementFiles(agreementId || undefined);
+  const qc = useQueryClient();
+
+  const handleDelete = async (file: AgreementFile) => {
+    if (!confirm(`Ta bort "${file.file_name}"?`)) return;
+    try {
+      await deleteAgreementFile(file.id, file.file_path);
+      qc.invalidateQueries({ queryKey: ["agreement-files"] });
+      qc.invalidateQueries({ queryKey: ["agreement-file-counts"] });
+      toast.success("Dokument borttaget");
+    } catch {
+      toast.error("Kunde inte ta bort dokumentet");
+    }
+  };
+
+  return (
+    <Dialog open={!!agreementId} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Dokument</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          {isLoading && <p className="text-sm text-muted-foreground">Laddar...</p>}
+          {!isLoading && files?.length === 0 && (
+            <p className="text-sm text-muted-foreground">Inga dokument uppladdade.</p>
+          )}
+          {files?.map((f) => (
+            <div key={f.id} className="flex items-center gap-2 rounded-md border px-3 py-2">
+              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="flex-1 truncate text-sm">{f.file_name}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => onDownload(f.file_path)}>
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive" onClick={() => handleDelete(f)}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              className="hidden"
+              accept=".pdf,.doc,.docx"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file && agreementId) {
+                  await onUpload(agreementId, file);
+                  qc.invalidateQueries({ queryKey: ["agreement-files"] });
+                  qc.invalidateQueries({ queryKey: ["agreement-file-counts"] });
+                }
+                e.target.value = "";
+              }}
+            />
+            <div className="flex items-center justify-center gap-2 rounded-md border border-dashed px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent/50">
+              <Upload className="h-4 w-4" />
+              {uploading ? "Laddar upp..." : "Ladda upp dokument"}
+            </div>
+          </label>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const AgreementsList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -146,17 +228,19 @@ const AgreementsList = () => {
   const { data: clients } = useClients();
   const { data: works } = useWorks();
   const { data: workCounts } = useAllAgreementWorkCounts();
+  const { data: fileCounts } = useAllAgreementFileCounts();
   const createAgreement = useCreateAgreement();
   const updateAgreement = useUpdateAgreement();
   const deleteAgreement = useDeleteAgreement();
   const createClient = useCreateClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editingAgreement, setEditingAgreement] = useState<Agreement | null>(null);
-  const [uploading, setUploading] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [showFilesDialog, setShowFilesDialog] = useState<string | null>(null);
   const [showNewClientDialog, setShowNewClientDialog] = useState(false);
   const [clientPopoverOpen, setClientPopoverOpen] = useState(false);
   const [newClientType, setNewClientType] = useState<"person" | "company">("person");
@@ -291,15 +375,14 @@ const AgreementsList = () => {
   };
 
   const handleFileUpload = async (agreementId: string, file: File) => {
-    setUploading(agreementId);
+    setUploading(true);
     try {
       await uploadAgreementFile(file, agreementId);
-      toast.success("Avtal uppladdat");
-      window.location.reload();
+      toast.success("Dokument uppladdat");
     } catch {
       toast.error("Kunde inte ladda upp filen");
     }
-    setUploading(null);
+    setUploading(false);
   };
 
   const handleDownload = async (filePath: string) => {
@@ -434,26 +517,17 @@ const AgreementsList = () => {
                   })()}
                 </TableCell>
                 <TableCell>
-                  {a.file_path ? (
-                    <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => handleDownload(a.file_path)}>
-                      <Download className="h-3 w-3" /> Öppna
-                    </Button>
-                  ) : (
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(a.id, file);
-                        }}
-                      />
-                      <Button variant="outline" size="sm" className="pointer-events-none h-7 gap-1.5 text-xs" disabled={uploading === a.id}>
-                        <Upload className="h-3 w-3" /> {uploading === a.id ? "Laddar..." : "Ladda upp"}
-                      </Button>
-                    </label>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 text-xs"
+                    onClick={() => setShowFilesDialog(a.id)}
+                  >
+                    <FileText className="h-3 w-3" />
+                    {(fileCounts?.[a.id] || 0) > 0
+                      ? `${fileCounts[a.id]} dok`
+                      : "Lägg till"}
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
@@ -696,7 +770,7 @@ const AgreementsList = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Signerat avtal (PDF)</Label>
+              <Label>Dokument (PDF)</Label>
               <div className="flex items-center gap-3">
                 <label className="flex-1 cursor-pointer">
                   <input
@@ -708,11 +782,7 @@ const AgreementsList = () => {
                   <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors hover:bg-accent/50">
                     <Upload className="h-4 w-4 text-muted-foreground" />
                     <span className={form.pdfFile ? "text-foreground" : "text-muted-foreground"}>
-                      {form.pdfFile
-                        ? form.pdfFile.name
-                        : editingAgreement?.file_path
-                          ? `Byt ut: ${editingAgreement.file_name || editingAgreement.file_path}`
-                          : "Välj PDF-fil..."}
+                      {form.pdfFile ? form.pdfFile.name : "Lägg till dokument..."}
                     </span>
                   </div>
                 </label>
@@ -722,6 +792,11 @@ const AgreementsList = () => {
                   </Button>
                 )}
               </div>
+              {editingAgreement && (
+                <p className="text-xs text-muted-foreground">
+                  Fler dokument kan hanteras via "Dokument"-knappen i listan efter att avtalet sparats.
+                </p>
+              )}
             </div>
 
             <Button onClick={handleSave} disabled={isSaving} className="w-full">
@@ -755,6 +830,15 @@ const AgreementsList = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Files management dialog */}
+      <AgreementFilesDialog
+        agreementId={showFilesDialog}
+        onClose={() => setShowFilesDialog(null)}
+        onUpload={handleFileUpload}
+        onDownload={handleDownload}
+        uploading={uploading}
+      />
 
       {/* Quick-add client dialog */}
       <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
