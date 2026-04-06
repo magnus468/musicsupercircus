@@ -525,7 +525,7 @@ const AgreementsList = () => {
                   >
                     <FileText className="h-3 w-3" />
                     {(fileCounts?.[a.id] || 0) > 0
-                      ? `${fileCounts[a.id]} dok`
+                      ? `${fileCounts?.[a.id]} dok`
                       : "Lägg till"}
                   </Button>
                 </TableCell>

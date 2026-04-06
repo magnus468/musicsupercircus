@@ -1,7 +1,13 @@
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
-import { useAgreements, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
+import {
+  useAgreements,
+  useDeleteAgreement,
+  useAgreementFiles,
+  getAgreementSignedUrl,
+  type Agreement,
+} from "@/hooks/useAgreements";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, MapPin, FileText } from "lucide-react";
+import { ArrowLeft, MapPin, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -84,6 +90,34 @@ const computeDisplayStatus = (agreement: Agreement): { label: string; variant: "
   return { label: "Aktivt", variant: "default" };
 };
 
+const AgreementFileButtons = ({ agreementId, onViewPdf }: { agreementId: string; onViewPdf: (url: string) => void }) => {
+  const { data: files } = useAgreementFiles(agreementId);
+  if (!files || files.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {files.map((f, i) => (
+        <Button
+          key={f.id}
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={async () => {
+            try {
+              const url = await getAgreementSignedUrl(f.file_path);
+              onViewPdf(url);
+            } catch {
+              toast.error("Kunde inte öppna dokumentet");
+            }
+          }}
+        >
+          <FileText className="h-4 w-4" />
+          {files.length > 1 ? `Dokument ${i + 1}` : "Visa avtal"}
+        </Button>
+      ))}
+    </div>
+  );
+};
+
 const ClientDetail = () => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
@@ -92,6 +126,7 @@ const ClientDetail = () => {
   const { data: client, isLoading: loadingClient } = useClient(id);
   const { data: allWorks } = useWorks();
   const { data: agreements, isLoading: loadingAgreements } = useAgreements();
+  const deleteAgreement = useDeleteAgreement();
 
   const clientAgreements = (agreements?.filter((a) => a.client_id === id) ?? []).filter((agreement) => {
     if (!selectedAgreementId) return true;
@@ -198,23 +233,25 @@ const ClientDetail = () => {
                   </CardTitle>
                   <Badge variant={status.variant}>{status.label}</Badge>
                 </div>
-                {agreement.file_path && (
+                <div className="flex items-center gap-2">
+                  <AgreementFileButtons agreementId={agreement.id} onViewPdf={setPdfViewerUrl} />
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
                     onClick={async () => {
+                      if (!confirm("Vill du verkligen ta bort detta avtal?")) return;
                       try {
-                        const url = await getAgreementSignedUrl(agreement.file_path!);
-                        setPdfViewerUrl(url);
+                        await deleteAgreement.mutateAsync(agreement.id);
+                        toast.success("Avtal borttaget");
                       } catch {
-                        toast.error("Kunde inte öppna avtalet");
+                        toast.error("Kunde inte ta bort avtalet");
                       }
                     }}
                   >
-                    <FileText className="h-4 w-4" /> Visa avtal
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <dl className="grid gap-3 sm:grid-cols-3 text-sm">
