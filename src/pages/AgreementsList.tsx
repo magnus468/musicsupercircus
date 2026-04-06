@@ -551,6 +551,7 @@ const AgreementsList = () => {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <Dialog open={showDialog} onOpenChange={(open) => { if (!open) closeDialog(); }}>
