@@ -158,6 +158,7 @@ const AgreementsList = () => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [showNewClientDialog, setShowNewClientDialog] = useState(false);
+  const [clientPopoverOpen, setClientPopoverOpen] = useState(false);
   const [newClientType, setNewClientType] = useState<"person" | "company">("person");
   const [newClientFirstName, setNewClientFirstName] = useState("");
   const [newClientLastName, setNewClientLastName] = useState("");
@@ -486,7 +487,7 @@ const AgreementsList = () => {
             <div className="space-y-2">
               <Label>Klient *</Label>
               <div className="flex gap-2">
-                <Popover>
+                <Popover open={clientPopoverOpen} onOpenChange={setClientPopoverOpen} modal={true}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" role="combobox" className="flex-1 justify-between font-normal">
                       {form.clientId
@@ -510,7 +511,7 @@ const AgreementsList = () => {
                               <CommandItem
                                 key={c.id}
                                 value={label}
-                                onSelect={() => setField("clientId", c.id)}
+                                onSelect={() => { setField("clientId", c.id); setClientPopoverOpen(false); }}
                               >
                                 <Check className={cn("mr-2 h-4 w-4", form.clientId === c.id ? "opacity-100" : "opacity-0")} />
                                 {label}
