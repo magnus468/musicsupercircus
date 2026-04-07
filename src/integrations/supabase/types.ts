@@ -425,7 +425,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_settlement_stats: { Args: never; Returns: Json }
+      get_settlement_stats:
+        | { Args: never; Returns: Json }
+        | { Args: { p_distribution_key?: string }; Returns: Json }
     }
     Enums: {
       publishing_type: "original" | "MSCE" | "MSCP" | "administration"
