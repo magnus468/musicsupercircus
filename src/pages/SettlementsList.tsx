@@ -1,27 +1,33 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useSettlements, useSettlementStats } from "@/hooks/useSettlements";
 import { SettlementsOverview } from "@/components/settlements/SettlementsOverview";
 import { SettlementsWorksTab } from "@/components/settlements/SettlementsWorksTab";
 import { SettlementsDetailsTab } from "@/components/settlements/SettlementsDetailsTab";
+import { SettlementsPeriodFilter } from "@/components/settlements/SettlementsPeriodFilter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SettlementsList = () => {
-  const { data: stats, isLoading: statsLoading } = useSettlementStats();
+  const [distributionKey, setDistributionKey] = useState<string | null>(null);
+  const { data: stats, isLoading: statsLoading } = useSettlementStats(distributionKey);
   const [tab, setTab] = useState("overview");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const pageSize = 100;
 
-  // Only fetch detail rows when on details tab
   const { data: detailData, isLoading: detailsLoading } = useSettlements(
     page,
     pageSize,
-    tab === "details" ? search : ""
+    tab === "details" ? search : "",
+    distributionKey
   );
 
-  // Reset page when search changes
   const handleSearch = (value: string) => {
     setSearch(value);
+    setPage(0);
+  };
+
+  const handlePeriodChange = (key: string | null) => {
+    setDistributionKey(key);
     setPage(0);
   };
 
@@ -37,6 +43,12 @@ const SettlementsList = () => {
 
   return (
     <div className="space-y-6">
+      <SettlementsPeriodFilter
+        periods={stats.periods}
+        selectedKey={distributionKey}
+        onSelect={handlePeriodChange}
+      />
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="overview">Översikt</TabsTrigger>

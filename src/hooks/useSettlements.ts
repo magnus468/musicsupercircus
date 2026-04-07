@@ -27,6 +27,13 @@ export interface Settlement {
   created_at: string;
 }
 
+export interface SettlementPeriod {
+  distribution: string;
+  distributionKey: string;
+  rowCount: number;
+  total: number;
+}
+
 export interface SettlementStats {
   totalAmount: number;
   totalRows: number;
@@ -37,16 +44,18 @@ export interface SettlementStats {
   byRight: Record<string, number>;
   uniqueWorks: number;
   uniqueCountries: number;
+  periods: SettlementPeriod[];
 }
 
-/** Fetch paginated settlement rows with optional server-side search */
+/** Fetch paginated settlement rows with optional server-side search and period filter */
 export const useSettlements = (
   page: number,
   pageSize: number,
-  search: string
+  search: string,
+  distributionKey: string | null
 ) => {
   return useQuery({
-    queryKey: ["settlements", page, pageSize, search],
+    queryKey: ["settlements", page, pageSize, search, distributionKey],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -59,6 +68,10 @@ export const useSettlements = (
         .select("*", { count: "exact" })
         .order("amount", { ascending: false })
         .range(from, to);
+
+      if (distributionKey) {
+        query = query.eq("distribution_key", distributionKey);
+      }
 
       if (search.trim()) {
         const q = `%${search.trim()}%`;
@@ -75,14 +88,16 @@ export const useSettlements = (
 };
 
 /** Fetch pre-aggregated stats from the database function */
-export const useSettlementStats = () => {
+export const useSettlementStats = (distributionKey: string | null) => {
   return useQuery<SettlementStats>({
-    queryKey: ["settlement-stats"],
+    queryKey: ["settlement-stats", distributionKey],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_settlement_stats");
+      const { data, error } = await supabase.rpc("get_settlement_stats", {
+        p_distribution_key: distributionKey,
+      });
       if (error) throw error;
       return data as unknown as SettlementStats;
     },
