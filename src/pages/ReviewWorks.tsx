@@ -331,6 +331,28 @@ const ReviewWorks = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {matchTarget && (
+        <MatchWorkDialog
+          open={!!matchTarget}
+          onOpenChange={(open) => !open && setMatchTarget(null)}
+          settlementTitle={matchTarget.title}
+          totalAmount={matchTarget.amount}
+          isMatching={matchWork.isPending}
+          onMatch={(newTitle) => {
+            matchWork.mutate(
+              { oldTitle: matchTarget.title, newTitle },
+              {
+                onSuccess: () => {
+                  toast.success(`"${matchTarget.title}" matchad till "${newTitle}"`);
+                  setMatchTarget(null);
+                },
+                onError: () => toast.error("Kunde inte matcha verket"),
+              }
+            );
+          }}
+        />
+      )}
     </div>
   );
 };
