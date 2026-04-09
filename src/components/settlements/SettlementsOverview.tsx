@@ -106,8 +106,12 @@ export const SettlementsOverview = ({ stats, distributionKey = null }: Props) =>
           <CardContent>
             <div className="space-y-3">
               {stats.topCountries.map(([name, amount]) => (
-                <div key={name} className="flex items-center justify-between text-sm">
-                  <span>{name}</span>
+                <div
+                  key={name}
+                  className="flex items-center justify-between text-sm cursor-pointer hover:bg-muted/50 rounded px-2 py-1 -mx-2 transition-colors"
+                  onClick={() => setSelectedCountry(name)}
+                >
+                  <span className="text-primary underline-offset-2 hover:underline">{name}</span>
                   <span className="font-medium tabular-nums">{fmt(amount)}</span>
                 </div>
               ))}
