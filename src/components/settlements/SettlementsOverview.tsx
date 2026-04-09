@@ -16,9 +16,12 @@ const barColors = [
 
 interface Props {
   stats: SettlementStats;
+  distributionKey?: string | null;
 }
 
-export const SettlementsOverview = ({ stats }: Props) => {
+export const SettlementsOverview = ({ stats, distributionKey = null }: Props) => {
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+
   const composerChartData = stats.topComposers.map(([name, amount]) => ({
     name: name.length > 22 ? name.slice(0, 20) + "…" : name,
     fullName: name,
