@@ -115,14 +115,9 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                         {group.periods.length} {group.periods.length === 1 ? "period" : "perioder"}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {group.totalRows.toLocaleString("sv-SE")} rader
-                      </span>
-                      <span className="font-medium tabular-nums text-sm">
-                        {fmt(group.totalAmount)}
-                      </span>
-                    </div>
+                    <span className="font-medium tabular-nums text-sm">
+                      {fmt(group.totalAmount)}
+                    </span>
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
