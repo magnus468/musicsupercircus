@@ -95,12 +95,12 @@ export const SettlementsOverview = ({ stats }: Props) => {
           </CardContent>
         </Card>
 
-        {/* By source */}
+        {/* By country */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Per källa</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Per land</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {stats.topSources.map(([name, amount]) => (
+              {stats.topCountries.map(([name, amount]) => (
                 <div key={name} className="flex items-center justify-between text-sm">
                   <span>{name}</span>
                   <span className="font-medium tabular-nums">{fmt(amount)}</span>
