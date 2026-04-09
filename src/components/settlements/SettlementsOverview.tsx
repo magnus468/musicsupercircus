@@ -166,6 +166,11 @@ export const SettlementsOverview = ({ stats, distributionKey = null }: Props) =>
           </div>
         </CardContent>
       </Card>
+      <CountryWorksDialog
+        country={selectedCountry}
+        onClose={() => setSelectedCountry(null)}
+        distributionKey={distributionKey}
+      />
     </>
   );
 };
