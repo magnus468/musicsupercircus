@@ -57,7 +57,7 @@ const SettlementsList = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <SettlementsOverview stats={stats} />
+          <SettlementsOverview stats={stats} distributionKey={distributionKey} />
         </TabsContent>
 
         <TabsContent value="works" className="space-y-4">
