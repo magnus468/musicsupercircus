@@ -87,6 +87,28 @@ export const useSettlements = (
   });
 };
 
+export interface UnmatchedSettlementWork {
+  work_title: string;
+  total_amount: number;
+  row_count: number;
+  composers: string | null;
+}
+
+/** Fetch settlement work titles that don't match any work in the works table */
+export const useUnmatchedSettlementWorks = () => {
+  return useQuery<UnmatchedSettlementWork[]>({
+    queryKey: ["unmatched-settlement-works"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_unmatched_settlement_works");
+      if (error) throw error;
+      return data as unknown as UnmatchedSettlementWork[];
+    },
+  });
+};
+
 /** Fetch pre-aggregated stats from the database function */
 export const useSettlementStats = (distributionKey: string | null) => {
   return useQuery<SettlementStats>({

@@ -428,6 +428,7 @@ export type Database = {
       get_settlement_stats:
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
+      get_unmatched_settlement_works: { Args: never; Returns: Json }
     }
     Enums: {
       publishing_type: "original" | "MSCE" | "MSCP" | "administration"
