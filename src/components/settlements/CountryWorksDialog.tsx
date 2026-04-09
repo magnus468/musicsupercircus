@@ -26,19 +26,16 @@ interface Props {
   distributionKey: string | null;
 }
 
-/** Extract a display year from a distribution_key */
-function extractYear(dk: string): string {
-  if (dk.startsWith("WC-")) {
-    return dk.slice(3, 7);
-  }
-  // STIM keys are like "1961", "1954" etc
-  return dk.slice(0, 4);
+interface WorkRow {
+  title: string;
+  total: number;
+  count: number;
+  composers: string | null;
 }
 
 export const CountryWorksDialog = ({ country, onClose, distributionKey }: Props) => {
   const [yearFilter, setYearFilter] = useState<string>("all");
 
-  // Reset year filter when country changes
   useEffect(() => {
     setYearFilter("all");
   }, [country]);
@@ -48,63 +45,39 @@ export const CountryWorksDialog = ({ country, onClose, distributionKey }: Props)
     enabled: !!country,
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      if (!country) return { works: [], years: [] };
+      if (!country) return { works: [] as WorkRow[], years: [] as string[] };
 
-      // First get available years for this country
-      let yearsQuery = supabase
-        .from("settlements")
-        .select("distribution_key")
-        .eq("country", country);
-
-      if (distributionKey) {
-        yearsQuery = yearsQuery.eq("distribution_key", distributionKey);
-      }
-
-      const { data: yearRows } = await yearsQuery;
-      const yearSet = new Set<string>();
-      (yearRows ?? []).forEach((r: any) => {
-        if (r.distribution_key) yearSet.add(extractYear(r.distribution_key));
-      });
-      const years = Array.from(yearSet).sort().reverse();
-
-      // Now get works grouped by title
-      let query = supabase
-        .from("settlements")
-        .select("work_title, amount, distribution_key, composers")
-        .eq("country", country);
-
-      if (distributionKey) {
-        query = query.eq("distribution_key", distributionKey);
-      }
-
-      const { data: rows, error } = await query;
+      const { data: result, error } = await supabase.rpc("get_country_works", {
+        p_country: country,
+        p_distribution_key: distributionKey,
+        p_year: yearFilter === "all" ? null : yearFilter,
+      } as any);
       if (error) throw error;
 
-      // Filter by year client-side and aggregate
-      const workMap = new Map<string, { total: number; count: number; composers: string | null }>();
-      (rows ?? []).forEach((r: any) => {
-        if (yearFilter !== "all" && r.distribution_key) {
-          const ry = extractYear(r.distribution_key);
-          if (ry !== yearFilter) return;
-        }
-        const existing = workMap.get(r.work_title);
-        if (existing) {
-          existing.total += Number(r.amount);
-          existing.count += 1;
-        } else {
-          workMap.set(r.work_title, { total: Number(r.amount), count: 1, composers: r.composers });
-        }
-      });
-
-      const works = Array.from(workMap.entries())
-        .map(([title, d]) => ({ title, total: d.total, count: d.count, composers: d.composers }))
-        .sort((a, b) => b.total - a.total);
-
-      return { works, years };
+      const parsed = result as unknown as { works: WorkRow[]; years: string[] };
+      return parsed;
     },
   });
 
-  const totalForCountry = (data?.works ?? []).reduce((s, w) => s + w.total, 0);
+  // For the year selector, fetch all years (without year filter)
+  const { data: allData } = useQuery({
+    queryKey: ["country-works-years", country, distributionKey],
+    enabled: !!country,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      if (!country) return { works: [], years: [] as string[] };
+      const { data: result, error } = await supabase.rpc("get_country_works", {
+        p_country: country,
+        p_distribution_key: distributionKey,
+      } as any);
+      if (error) throw error;
+      return result as unknown as { works: WorkRow[]; years: string[] };
+    },
+  });
+
+  const years = allData?.years ?? [];
+  const works = data?.works ?? [];
+  const totalForCountry = works.reduce((s, w) => s + w.total, 0);
 
   return (
     <Dialog open={!!country} onOpenChange={(open) => !open && onClose()}>
@@ -118,7 +91,7 @@ export const CountryWorksDialog = ({ country, onClose, distributionKey }: Props)
           </DialogTitle>
         </DialogHeader>
 
-        {(data?.years?.length ?? 0) > 1 && (
+        {years.length > 1 && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">År:</span>
             <Select value={yearFilter} onValueChange={setYearFilter}>
@@ -127,7 +100,7 @@ export const CountryWorksDialog = ({ country, onClose, distributionKey }: Props)
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alla år</SelectItem>
-                {data?.years.map((y) => (
+                {years.map((y) => (
                   <SelectItem key={y} value={y}>{y}</SelectItem>
                 ))}
               </SelectContent>
@@ -149,7 +122,7 @@ export const CountryWorksDialog = ({ country, onClose, distributionKey }: Props)
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(data?.works ?? []).map((w) => (
+                {works.map((w) => (
                   <TableRow key={w.title}>
                     <TableCell className="font-medium">{w.title}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{w.composers ?? "–"}</TableCell>
@@ -157,7 +130,7 @@ export const CountryWorksDialog = ({ country, onClose, distributionKey }: Props)
                     <TableCell className="text-right tabular-nums whitespace-nowrap">{fmt(w.total)}</TableCell>
                   </TableRow>
                 ))}
-                {(data?.works ?? []).length === 0 && (
+                {works.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       Inga verk hittades
