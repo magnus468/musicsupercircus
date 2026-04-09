@@ -1,7 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useWorks } from "@/hooks/useWorks";
 import { Search, Check } from "lucide-react";
@@ -27,20 +26,25 @@ const MatchWorkDialog = ({
   isMatching,
 }: MatchWorkDialogProps) => {
   const [search, setSearch] = useState("");
-  const { data: works } = useWorks();
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const filtered = useMemo(() => {
-    if (!works || !search.trim()) return works?.slice(0, 20) ?? [];
-    const q = search.toLowerCase();
-    return works
-      .filter(
-        (w) =>
-          w.title.toLowerCase().includes(q) ||
-          w.creators.toLowerCase().includes(q) ||
-          (w.project && w.project.toLowerCase().includes(q))
-      )
-      .slice(0, 20);
-  }, [works, search]);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset search when dialog opens
+  useEffect(() => {
+    if (open) {
+      setSearch("");
+      setDebouncedSearch("");
+    }
+  }, [open]);
+
+  // Use server-side search to handle 1500+ works
+  const { data: works, isLoading } = useWorks(debouncedSearch || undefined);
+
+  const displayed = (works ?? []).slice(0, 30);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,26 +69,29 @@ const MatchWorkDialog = ({
         </div>
 
         <div className="overflow-y-auto flex-1 -mx-1 px-1 space-y-1 min-h-0">
-          {filtered.map((w) => (
-            <button
-              key={w.id}
-              disabled={isMatching}
-              onClick={() => onMatch(w.title)}
-              className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors flex items-center justify-between gap-2 group"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{w.title}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {w.creators.replace(/\([^)]*\)/g, "").replace(/,\s*$/, "").trim()}
-                  {w.project && ` · ${w.project}`}
-                </p>
-              </div>
-              <Check className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 shrink-0" />
-            </button>
-          ))}
-          {filtered.length === 0 && (
+          {isLoading ? (
+            <p className="text-center text-sm text-muted-foreground py-6">Söker...</p>
+          ) : displayed.length > 0 ? (
+            displayed.map((w) => (
+              <button
+                key={w.id}
+                disabled={isMatching}
+                onClick={() => onMatch(w.title)}
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors flex items-center justify-between gap-2 group"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{w.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {w.creators.replace(/\([^)]*\)/g, "").replace(/,\s*$/, "").trim()}
+                    {w.project && ` · ${w.project}`}
+                  </p>
+                </div>
+                <Check className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 shrink-0" />
+              </button>
+            ))
+          ) : (
             <p className="text-center text-sm text-muted-foreground py-6">
-              Inga verk hittades
+              {search.trim() ? "Inga verk hittades" : "Skriv för att söka bland verk"}
             </p>
           )}
         </div>
