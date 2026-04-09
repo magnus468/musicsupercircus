@@ -93,7 +93,9 @@ const ReviewWorks = () => {
   const { data: agreements } = useAgreements();
   const { data: unmatchedWorks, isLoading: unmatchedLoading } = useUnmatchedSettlementWorks();
   const deleteWork = useDeleteWork();
+  const matchWork = useMatchSettlementWork();
   const [editWork, setEditWork] = useState<Work | null>(null);
+  const [matchTarget, setMatchTarget] = useState<{ title: string; amount: number } | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<IssueType>>(
     new Set(["no_publisher", "bad_split", "no_repr", "no_project", "no_agreement"])
   );
