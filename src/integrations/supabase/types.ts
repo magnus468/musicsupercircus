@@ -294,6 +294,27 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_title_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          settlement_title: string
+          work_title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          settlement_title: string
+          work_title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          settlement_title?: string
+          work_title?: string
+        }
+        Relationships: []
+      }
       settlements: {
         Row: {
           agreement_key: string | null

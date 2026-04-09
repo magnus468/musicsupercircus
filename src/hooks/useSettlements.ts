@@ -178,16 +178,26 @@ export const useSettlementStats = (distributionKey: string | null) => {
   });
 };
 
-/** Update work_title on settlement rows to match them to a registered work */
+/** Update work_title on settlement rows and save the mapping for future imports */
 export const useMatchSettlementWork = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ oldTitle, newTitle }: { oldTitle: string; newTitle: string }) => {
-      const { error } = await supabase
+      // Update existing settlement rows
+      const { error: updateErr } = await supabase
         .from("settlements")
         .update({ work_title: newTitle })
         .ilike("work_title", oldTitle.trim());
-      if (error) throw error;
+      if (updateErr) throw updateErr;
+
+      // Save mapping for future imports (upsert to avoid duplicates)
+      const { error: mapErr } = await supabase
+        .from("settlement_title_mappings")
+        .upsert(
+          { settlement_title: oldTitle.trim(), work_title: newTitle },
+          { onConflict: "settlement_title" }
+        );
+      if (mapErr) throw mapErr;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["unmatched-settlement-works"] });
