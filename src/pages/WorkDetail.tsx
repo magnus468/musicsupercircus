@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import WorkForm from "@/components/WorkForm";
 import CoPublisherAgreementDialog from "@/components/CoPublisherAgreementDialog";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
+import WorkRevenueCharts from "@/components/works/WorkRevenueCharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -315,6 +316,9 @@ const WorkDetail = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Revenue breakdown charts */}
+      <WorkRevenueCharts workTitle={work.title} />
 
       {/* Co-publisher agreement dialog */}
       <CoPublisherAgreementDialog
