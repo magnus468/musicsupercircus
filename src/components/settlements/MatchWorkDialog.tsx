@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useWorks } from "@/hooks/useWorks";
+import { supabase } from "@/integrations/supabase/client";
 import { Search, Check } from "lucide-react";
 
 interface MatchWorkDialogProps {
@@ -16,6 +17,26 @@ interface MatchWorkDialogProps {
 
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
+
+const useSearchWorks = (search: string, enabled: boolean) => {
+  return useQuery({
+    queryKey: ["match-work-search", search],
+    enabled: enabled && search.trim().length >= 1,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const term = search.trim();
+      const s = `%${term}%`;
+      const { data, error } = await supabase
+        .from("works")
+        .select("id, title, creators, project")
+        .or(`title.ilike.${s},creators.ilike.${s},project.ilike.${s}`)
+        .order("title")
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+};
 
 const MatchWorkDialog = ({
   open,
@@ -33,7 +54,6 @@ const MatchWorkDialog = ({
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Reset search when dialog opens
   useEffect(() => {
     if (open) {
       setSearch("");
@@ -41,10 +61,7 @@ const MatchWorkDialog = ({
     }
   }, [open]);
 
-  // Use server-side search to handle 1500+ works
-  const { data: works, isLoading } = useWorks(debouncedSearch || undefined);
-
-  const displayed = (works ?? []).slice(0, 30);
+  const { data: works, isLoading } = useSearchWorks(debouncedSearch, open);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -69,10 +86,14 @@ const MatchWorkDialog = ({
         </div>
 
         <div className="overflow-y-auto flex-1 -mx-1 px-1 space-y-1 min-h-0">
-          {isLoading ? (
+          {!debouncedSearch.trim() ? (
+            <p className="text-center text-sm text-muted-foreground py-6">
+              Skriv för att söka bland verk
+            </p>
+          ) : isLoading ? (
             <p className="text-center text-sm text-muted-foreground py-6">Söker...</p>
-          ) : displayed.length > 0 ? (
-            displayed.map((w) => (
+          ) : works && works.length > 0 ? (
+            works.map((w) => (
               <button
                 key={w.id}
                 disabled={isMatching}
@@ -91,7 +112,7 @@ const MatchWorkDialog = ({
             ))
           ) : (
             <p className="text-center text-sm text-muted-foreground py-6">
-              {search.trim() ? "Inga verk hittades" : "Skriv för att söka bland verk"}
+              Inga verk hittades
             </p>
           )}
         </div>
