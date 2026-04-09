@@ -300,8 +300,8 @@ const ReviewWorks = () => {
                   </TableHeader>
                   <TableBody>
                     {unmatchedWorks.map((uw) => (
-                      <TableRow key={uw.work_title}>
-                        <TableCell className="font-medium">{uw.work_title}</TableCell>
+                      <TableRow key={uw.work_title} className="cursor-pointer hover:bg-accent/50" onClick={() => setMatchTarget({ title: uw.work_title, amount: Number(uw.total_amount) })}>
+                        <TableCell className="font-medium text-primary underline underline-offset-2">{uw.work_title}</TableCell>
                         <TableCell className="text-muted-foreground">{uw.composers || "—"}</TableCell>
                         <TableCell className="text-right tabular-nums whitespace-nowrap">
                           {fmt(Number(uw.total_amount))}
