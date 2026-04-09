@@ -177,3 +177,22 @@ export const useSettlementStats = (distributionKey: string | null) => {
     },
   });
 };
+
+/** Update work_title on settlement rows to match them to a registered work */
+export const useMatchSettlementWork = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ oldTitle, newTitle }: { oldTitle: string; newTitle: string }) => {
+      const { error } = await supabase
+        .from("settlements")
+        .update({ work_title: newTitle })
+        .ilike("work_title", oldTitle.trim());
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["unmatched-settlement-works"] });
+      qc.invalidateQueries({ queryKey: ["settlement-stats"] });
+      qc.invalidateQueries({ queryKey: ["work-settlements"] });
+    },
+  });
+};
