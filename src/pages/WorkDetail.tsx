@@ -17,6 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+const fmtKr = (n: number) =>
+  n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
+
 /** Fetch all agreement_works rows so we can show linked works per agreement */
 const useAllAgreementWorks = () => {
   return useQuery({
