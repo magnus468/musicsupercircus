@@ -446,6 +446,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_country_works: {
+        Args: {
+          p_country: string
+          p_distribution_key?: string
+          p_year?: string
+        }
+        Returns: Json
+      }
       get_settlement_stats:
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
