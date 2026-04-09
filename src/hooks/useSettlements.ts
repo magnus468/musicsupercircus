@@ -87,6 +87,58 @@ export const useSettlements = (
   });
 };
 
+export interface WorkSettlementSummary {
+  distribution: string;
+  distribution_key: string;
+  total_amount: number;
+  row_count: number;
+  countries: string[];
+  sources: string[];
+}
+
+/** Fetch settlement breakdown for a specific work by title */
+export const useWorkSettlements = (workTitle: string | undefined) => {
+  return useQuery<WorkSettlementSummary[]>({
+    queryKey: ["work-settlements", workTitle],
+    enabled: !!workTitle,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      if (!workTitle) return [];
+      const { data, error } = await supabase
+        .from("settlements")
+        .select("distribution, distribution_key, amount, country, source")
+        .ilike("work_title", workTitle.trim());
+      if (error) throw error;
+
+      const byPeriod = new Map<string, { distribution: string; distribution_key: string; total: number; count: number; countries: Set<string>; sources: Set<string> }>();
+      (data as any[]).forEach((r) => {
+        const key = r.distribution_key || "unknown";
+        if (!byPeriod.has(key)) {
+          byPeriod.set(key, { distribution: r.distribution || key, distribution_key: key, total: 0, count: 0, countries: new Set(), sources: new Set() });
+        }
+        const p = byPeriod.get(key)!;
+        p.total += Number(r.amount);
+        p.count += 1;
+        if (r.country) p.countries.add(r.country);
+        if (r.source) p.sources.add(r.source);
+      });
+
+      return Array.from(byPeriod.values())
+        .map((p) => ({
+          distribution: p.distribution,
+          distribution_key: p.distribution_key,
+          total_amount: p.total,
+          row_count: p.count,
+          countries: Array.from(p.countries),
+          sources: Array.from(p.sources),
+        }))
+        .sort((a, b) => b.distribution_key.localeCompare(a.distribution_key));
+    },
+  });
+};
+
 export interface UnmatchedSettlementWork {
   work_title: string;
   total_amount: number;

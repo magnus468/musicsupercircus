@@ -3,17 +3,22 @@ import { useParams, Link } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements, useAgreementWorks, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
+import { useWorkSettlements } from "@/hooks/useSettlements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, TrendingUp } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import WorkForm from "@/components/WorkForm";
 import CoPublisherAgreementDialog from "@/components/CoPublisherAgreementDialog";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+const fmtKr = (n: number) =>
+  n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
 /** Fetch all agreement_works rows so we can show linked works per agreement */
 const useAllAgreementWorks = () => {
@@ -46,6 +51,7 @@ const WorkDetail = () => {
   const { data: allAgreementWorks } = useAllAgreementWorks();
 
   const work = works?.find((w) => w.id === id);
+  const { data: workSettlements, isLoading: settlementsLoading } = useWorkSettlements(work?.title);
 
   const clientMap = new Map<string, string>();
   clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
@@ -256,6 +262,57 @@ const WorkDetail = () => {
               </tbody>
             </table>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Settlement revenue */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">Avräkningsintäkter</CardTitle>
+            {workSettlements && workSettlements.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {fmtKr(workSettlements.reduce((s, r) => s + r.total_amount, 0))} totalt
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {settlementsLoading ? (
+            <p className="text-sm text-muted-foreground">Laddar...</p>
+          ) : workSettlements && workSettlements.length > 0 ? (
+            <div className="rounded-lg border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Period</TableHead>
+                    <TableHead className="text-right">Belopp</TableHead>
+                    <TableHead className="text-right">Rader</TableHead>
+                    <TableHead>Länder</TableHead>
+                    <TableHead>Källor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {workSettlements.map((ws) => (
+                    <TableRow key={ws.distribution_key}>
+                      <TableCell className="font-medium whitespace-nowrap">{ws.distribution}</TableCell>
+                      <TableCell className="text-right tabular-nums whitespace-nowrap">{fmtKr(ws.total_amount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{ws.row_count}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                        {ws.countries.slice(0, 5).join(", ")}{ws.countries.length > 5 ? ` +${ws.countries.length - 5}` : ""}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                        {ws.sources.join(", ")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Inga avräkningar hittade för detta verk.</p>
+          )}
         </CardContent>
       </Card>
 
