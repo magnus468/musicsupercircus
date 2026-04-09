@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DollarSign, Music2, Globe, Search } from "lucide-react";
 import type { SettlementStats } from "@/hooks/useSettlements";
+import { CountryWorksDialog } from "./CountryWorksDialog";
 
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
@@ -14,9 +16,12 @@ const barColors = [
 
 interface Props {
   stats: SettlementStats;
+  distributionKey?: string | null;
 }
 
-export const SettlementsOverview = ({ stats }: Props) => {
+export const SettlementsOverview = ({ stats, distributionKey = null }: Props) => {
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+
   const composerChartData = stats.topComposers.map(([name, amount]) => ({
     name: name.length > 22 ? name.slice(0, 20) + "…" : name,
     fullName: name,
@@ -101,8 +106,12 @@ export const SettlementsOverview = ({ stats }: Props) => {
           <CardContent>
             <div className="space-y-3">
               {stats.topCountries.map(([name, amount]) => (
-                <div key={name} className="flex items-center justify-between text-sm">
-                  <span>{name}</span>
+                <div
+                  key={name}
+                  className="flex items-center justify-between text-sm cursor-pointer hover:bg-muted/50 rounded px-2 py-1 -mx-2 transition-colors"
+                  onClick={() => setSelectedCountry(name)}
+                >
+                  <span className="text-primary underline-offset-2 hover:underline">{name}</span>
                   <span className="font-medium tabular-nums">{fmt(amount)}</span>
                 </div>
               ))}
@@ -117,8 +126,12 @@ export const SettlementsOverview = ({ stats }: Props) => {
         <CardContent>
           <div className="space-y-3">
             {stats.topCountries.map(([name, amount]) => (
-              <div key={name} className="flex items-center gap-3">
-                <span className="w-32 text-sm text-muted-foreground">{name}</span>
+              <div
+                key={name}
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={() => setSelectedCountry(name)}
+              >
+                <span className="w-32 text-sm text-muted-foreground group-hover:text-primary transition-colors">{name}</span>
                 <div className="flex-1 h-7 bg-muted rounded-md overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-md transition-all duration-500 flex items-center px-3"
@@ -153,6 +166,11 @@ export const SettlementsOverview = ({ stats }: Props) => {
           </div>
         </CardContent>
       </Card>
+      <CountryWorksDialog
+        country={selectedCountry}
+        onClose={() => setSelectedCountry(null)}
+        distributionKey={distributionKey}
+      />
     </>
   );
 };
