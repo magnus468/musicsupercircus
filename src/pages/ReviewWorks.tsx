@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useWorks, useDeleteWork, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements } from "@/hooks/useAgreements";
-import { useUnmatchedSettlementWorks } from "@/hooks/useSettlements";
+import { useUnmatchedSettlementWorks, useMatchSettlementWork } from "@/hooks/useSettlements";
+import MatchWorkDialog from "@/components/settlements/MatchWorkDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,9 @@ const ReviewWorks = () => {
   const { data: agreements } = useAgreements();
   const { data: unmatchedWorks, isLoading: unmatchedLoading } = useUnmatchedSettlementWorks();
   const deleteWork = useDeleteWork();
+  const matchWork = useMatchSettlementWork();
   const [editWork, setEditWork] = useState<Work | null>(null);
+  const [matchTarget, setMatchTarget] = useState<{ title: string; amount: number } | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<IssueType>>(
     new Set(["no_publisher", "bad_split", "no_repr", "no_project", "no_agreement"])
   );
@@ -297,8 +300,8 @@ const ReviewWorks = () => {
                   </TableHeader>
                   <TableBody>
                     {unmatchedWorks.map((uw) => (
-                      <TableRow key={uw.work_title}>
-                        <TableCell className="font-medium">{uw.work_title}</TableCell>
+                      <TableRow key={uw.work_title} className="cursor-pointer hover:bg-accent/50" onClick={() => setMatchTarget({ title: uw.work_title, amount: Number(uw.total_amount) })}>
+                        <TableCell className="font-medium text-primary underline underline-offset-2">{uw.work_title}</TableCell>
                         <TableCell className="text-muted-foreground">{uw.composers || "—"}</TableCell>
                         <TableCell className="text-right tabular-nums whitespace-nowrap">
                           {fmt(Number(uw.total_amount))}
@@ -328,6 +331,28 @@ const ReviewWorks = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {matchTarget && (
+        <MatchWorkDialog
+          open={!!matchTarget}
+          onOpenChange={(open) => !open && setMatchTarget(null)}
+          settlementTitle={matchTarget.title}
+          totalAmount={matchTarget.amount}
+          isMatching={matchWork.isPending}
+          onMatch={(newTitle) => {
+            matchWork.mutate(
+              { oldTitle: matchTarget.title, newTitle },
+              {
+                onSuccess: () => {
+                  toast.success(`"${matchTarget.title}" matchad till "${newTitle}"`);
+                  setMatchTarget(null);
+                },
+                onError: () => toast.error("Kunde inte matcha verket"),
+              }
+            );
+          }}
+        />
+      )}
     </div>
   );
 };
