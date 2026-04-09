@@ -317,6 +317,9 @@ const WorkDetail = () => {
         </CardContent>
       </Card>
 
+      {/* Revenue breakdown charts */}
+      <WorkRevenueCharts workTitle={work.title} />
+
       {/* Co-publisher agreement dialog */}
       <CoPublisherAgreementDialog
         agreement={selectedAgreement}
