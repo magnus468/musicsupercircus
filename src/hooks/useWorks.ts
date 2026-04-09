@@ -14,7 +14,7 @@ export const useWorks = (search?: string) => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     queryFn: async () => {
-      let query = supabase.from("works").select("*").order("created_at", { ascending: false });
+      let query = supabase.from("works").select("*").order("created_at", { ascending: false }).limit(5000);
       if (search && search.trim()) {
         const term = search.trim();
         const s = `%${term}%`;
