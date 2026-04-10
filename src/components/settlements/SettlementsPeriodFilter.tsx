@@ -9,14 +9,28 @@ import type { SettlementPeriod } from "@/hooks/useSettlements";
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
-function extractYear(distribution: string | null, distributionKey: string): string {
-  if (distribution) {
-    const match = distribution.match(/\d{4}/);
-    if (match) return match[0];
-  }
+/** Swedish month names for matching distribution period names */
+const MONTHS = /^(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\s+(\d{4})/i;
+
+/**
+ * Extract the distribution year from the BASE period name (before comma).
+ * Only uses the year from the base part (e.g. "November 2025" → 2025).
+ * For WC periods, uses the key prefix.
+ * For STIM periods without a clear month+year base name (like "Privatkopieringsersättning"),
+ * returns null so the caller can infer from neighboring periods.
+ */
+function extractYear(distribution: string | null, distributionKey: string): string | null {
   if (distributionKey.startsWith("WC-")) return distributionKey.slice(3, 7);
-  const keyMatch = distributionKey.match(/\d{4}/);
-  return keyMatch ? keyMatch[0] : "Övrigt";
+  if (!distribution) return null;
+  const baseName = getBasePeriodName(distribution);
+  // Try month+year pattern first
+  const monthMatch = baseName.match(MONTHS);
+  if (monthMatch) return monthMatch[2];
+  // Try just a 4-digit year in the base name (e.g. "Mars 2026")
+  const yearMatch = baseName.match(/\b(\d{4})\b/);
+  if (yearMatch) return yearMatch[1];
+  // No year in base name – caller should infer
+  return null;
 }
 
 /** Extract base period name: "November 2025, Spotify Norden" → "November 2025" */
