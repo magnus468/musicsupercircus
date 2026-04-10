@@ -45,6 +45,7 @@ const WorkDetail = () => {
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{id: string;}>();
+  const navigate = useNavigate();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();

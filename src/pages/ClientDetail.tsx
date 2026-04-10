@@ -121,6 +121,7 @@ const AgreementFileButtons = ({ agreementId, onViewPdf }: { agreementId: string;
 const ClientDetail = () => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const selectedAgreementId = searchParams.get("agreement");
   const { data: client, isLoading: loadingClient } = useClient(id);
