@@ -95,12 +95,37 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
 
   const yearGroups = useMemo((): YearGroup[] => {
     if (groupedPeriods.length === 0) return [];
+
+    // Build a sorted list of all numeric STIM keys with known years for inference
+    const knownYears: { key: number; year: string }[] = [];
+    for (const p of periods) {
+      if (p.distributionKey.startsWith("WC-")) continue;
+      const num = parseInt(p.distributionKey, 10);
+      if (isNaN(num)) continue;
+      const y = extractYear(p.distribution, p.distributionKey);
+      if (y) knownYears.push({ key: num, year: y });
+    }
+    knownYears.sort((a, b) => a.key - b.key);
+
+    /** Infer year for a STIM key by finding the closest key with a known year */
+    const inferYear = (distributionKey: string): string => {
+      const num = parseInt(distributionKey, 10);
+      if (isNaN(num) || knownYears.length === 0) return "Övrigt";
+      let closest = knownYears[0];
+      let minDist = Math.abs(num - closest.key);
+      for (const ky of knownYears) {
+        const d = Math.abs(num - ky.key);
+        if (d < minDist) { minDist = d; closest = ky; }
+      }
+      return closest.year;
+    };
+
     const map = new Map<string, YearGroup>();
     for (const gp of groupedPeriods) {
-      // Use the first key to determine the year
       const firstKey = gp.keys[0];
       const firstPeriod = periods.find((p) => p.distributionKey === firstKey);
-      const year = extractYear(firstPeriod?.distribution ?? null, firstKey);
+      let year = extractYear(firstPeriod?.distribution ?? null, firstKey);
+      if (!year) year = inferYear(firstKey);
       if (!map.has(year)) {
         map.set(year, { year, periods: [], totalAmount: 0, totalRows: 0 });
       }
