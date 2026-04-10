@@ -149,10 +149,12 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
 
   const selectedYear = useMemo(() => {
     if (!selectedGroupedPeriod) return null;
-    const firstKey = selectedGroupedPeriod.keys[0];
-    const firstPeriod = periods.find((p) => p.distributionKey === firstKey);
-    return extractYear(firstPeriod?.distribution ?? null, firstKey);
-  }, [selectedGroupedPeriod, periods]);
+    // Find the year group that contains this grouped period
+    for (const yg of yearGroups) {
+      if (yg.periods.some((gp) => gp === selectedGroupedPeriod)) return yg.year;
+    }
+    return null;
+  }, [selectedGroupedPeriod, yearGroups]);
 
   const toggleYear = (year: string) => {
     setExpandedYears((prev) => {
