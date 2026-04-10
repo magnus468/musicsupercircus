@@ -129,8 +129,8 @@ const ProjectDetail = () => {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" asChild className="gap-2">
-        <Link to="/projects"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
+      <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate(-1)}>
+        <ArrowLeft className="h-4 w-4" /> Tillbaka
       </Button>
 
       <Card>
