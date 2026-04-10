@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
 import {
@@ -121,6 +121,7 @@ const AgreementFileButtons = ({ agreementId, onViewPdf }: { agreementId: string;
 const ClientDetail = () => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const selectedAgreementId = searchParams.get("agreement");
   const { data: client, isLoading: loadingClient } = useClient(id);
@@ -172,8 +173,8 @@ const ClientDetail = () => {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" asChild className="gap-2">
-        <Link to="/clients"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
+      <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate(-1)}>
+        <ArrowLeft className="h-4 w-4" /> Tillbaka
       </Button>
 
       <Card>

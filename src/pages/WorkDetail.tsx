@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements, useAgreementWorks, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
@@ -45,6 +45,7 @@ const WorkDetail = () => {
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const { id } = useParams<{id: string;}>();
+  const navigate = useNavigate();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
@@ -141,8 +142,8 @@ const WorkDetail = () => {
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild className="gap-2">
-          <Link to="/works"><ArrowLeft className="h-4 w-4" /> Tillbaka</Link>
+        <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" /> Tillbaka
         </Button>
         <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditing(true)}>
           <Pencil className="h-4 w-4" /> Redigera
