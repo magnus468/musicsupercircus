@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useClients, useDeleteClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { useClientWorkCounts } from "@/hooks/useClientWorkCounts";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,7 @@ const InlineEdit = ({
 };
 
 const ClientsList = () => {
+  useScrollRestore();
   const [search, setSearch] = useState("");
   const { data: clients, isLoading } = useClients(search);
   const deleteClient = useDeleteClient();

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { Link } from "react-router-dom";
 import { useProjects, Project } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
@@ -135,6 +136,7 @@ const ProjectTable = ({
 );
 
 const ProjectsList = () => {
+  useScrollRestore();
   const { data: projects, isLoading } = useProjects();
   const { data: works } = useWorks();
   const { data: agreements } = useAgreements();

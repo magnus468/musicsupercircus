@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useSettlements, useSettlementStats } from "@/hooks/useSettlements";
 import { SettlementsOverview } from "@/components/settlements/SettlementsOverview";
 import { SettlementsWorksTab } from "@/components/settlements/SettlementsWorksTab";
@@ -7,6 +8,7 @@ import { SettlementsPeriodFilter } from "@/components/settlements/SettlementsPer
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SettlementsList = () => {
+  useScrollRestore();
   const [distributionKey, setDistributionKey] = useState<string | null>(null);
   const { data: stats, isLoading: statsLoading } = useSettlementStats(distributionKey);
   const [tab, setTab] = useState("overview");
