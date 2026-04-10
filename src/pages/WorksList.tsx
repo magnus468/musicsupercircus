@@ -28,6 +28,7 @@ const WorksList = () => {
   const { data: works, isLoading } = useWorks(debouncedSearch);
   const { data: clients } = useClients();
   const deleteWork = useDeleteWork();
+  useScrollRestore(!isLoading);
 
   const clientMap = useMemo(() => {
     const map = new Map<string, string>();
