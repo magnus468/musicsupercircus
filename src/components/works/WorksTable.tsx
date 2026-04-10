@@ -22,6 +22,8 @@ interface WorksTableProps {
   onOpenWork: (id: string) => void;
 }
 
+const WORK_ROW_ID_PREFIX = "work-row-";
+
 const parseCreatorParts = (creators: string) => {
   return (creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
     .map((c) => ({
@@ -109,7 +111,7 @@ const WorksTable = memo(({
         </TableHeader>
         <TableBody>
           {works?.map((work) => (
-            <TableRow key={work.id} data-work-id={work.id}>
+            <TableRow key={work.id} id={`${WORK_ROW_ID_PREFIX}${work.id}`} data-work-id={work.id}>
               <TableCell className="font-medium max-w-[200px] truncate">
                 <Link
                   to={`/works/${work.id}`}
