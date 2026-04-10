@@ -19,7 +19,10 @@ interface WorksTableProps {
   clientMap: Map<string, string>;
   onEdit: (work: Work) => void;
   onDelete: (id: string) => void;
+  onOpenWork: (id: string) => void;
 }
+
+const WORK_ROW_ID_PREFIX = "work-row-";
 
 const parseCreatorParts = (creators: string) => {
   return (creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
@@ -78,6 +81,7 @@ const WorksTable = memo(({
   clientMap,
   onEdit,
   onDelete,
+  onOpenWork,
 }: WorksTableProps) => {
   return (
     <div className="rounded-lg border bg-card overflow-x-auto">
@@ -107,9 +111,13 @@ const WorksTable = memo(({
         </TableHeader>
         <TableBody>
           {works?.map((work) => (
-            <TableRow key={work.id}>
+            <TableRow key={work.id} id={`${WORK_ROW_ID_PREFIX}${work.id}`} data-work-id={work.id}>
               <TableCell className="font-medium max-w-[200px] truncate">
-                <Link to={`/works/${work.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                <Link
+                  to={`/works/${work.id}`}
+                  onClick={() => onOpenWork(work.id)}
+                  className="text-primary underline underline-offset-2 hover:text-primary/80"
+                >
                   {work.title}
                 </Link>
               </TableCell>

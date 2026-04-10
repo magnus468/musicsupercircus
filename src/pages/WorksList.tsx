@@ -1,17 +1,22 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigationType } from "react-router-dom";
 import { useDeleteWork, useWorks, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
-import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import WorkForm from "@/components/WorkForm";
 import WorksFilters from "@/components/works/WorksFilters";
 import WorksTable from "@/components/works/WorksTable";
 import { toast } from "sonner";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 
 type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_status" | "share_percentage" | "created_at";
 type SortDir = "asc" | "desc";
 
+const LAST_OPENED_WORK_KEY = "works-last-opened-id";
+const WORK_ROW_ID_PREFIX = "work-row-";
+
 const WorksList = () => {
+  const navigationType = useNavigationType();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -28,6 +33,7 @@ const WorksList = () => {
   const { data: works, isLoading } = useWorks(debouncedSearch);
   const { data: clients } = useClients();
   const deleteWork = useDeleteWork();
+
   useScrollRestore(!isLoading);
 
   const clientMap = useMemo(() => {
@@ -98,6 +104,39 @@ const WorksList = () => {
     return result;
   }, [works, typeFilter, stimFilter, sortKey, sortDir]);
 
+  useEffect(() => {
+    if (isLoading || !filtered?.length || navigationType !== "POP") return;
+
+    const lastOpenedWorkId = sessionStorage.getItem(LAST_OPENED_WORK_KEY);
+    if (!lastOpenedWorkId) return;
+
+    let attempts = 0;
+
+    const tryScrollToWork = () => {
+      const row = document.getElementById(`${WORK_ROW_ID_PREFIX}${lastOpenedWorkId}`);
+
+      if (row) {
+        row.scrollIntoView({ block: "center" });
+        sessionStorage.removeItem(LAST_OPENED_WORK_KEY);
+        return;
+      }
+
+      if (attempts >= 10) {
+        sessionStorage.removeItem(LAST_OPENED_WORK_KEY);
+        return;
+      }
+
+      attempts += 1;
+      requestAnimationFrame(tryScrollToWork);
+    };
+
+    requestAnimationFrame(tryScrollToWork);
+  }, [filtered, isLoading, navigationType]);
+
+  const handleOpenWork = useCallback((id: string) => {
+    sessionStorage.setItem(LAST_OPENED_WORK_KEY, id);
+  }, []);
+
   const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Vill du verkligen ta bort detta verk?")) return;
 
@@ -133,6 +172,7 @@ const WorksList = () => {
         clientMap={clientMap}
         onEdit={setEditWork}
         onDelete={handleDelete}
+        onOpenWork={handleOpenWork}
       />
 
       <Dialog open={!!editWork} onOpenChange={(open) => !open && setEditWork(null)}>
