@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   useAgreements,
@@ -222,6 +223,7 @@ const AgreementFilesDialog = ({
 };
 
 const AgreementsList = () => {
+  useScrollRestore();
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get("highlight");
   const { data: agreements, isLoading } = useAgreements();

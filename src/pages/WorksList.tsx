@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useDeleteWork, useWorks, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import WorkForm from "@/components/WorkForm";
 import WorksFilters from "@/components/works/WorksFilters";
@@ -11,6 +12,7 @@ type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_stat
 type SortDir = "asc" | "desc";
 
 const WorksList = () => {
+  useScrollRestore();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
