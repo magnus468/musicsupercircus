@@ -23,13 +23,12 @@ function extractYear(distribution: string | null, distributionKey: string): stri
   if (distributionKey.startsWith("WC-")) return distributionKey.slice(3, 7);
   if (!distribution) return null;
   const baseName = getBasePeriodName(distribution);
-  // Try month+year pattern first
+  // Only match Swedish month + year pattern (e.g. "November 2025", "Mars 2024")
+  // All other periods (Omfördelade intäkter 2020, Privatkopieringsersättning, etc.)
+  // should fall through to inference based on neighboring distribution keys
   const monthMatch = baseName.match(MONTHS);
   if (monthMatch) return monthMatch[2];
-  // Try just a 4-digit year in the base name (e.g. "Mars 2026")
-  const yearMatch = baseName.match(/\b(\d{4})\b/);
-  if (yearMatch) return yearMatch[1];
-  // No year in base name – caller should infer
+  // No month+year in base name – caller should infer from neighboring keys
   return null;
 }
 
