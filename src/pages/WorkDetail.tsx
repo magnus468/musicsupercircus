@@ -179,12 +179,17 @@ const WorkDetail = () => {
               <dt className="text-muted-foreground">STIM-status</dt>
               <dd><Badge variant="outline">{stimLabel(work.stim_status)}</Badge></dd>
             </div>
-            {work.share_percentage != null &&
-            <div>
-                <dt className="text-muted-foreground">Andel</dt>
-                <dd>{work.share_percentage}%</dd>
-              </div>
-            }
+            {(() => {
+              const nordicTotal = creatorEntries.filter(e => e.repr).reduce((s, e) => s + (parseFloat(e.share) || 0), 0);
+              const rowTotal = creatorEntries.filter(e => e.repr).reduce((s, e) => s + (parseFloat(e.shareRow) || 0), 0);
+              if (nordicTotal === 0 && rowTotal === 0) return null;
+              return (
+                <div>
+                  <dt className="text-muted-foreground">Andel (Norden / ROW)</dt>
+                  <dd>{nordicTotal === rowTotal ? `${nordicTotal}%` : `${nordicTotal}% / ${rowTotal}%`}</dd>
+                </div>
+              );
+            })()}
             {work.co_publishers && work.co_publishers.length > 0 && <div>
                 <dt className="text-muted-foreground">Co-publishers</dt>
                 <dd className="space-x-1">
