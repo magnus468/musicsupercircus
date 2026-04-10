@@ -223,10 +223,10 @@ const AgreementFilesDialog = ({
 };
 
 const AgreementsList = () => {
-  useScrollRestore();
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get("highlight");
   const { data: agreements, isLoading } = useAgreements();
+  useScrollRestore(!isLoading);
   const { data: clients } = useClients();
   const { data: works } = useWorks();
   const { data: workCounts } = useAllAgreementWorkCounts();
