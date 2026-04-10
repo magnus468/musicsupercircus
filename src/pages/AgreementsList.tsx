@@ -783,9 +783,9 @@ const AgreementsList = () => {
                           onCheckedChange={() => toggleWork(w.id)}
                         />
                         <span className="font-medium truncate">{w.title}</span>
-                        <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                          {[displayCreators, w.project].filter(Boolean).join(" · ")}
-                        </span>
+                        {displayCreators && (
+                          <span className="ml-auto shrink-0 text-xs text-muted-foreground">{displayCreators}</span>
+                        )}
                       </label>
                     );
                   })}
