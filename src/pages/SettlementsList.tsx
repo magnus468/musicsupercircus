@@ -8,9 +8,9 @@ import { SettlementsPeriodFilter } from "@/components/settlements/SettlementsPer
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SettlementsList = () => {
-  useScrollRestore();
   const [distributionKey, setDistributionKey] = useState<string | null>(null);
   const { data: stats, isLoading: statsLoading } = useSettlementStats(distributionKey);
+  useScrollRestore(!statsLoading);
   const [tab, setTab] = useState("overview");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);

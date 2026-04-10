@@ -79,9 +79,9 @@ const InlineEdit = ({
 };
 
 const ClientsList = () => {
-  useScrollRestore();
   const [search, setSearch] = useState("");
   const { data: clients, isLoading } = useClients(search);
+  useScrollRestore(!isLoading);
   const deleteClient = useDeleteClient();
   const updateClient = useUpdateClient();
   const { data: workCounts } = useClientWorkCounts();

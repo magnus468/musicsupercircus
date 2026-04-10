@@ -136,8 +136,8 @@ const ProjectTable = ({
 );
 
 const ProjectsList = () => {
-  useScrollRestore();
   const { data: projects, isLoading } = useProjects();
+  useScrollRestore(!isLoading);
   const { data: works } = useWorks();
   const { data: agreements } = useAgreements();
   const { data: allAgreementWorks } = useQuery({
