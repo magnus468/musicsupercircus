@@ -12,6 +12,7 @@ type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_stat
 type SortDir = "asc" | "desc";
 
 const WorksList = () => {
+  useScrollRestore();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
