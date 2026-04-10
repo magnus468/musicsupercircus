@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useClient } from "@/hooks/useClients";
 import { useWorks } from "@/hooks/useWorks";
 import {

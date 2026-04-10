@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements, useAgreementWorks, getAgreementSignedUrl, type Agreement } from "@/hooks/useAgreements";
