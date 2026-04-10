@@ -70,7 +70,12 @@ export const useSettlements = (
         .range(from, to);
 
       if (distributionKey) {
-        query = query.eq("distribution_key", distributionKey);
+        const keys = distributionKey.split(",");
+        if (keys.length === 1) {
+          query = query.eq("distribution_key", keys[0]);
+        } else {
+          query = query.in("distribution_key", keys);
+        }
       }
 
       if (search.trim()) {

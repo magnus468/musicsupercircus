@@ -19,9 +19,28 @@ function extractYear(distribution: string | null, distributionKey: string): stri
   return keyMatch ? keyMatch[0] : "Övrigt";
 }
 
+/** Extract base period name: "November 2025, Spotify Norden" → "November 2025" */
+function getBasePeriodName(distribution: string): string {
+  const commaIdx = distribution.indexOf(",");
+  if (commaIdx > 0) return distribution.slice(0, commaIdx).trim();
+  return distribution;
+}
+
+/** Check if this is a STIM period (not WC-prefixed) */
+function isStimPeriod(distributionKey: string): boolean {
+  return !distributionKey.startsWith("WC-");
+}
+
+interface GroupedPeriod {
+  label: string;
+  keys: string[];
+  total: number;
+  rowCount: number;
+}
+
 interface YearGroup {
   year: string;
-  periods: SettlementPeriod[];
+  periods: GroupedPeriod[];
   totalAmount: number;
   totalRows: number;
 }
@@ -35,28 +54,66 @@ interface Props {
 export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Props) => {
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
 
-  const yearGroups = useMemo((): YearGroup[] => {
+  // Group sub-periods by base name for STIM periods
+  const groupedPeriods = useMemo((): GroupedPeriod[] => {
     if (!periods || periods.length === 0) return [];
-    const map = new Map<string, YearGroup>();
+    const map = new Map<string, GroupedPeriod>();
     for (const p of periods) {
-      const year = extractYear(p.distribution, p.distributionKey);
+      let groupKey: string;
+      let label: string;
+      if (isStimPeriod(p.distributionKey)) {
+        label = getBasePeriodName(p.distribution);
+        groupKey = `stim-${label}`;
+      } else {
+        label = p.distribution;
+        groupKey = p.distributionKey;
+      }
+      if (!map.has(groupKey)) {
+        map.set(groupKey, { label, keys: [], total: 0, rowCount: 0 });
+      }
+      const g = map.get(groupKey)!;
+      g.keys.push(p.distributionKey);
+      g.total += p.total;
+      g.rowCount += p.rowCount;
+    }
+    return Array.from(map.values());
+  }, [periods]);
+
+  const yearGroups = useMemo((): YearGroup[] => {
+    if (groupedPeriods.length === 0) return [];
+    const map = new Map<string, YearGroup>();
+    for (const gp of groupedPeriods) {
+      // Use the first key to determine the year
+      const firstKey = gp.keys[0];
+      const firstPeriod = periods.find((p) => p.distributionKey === firstKey);
+      const year = extractYear(firstPeriod?.distribution ?? null, firstKey);
       if (!map.has(year)) {
         map.set(year, { year, periods: [], totalAmount: 0, totalRows: 0 });
       }
       const g = map.get(year)!;
-      g.periods.push(p);
-      g.totalAmount += p.total;
-      g.totalRows += p.rowCount;
+      g.periods.push(gp);
+      g.totalAmount += gp.total;
+      g.totalRows += gp.rowCount;
     }
     return Array.from(map.values()).sort((a, b) => b.year.localeCompare(a.year));
-  }, [periods]);
+  }, [groupedPeriods, periods]);
 
-  // Auto-expand the year that contains the selected period
+  const selectedKeys = useMemo(() => (selectedKey ? selectedKey.split(",") : []), [selectedKey]);
+
+  // Find which grouped period is currently selected
+  const selectedGroupedPeriod = useMemo(() => {
+    if (selectedKeys.length === 0) return null;
+    return groupedPeriods.find((gp) =>
+      gp.keys.length === selectedKeys.length && gp.keys.every((k) => selectedKeys.includes(k))
+    ) ?? null;
+  }, [selectedKeys, groupedPeriods]);
+
   const selectedYear = useMemo(() => {
-    if (!selectedKey) return null;
-    const p = periods.find((p) => p.distributionKey === selectedKey);
-    return p ? extractYear(p.distribution, p.distributionKey) : null;
-  }, [selectedKey, periods]);
+    if (!selectedGroupedPeriod) return null;
+    const firstKey = selectedGroupedPeriod.keys[0];
+    const firstPeriod = periods.find((p) => p.distributionKey === firstKey);
+    return extractYear(firstPeriod?.distribution ?? null, firstKey);
+  }, [selectedGroupedPeriod, periods]);
 
   const toggleYear = (year: string) => {
     setExpandedYears((prev) => {
@@ -65,6 +122,11 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       else next.add(year);
       return next;
     });
+  };
+
+  const handleSelect = (gp: GroupedPeriod) => {
+    const keyStr = gp.keys.join(",");
+    onSelect(selectedKey === keyStr ? null : keyStr);
   };
 
   if (!periods || periods.length === 0) return null;
@@ -90,7 +152,10 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
         <div className="space-y-1">
           {yearGroups.map((group) => {
             const isExpanded = expandedYears.has(group.year) || selectedYear === group.year;
-            const hasSelectedPeriod = group.periods.some((p) => p.distributionKey === selectedKey);
+            const hasSelectedPeriod = group.periods.some((gp) => {
+              const keyStr = gp.keys.join(",");
+              return keyStr === selectedKey;
+            });
 
             return (
               <Collapsible
@@ -111,9 +176,6 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                       )}
                       <span className="font-semibold">{group.year}</span>
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0 font-normal">
-                        {group.periods.length} {group.periods.length === 1 ? "period" : "perioder"}
-                      </Badge>
                     </div>
                     <span className="font-medium tabular-nums text-sm">
                       {fmt(group.totalAmount)}
@@ -122,12 +184,13 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="ml-5 mt-1 space-y-0.5 pb-1">
-                    {group.periods.map((p) => {
-                      const isActive = selectedKey === p.distributionKey;
+                    {group.periods.map((gp) => {
+                      const keyStr = gp.keys.join(",");
+                      const isActive = selectedKey === keyStr;
                       return (
                         <button
-                          key={p.distributionKey}
-                          onClick={() => onSelect(isActive ? null : p.distributionKey)}
+                          key={keyStr}
+                          onClick={() => handleSelect(gp)}
                           className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                             isActive
                               ? "bg-primary text-primary-foreground"
@@ -135,16 +198,10 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className={isActive ? "font-medium" : ""}>{p.distribution}</span>
-                            <Badge
-                              variant={isActive ? "outline" : "secondary"}
-                              className={`text-xs px-1.5 py-0 ${isActive ? "border-primary-foreground/30 text-primary-foreground" : ""}`}
-                            >
-                              {p.rowCount.toLocaleString("sv-SE")}
-                            </Badge>
+                            <span className={isActive ? "font-medium" : ""}>{gp.label}</span>
                           </div>
                           <span className={`tabular-nums text-sm ${isActive ? "" : "text-muted-foreground"}`}>
-                            {fmt(p.total)}
+                            {fmt(gp.total)}
                           </span>
                         </button>
                       );
@@ -156,11 +213,11 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
           })}
         </div>
 
-        {selectedKey && (
+        {selectedGroupedPeriod && (
           <p className="mt-3 text-xs text-muted-foreground border-t pt-2">
-            Visar data för: <span className="font-medium text-foreground">{periods.find((p) => p.distributionKey === selectedKey)?.distribution}</span>
+            Visar data för: <span className="font-medium text-foreground">{selectedGroupedPeriod.label}</span>
             {" — "}
-            {fmt(periods.find((p) => p.distributionKey === selectedKey)?.total ?? 0)}
+            {fmt(selectedGroupedPeriod.total)}
           </p>
         )}
       </CardContent>
