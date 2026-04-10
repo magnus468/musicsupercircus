@@ -760,16 +760,35 @@ const AgreementsList = () => {
                     const nq = normalize(q);
                     return normalize(w.title).includes(nq) || normalize(w.creators).includes(nq) || (w.project && normalize(w.project).includes(nq));
                   })
-                  .map((w) => (
-                    <label key={w.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-accent/50">
-                      <Checkbox
-                        checked={form.selectedWorkIds.includes(w.id)}
-                        onCheckedChange={() => toggleWork(w.id)}
-                      />
-                      <span className="truncate">{w.title}</span>
-                      <span className="ml-auto shrink-0 text-xs text-muted-foreground">{w.creators}</span>
-                    </label>
-                  ))}
+                  .map((w) => {
+                    // Filter out publishers (E) and MSC entities from the displayed creators
+                    const displayCreators = (w.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\([^)]*\))?(?=,|$)/g) || [])
+                      .map((c) => {
+                        const trimmed = c.replace(/^,\s*/, "").trim();
+                        const nameMatch = trimmed.match(/^(.+?)\s*\(([^)]*)\)$/);
+                        const name = nameMatch ? nameMatch[1].trim() : trimmed;
+                        const meta = nameMatch ? nameMatch[2] : "";
+                        const tags = meta.split(",").map((t) => t.trim());
+                        const isPublisher = tags.includes("E");
+                        const isMSC = /music super circus/i.test(name);
+                        if (isPublisher || isMSC) return null;
+                        return name;
+                      })
+                      .filter(Boolean)
+                      .join(", ");
+                    return (
+                      <label key={w.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-accent/50">
+                        <Checkbox
+                          checked={form.selectedWorkIds.includes(w.id)}
+                          onCheckedChange={() => toggleWork(w.id)}
+                        />
+                        <span className="font-medium truncate">{w.title}</span>
+                        {displayCreators && (
+                          <span className="ml-auto shrink-0 text-xs text-muted-foreground">{displayCreators}</span>
+                        )}
+                      </label>
+                    );
+                  })}
               </div>
             </div>
 
