@@ -1,50 +1,13 @@
 import { useState, useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarRange, ChevronDown, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { SettlementPeriod } from "@/hooks/useSettlements";
+import { extractYearFromLabel, isStimPeriod, resolveStimPayoutLabels } from "./settlementPeriodGrouping";
 
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
-
-/** Swedish month names for matching distribution period names */
-const MONTH_PATTERN = /(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\s+(\d{4})/i;
-
-/**
- * Extract the distribution year from the BASE period name.
- * Only uses the year from a Swedish month+year pattern.
- */
-function extractYear(distribution: string | null, distributionKey: string): string | null {
-  if (distributionKey.startsWith("WC-")) return distributionKey.slice(3, 7);
-  if (!distribution) return null;
-  const monthMatch = distribution.match(MONTH_PATTERN);
-  if (monthMatch) return monthMatch[2];
-  return null;
-}
-
-/**
- * Extract the main period group name from a distribution name.
- * Finds the first Swedish month + year pattern and returns it as the canonical group name.
- * "November 2025, Spotify Norden" → "November 2025"
- * "Mars 2025 - TONO" → "Mars 2025"
- * "Korrigering februari & maj 2025, Deezer" → "Februari 2025"
- * "Privatkopieringsersättning, 2013-2016" → null (no month)
- */
-function getMainPeriodName(distribution: string): string | null {
-  const match = distribution.match(MONTH_PATTERN);
-  if (match) {
-    const month = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
-    return `${month} ${match[2]}`;
-  }
-  return null;
-}
-
-/** Check if this is a STIM period (not WC-prefixed) */
-function isStimPeriod(distributionKey: string): boolean {
-  return !distributionKey.startsWith("WC-");
-}
 
 interface GroupedPeriod {
   label: string;
@@ -68,6 +31,7 @@ interface Props {
 
 export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Props) => {
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
+  const stimPayoutLabels = useMemo(() => resolveStimPayoutLabels(periods), [periods]);
 
   // Group sub-periods by base name for STIM periods
   const groupedPeriods = useMemo((): GroupedPeriod[] => {
@@ -77,15 +41,8 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       let groupKey: string;
       let label: string;
       if (isStimPeriod(p.distributionKey)) {
-        const mainName = getMainPeriodName(p.distribution);
-        if (mainName) {
-          label = mainName;
-          groupKey = `stim-${label}`;
-        } else {
-          // No month+year found (e.g. Privatkopieringsersättning) – use full name
-          label = p.distribution;
-          groupKey = `stim-${label}`;
-        }
+        label = stimPayoutLabels.get(p.distributionKey) ?? p.distribution;
+        groupKey = `stim-${label}`;
       } else {
         label = p.distribution;
         groupKey = p.distributionKey;
@@ -99,41 +56,17 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       g.rowCount += p.rowCount;
     }
     return Array.from(map.values());
-  }, [periods]);
+  }, [periods, stimPayoutLabels]);
 
   const yearGroups = useMemo((): YearGroup[] => {
     if (groupedPeriods.length === 0) return [];
 
-    // Build a sorted list of all numeric STIM keys with known years for inference
-    const knownYears: { key: number; year: string }[] = [];
-    for (const p of periods) {
-      if (p.distributionKey.startsWith("WC-")) continue;
-      const num = parseInt(p.distributionKey, 10);
-      if (isNaN(num)) continue;
-      const y = extractYear(p.distribution, p.distributionKey);
-      if (y) knownYears.push({ key: num, year: y });
-    }
-    knownYears.sort((a, b) => a.key - b.key);
-
-    /** Infer year for a STIM key by finding the closest key with a known year */
-    const inferYear = (distributionKey: string): string => {
-      const num = parseInt(distributionKey, 10);
-      if (isNaN(num) || knownYears.length === 0) return "Övrigt";
-      let closest = knownYears[0];
-      let minDist = Math.abs(num - closest.key);
-      for (const ky of knownYears) {
-        const d = Math.abs(num - ky.key);
-        if (d < minDist) { minDist = d; closest = ky; }
-      }
-      return closest.year;
-    };
-
     const map = new Map<string, YearGroup>();
     for (const gp of groupedPeriods) {
       const firstKey = gp.keys[0];
-      const firstPeriod = periods.find((p) => p.distributionKey === firstKey);
-      let year = extractYear(firstPeriod?.distribution ?? null, firstKey);
-      if (!year) year = inferYear(firstKey);
+      const year = firstKey.startsWith("WC-")
+        ? firstKey.slice(3, 7)
+        : extractYearFromLabel(stimPayoutLabels.get(firstKey) ?? gp.label) ?? "Övrigt";
       if (!map.has(year)) {
         map.set(year, { year, periods: [], totalAmount: 0, totalRows: 0 });
       }
@@ -143,7 +76,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       g.totalRows += gp.rowCount;
     }
     return Array.from(map.values()).sort((a, b) => b.year.localeCompare(a.year));
-  }, [groupedPeriods, periods]);
+  }, [groupedPeriods, stimPayoutLabels]);
 
   const selectedKeys = useMemo(() => (selectedKey ? selectedKey.split(",") : []), [selectedKey]);
 
