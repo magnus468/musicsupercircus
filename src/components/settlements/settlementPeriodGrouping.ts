@@ -18,7 +18,7 @@ const MONTH_NAMES = [
 const monthPatternSource = `(${MONTH_NAMES.join("|")})\\s+(\\d{4})`;
 
 const MONTH_PATTERN = new RegExp(monthPatternSource, "i");
-const DIRECT_PAYOUT_PATTERN = new RegExp(`^\\s*${monthPatternSource}\\b`, "i");
+const DIRECT_PAYOUT_PATTERN = new RegExp(`^\\s*${monthPatternSource}\\s*$`, "i");
 
 const toTitleCase = (month: string) => month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
 
