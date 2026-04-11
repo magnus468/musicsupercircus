@@ -77,8 +77,15 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       let groupKey: string;
       let label: string;
       if (isStimPeriod(p.distributionKey)) {
-        label = getBasePeriodName(p.distribution);
-        groupKey = `stim-${label}`;
+        const mainName = getMainPeriodName(p.distribution);
+        if (mainName) {
+          label = mainName;
+          groupKey = `stim-${label}`;
+        } else {
+          // No month+year found (e.g. Privatkopieringsersättning) – use full name
+          label = p.distribution;
+          groupKey = `stim-${label}`;
+        }
       } else {
         label = p.distribution;
         groupKey = p.distributionKey;
