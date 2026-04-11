@@ -10,33 +10,35 @@ const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
 /** Swedish month names for matching distribution period names */
-const MONTHS = /^(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\s+(\d{4})/i;
+const MONTH_PATTERN = /(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\s+(\d{4})/i;
 
 /**
- * Extract the distribution year from the BASE period name (before comma).
- * Only uses the year from the base part (e.g. "November 2025" → 2025).
- * For WC periods, uses the key prefix.
- * For STIM periods without a clear month+year base name (like "Privatkopieringsersättning"),
- * returns null so the caller can infer from neighboring periods.
+ * Extract the distribution year from the BASE period name.
+ * Only uses the year from a Swedish month+year pattern.
  */
 function extractYear(distribution: string | null, distributionKey: string): string | null {
   if (distributionKey.startsWith("WC-")) return distributionKey.slice(3, 7);
   if (!distribution) return null;
-  const baseName = getBasePeriodName(distribution);
-  // Only match Swedish month + year pattern (e.g. "November 2025", "Mars 2024")
-  // All other periods (Omfördelade intäkter 2020, Privatkopieringsersättning, etc.)
-  // should fall through to inference based on neighboring distribution keys
-  const monthMatch = baseName.match(MONTHS);
+  const monthMatch = distribution.match(MONTH_PATTERN);
   if (monthMatch) return monthMatch[2];
-  // No month+year in base name – caller should infer from neighboring keys
   return null;
 }
 
-/** Extract base period name: "November 2025, Spotify Norden" → "November 2025" */
-function getBasePeriodName(distribution: string): string {
-  const commaIdx = distribution.indexOf(",");
-  if (commaIdx > 0) return distribution.slice(0, commaIdx).trim();
-  return distribution;
+/**
+ * Extract the main period group name from a distribution name.
+ * Finds the first Swedish month + year pattern and returns it as the canonical group name.
+ * "November 2025, Spotify Norden" → "November 2025"
+ * "Mars 2025 - TONO" → "Mars 2025"
+ * "Korrigering februari & maj 2025, Deezer" → "Februari 2025"
+ * "Privatkopieringsersättning, 2013-2016" → null (no month)
+ */
+function getMainPeriodName(distribution: string): string | null {
+  const match = distribution.match(MONTH_PATTERN);
+  if (match) {
+    const month = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+    return `${month} ${match[2]}`;
+  }
+  return null;
 }
 
 /** Check if this is a STIM period (not WC-prefixed) */
@@ -75,8 +77,15 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       let groupKey: string;
       let label: string;
       if (isStimPeriod(p.distributionKey)) {
-        label = getBasePeriodName(p.distribution);
-        groupKey = `stim-${label}`;
+        const mainName = getMainPeriodName(p.distribution);
+        if (mainName) {
+          label = mainName;
+          groupKey = `stim-${label}`;
+        } else {
+          // No month+year found (e.g. Privatkopieringsersättning) – use full name
+          label = p.distribution;
+          groupKey = `stim-${label}`;
+        }
       } else {
         label = p.distribution;
         groupKey = p.distributionKey;
