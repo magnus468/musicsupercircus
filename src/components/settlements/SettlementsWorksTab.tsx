@@ -49,7 +49,7 @@ export const SettlementsWorksTab = ({ stats }: Props) => {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Alla verk ({stats.topWorks.length > 20 ? "top 20" : stats.topWorks.length})</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Alla verk ({stats.topWorks.length > 100 ? "top 100" : stats.topWorks.length})</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
