@@ -97,8 +97,8 @@ export function resolveStimPayoutLabels(periods: SettlementPeriod[]): Map<string
 
     const label =
       extractDirectPayoutLabel(period.distribution) ??
-      findNearestDirectLabel(period.distributionKey) ??
       extractMonthYearAnywhere(period.distribution) ??
+      findNearestDirectLabel(period.distributionKey) ??
       period.distribution;
 
     resolved.set(period.distributionKey, label);
