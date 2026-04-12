@@ -1,0 +1,1 @@
+DELETE FROM settlements WHERE distribution_key NOT LIKE 'WC-%' AND CAST(distribution_key AS int) >= 1820 AND CAST(distribution_key AS int) <= 1960;
