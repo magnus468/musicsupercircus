@@ -63,18 +63,31 @@ export function resolveStimPayoutLabels(periods: SettlementPeriod[]): Map<string
     const key = Number.parseInt(distributionKey, 10);
     if (Number.isNaN(key) || directPayouts.length === 0) return null;
 
-    let closest = directPayouts[0];
-    let minDistance = Math.abs(key - closest.key);
-
+    // Sub-periods always have keys >= their main period's key,
+    // so pick the nearest preceding (or equal) direct payout.
+    let best: { key: number; label: string } | null = null;
     for (const payout of directPayouts) {
-      const distance = Math.abs(key - payout.key);
-      if (distance < minDistance) {
-        closest = payout;
-        minDistance = distance;
+      if (payout.key <= key) {
+        if (!best || payout.key > best.key) {
+          best = payout;
+        }
       }
     }
 
-    return closest.label;
+    // Fallback: if no preceding payout exists, use the closest one overall
+    if (!best) {
+      best = directPayouts[0];
+      let minDistance = Math.abs(key - best.key);
+      for (const payout of directPayouts) {
+        const distance = Math.abs(key - payout.key);
+        if (distance < minDistance) {
+          best = payout;
+          minDistance = distance;
+        }
+      }
+    }
+
+    return best?.label ?? null;
   };
 
   const resolved = new Map<string, string>();
