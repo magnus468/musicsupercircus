@@ -338,11 +338,11 @@ const WorkDetail = () => {
 
       {/* PDF viewer dialog */}
       <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => !open && closePdfViewer()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Avtalsdokument</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 min-h-[60vh]">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {pdfViewerUrl && <AgreementPdfPreview fileUrl={pdfViewerUrl} />}
           </div>
         </DialogContent>
