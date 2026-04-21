@@ -136,7 +136,35 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const updateWork = useUpdateWork();
   const createClient = useCreateClient();
   const { data: existingClients = [] } = useClients();
+  const { data: allAgreements = [] } = useAgreements();
+  const { data: linkedAgreementIds } = useWorkAgreements(work?.id);
+  const setWorkAgreements = useSetWorkAgreements();
+  const [selectedAgreementIds, setSelectedAgreementIds] = useState<string[]>([]);
   const isEdit = !!work;
+
+  useEffect(() => {
+    if (linkedAgreementIds) setSelectedAgreementIds(linkedAgreementIds);
+  }, [linkedAgreementIds]);
+
+  // Suggest agreements whose client_name matches any co-publisher
+  const suggestedAgreementIds = useMemo(() => {
+    const pubs = creatorsList
+      .filter((c) => c.role === "E")
+      .map((c) => fullName(c).toLowerCase())
+      .filter((n) => n && !n.includes("music super circus"));
+    if (pubs.length === 0) return new Set<string>();
+    return new Set(
+      allAgreements
+        .filter((a) => a.client_name && pubs.some((p) => p.includes(a.client_name!.toLowerCase()) || a.client_name!.toLowerCase().includes(p)))
+        .map((a) => a.id)
+    );
+  }, [allAgreements, creatorsList]);
+
+  const toggleAgreement = (id: string) => {
+    setSelectedAgreementIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
   const addEmptyCreator = (role: CreatorEntry["role"] = "CA") => {
     setCreatorsList((prev) => recalcShares([...prev, { firstName: "", lastName: "", role, share: "", shareRow: "", represented: true }]));
