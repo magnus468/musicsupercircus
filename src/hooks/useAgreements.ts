@@ -60,6 +60,41 @@ export const useAgreements = () => {
   });
 };
 
+export const useWorkAgreements = (workId?: string) => {
+  return useQuery({
+    queryKey: ["work-agreements", workId],
+    enabled: !!workId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("agreement_works")
+        .select("agreement_id")
+        .eq("work_id", workId!);
+      if (error) throw error;
+      return data.map((d: any) => d.agreement_id as string);
+    },
+  });
+};
+
+export const useSetWorkAgreements = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ workId, agreementIds }: { workId: string; agreementIds: string[] }) => {
+      await supabase.from("agreement_works").delete().eq("work_id", workId);
+      if (agreementIds.length) {
+        const { error } = await supabase.from("agreement_works").insert(
+          agreementIds.map((agreement_id) => ({ agreement_id, work_id: workId }))
+        );
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, { workId }) => {
+      qc.invalidateQueries({ queryKey: ["work-agreements", workId] });
+      qc.invalidateQueries({ queryKey: ["agreement-works"] });
+      qc.invalidateQueries({ queryKey: ["agreement-work-counts"] });
+    },
+  });
+};
+
 export const useAgreementWorks = (agreementId?: string) => {
   return useQuery({
     queryKey: ["agreement-works", agreementId],

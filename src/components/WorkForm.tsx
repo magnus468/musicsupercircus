@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCreateWork, useUpdateWork, type Work, type WorkInsert } from "@/hooks/useWorks";
 import { useCreateClient, useClients } from "@/hooks/useClients";
+import { useAgreements, useWorkAgreements, useSetWorkAgreements } from "@/hooks/useAgreements";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { X, Plus, FileText } from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface CreatorEntry {
@@ -133,7 +136,35 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const updateWork = useUpdateWork();
   const createClient = useCreateClient();
   const { data: existingClients = [] } = useClients();
+  const { data: allAgreements = [] } = useAgreements();
+  const { data: linkedAgreementIds } = useWorkAgreements(work?.id);
+  const setWorkAgreements = useSetWorkAgreements();
+  const [selectedAgreementIds, setSelectedAgreementIds] = useState<string[]>([]);
   const isEdit = !!work;
+
+  useEffect(() => {
+    if (linkedAgreementIds) setSelectedAgreementIds(linkedAgreementIds);
+  }, [linkedAgreementIds]);
+
+  // Suggest agreements whose client_name matches any co-publisher
+  const suggestedAgreementIds = useMemo(() => {
+    const pubs = creatorsList
+      .filter((c) => c.role === "E")
+      .map((c) => fullName(c).toLowerCase())
+      .filter((n) => n && !n.includes("music super circus"));
+    if (pubs.length === 0) return new Set<string>();
+    return new Set(
+      allAgreements
+        .filter((a) => a.client_name && pubs.some((p) => p.includes(a.client_name!.toLowerCase()) || a.client_name!.toLowerCase().includes(p)))
+        .map((a) => a.id)
+    );
+  }, [allAgreements, creatorsList]);
+
+  const toggleAgreement = (id: string) => {
+    setSelectedAgreementIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
   const addEmptyCreator = (role: CreatorEntry["role"] = "CA") => {
     setCreatorsList((prev) => recalcShares([...prev, { firstName: "", lastName: "", role, share: "", shareRow: "", represented: true }]));
@@ -186,14 +217,20 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     };
 
     try {
+      let workId = work?.id;
       if (isEdit) {
         await updateWork.mutateAsync({ id: work.id, ...data });
         toast.success("Verk uppdaterat");
       } else {
-        await createWork.mutateAsync(data);
+        const created = await createWork.mutateAsync(data);
+        workId = (created as any)?.id;
         toast.success("Verk tillagt");
         setTitle(""); setProject(""); setCreatorsList([]);
         setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
+        setSelectedAgreementIds([]);
+      }
+      if (workId) {
+        await setWorkAgreements.mutateAsync({ workId, agreementIds: selectedAgreementIds });
       }
       onSuccess?.();
     } catch {
@@ -305,7 +342,64 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
         </div>
       </div>
-      <Button type="submit" disabled={createWork.isPending || updateWork.isPending}>
+
+      {/* Förlagsavtal */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2">
+            <FileText className="h-3.5 w-3.5" />
+            Förlagsavtal
+            {selectedAgreementIds.length > 0 && (
+              <Badge variant="secondary" className="text-xs">{selectedAgreementIds.length}</Badge>
+            )}
+          </Label>
+          {suggestedAgreementIds.size > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {suggestedAgreementIds.size} föreslag{suggestedAgreementIds.size === 1 ? "et" : "na"} baserat på co-publishers
+            </span>
+          )}
+        </div>
+        <div className="rounded-md border max-h-56 overflow-y-auto divide-y">
+          {allAgreements.length === 0 ? (
+            <div className="p-3 text-xs text-muted-foreground">Inga avtal finns ännu</div>
+          ) : (
+            [...allAgreements]
+              .sort((a, b) => {
+                const aS = suggestedAgreementIds.has(a.id) ? 0 : 1;
+                const bS = suggestedAgreementIds.has(b.id) ? 0 : 1;
+                if (aS !== bS) return aS - bS;
+                return (a.client_name || "").localeCompare(b.client_name || "");
+              })
+              .map((a) => {
+                const checked = selectedAgreementIds.includes(a.id);
+                const suggested = suggestedAgreementIds.has(a.id);
+                return (
+                  <label
+                    key={a.id}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs cursor-pointer hover:bg-accent"
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={() => toggleAgreement(a.id)}
+                      className="h-3.5 w-3.5"
+                    />
+                    <span className="font-medium truncate flex-1">{a.client_name}</span>
+                    <Badge variant="outline" className="text-[10px] py-0 h-4">{a.internal_publisher}</Badge>
+                    <span className="text-muted-foreground tabular-nums">
+                      {format(new Date(a.agreement_date), "yyyy-MM-dd")}
+                    </span>
+                    {suggested && !checked && (
+                      <Badge className="text-[10px] py-0 h-4 bg-primary/15 text-primary border-0">förslag</Badge>
+                    )}
+                  </label>
+                );
+              })
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">Koppla verket till ett eller flera förlagsavtal</p>
+      </div>
+
+      <Button type="submit" disabled={createWork.isPending || updateWork.isPending || setWorkAgreements.isPending}>
         {isEdit ? "Spara ändringar" : "Lägg till verk"}
       </Button>
     </form>
