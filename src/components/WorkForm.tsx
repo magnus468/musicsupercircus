@@ -217,14 +217,20 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
     };
 
     try {
+      let workId = work?.id;
       if (isEdit) {
         await updateWork.mutateAsync({ id: work.id, ...data });
         toast.success("Verk uppdaterat");
       } else {
-        await createWork.mutateAsync(data);
+        const created = await createWork.mutateAsync(data);
+        workId = (created as any)?.id;
         toast.success("Verk tillagt");
         setTitle(""); setProject(""); setCreatorsList([]);
         setStimStatus("ej_anmäld"); setStimComment(""); setSharePercentage("");
+        setSelectedAgreementIds([]);
+      }
+      if (workId) {
+        await setWorkAgreements.mutateAsync({ workId, agreementIds: selectedAgreementIds });
       }
       onSuccess?.();
     } catch {
