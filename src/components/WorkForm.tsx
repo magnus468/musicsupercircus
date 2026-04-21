@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCreateWork, useUpdateWork, type Work, type WorkInsert } from "@/hooks/useWorks";
 import { useCreateClient, useClients } from "@/hooks/useClients";
+import { useAgreements, useWorkAgreements, useSetWorkAgreements } from "@/hooks/useAgreements";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { X, Plus, FileText } from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface CreatorEntry {
