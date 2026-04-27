@@ -79,7 +79,26 @@ const detectIssues = (
     const externalPubs = work.co_publishers.filter(
       (cp) => !cp.toLowerCase().includes("music super circus")
     );
-    if (externalPubs.length > 0 && !externalPubs.some((cp) => agreementClientNames.has(cp.toLowerCase()))) {
+    // Normalize: lowercase, strip common company suffixes & punctuation for fuzzy match
+    const normalize = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/\b(ab|aktiebolag|ltd|inc|llc|gmbh|oy|as|a\/s|bv|sa|srl|kb|hb)\b\.?/g, "")
+        .replace(/[.,&]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const normalizedAgreementNames = Array.from(agreementClientNames).map(normalize);
+
+    const hasMatch = externalPubs.some((cp) => {
+      const n = normalize(cp);
+      if (!n) return false;
+      return normalizedAgreementNames.some(
+        (an) => an === n || an.includes(n) || n.includes(an)
+      );
+    });
+
+    if (externalPubs.length > 0 && !hasMatch) {
       issues.push("no_agreement");
     }
   }
