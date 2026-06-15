@@ -22,14 +22,9 @@ import { extractYearFromLabel, isStimPeriod, resolveStimPayoutLabels } from "./s
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
-// Publisher derivation: Warner/Chappell-administered uploads → MSCP, STIM direct → MSCE
-const publisherForKey = (key: string): "MSCE" | "MSCP" =>
-  key.startsWith("WC-") ? "MSCP" : "MSCE";
-
-const publishersForKeys = (keys: string[]): Array<"MSCE" | "MSCP"> => {
-  const set = new Set(keys.map(publisherForKey));
-  return Array.from(set).sort();
-};
+// Publisher derivation: all uploaded settlements are currently MSCE (STIM direkt).
+// MSCP uploads (via Warner/Chappell) haven't been imported yet.
+const publishersForKeys = (_keys: string[]): Array<"MSCE" | "MSCP"> => ["MSCE"];
 
 const PublisherBadge = ({ pub }: { pub: "MSCE" | "MSCP" }) => (
   <span
