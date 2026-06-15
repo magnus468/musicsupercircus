@@ -254,12 +254,12 @@ export const UploadSettlementsDialog = ({ open, onOpenChange }: Props) => {
                     </div>
                   </>
                 ) : (
-                  <span className="text-muted-foreground">Välj en .xlsx-fil</span>
+                  <span className="text-muted-foreground">Välj en .xlsx-, .xls- eller .csv-fil</span>
                 )}
               </div>
               <input
                 type="file"
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,.csv"
                 className="hidden"
                 disabled={busy}
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
