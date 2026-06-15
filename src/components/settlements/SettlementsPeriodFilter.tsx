@@ -209,24 +209,37 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                       const keyStr = gp.keys.join(",");
                       const isActive = selectedKey === keyStr;
                       return (
-                        <button
+                        <div
                           key={keyStr}
-                          onClick={() => handleSelect(gp)}
-                          className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
-                            isActive
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted/60"
+                          className={`group/row w-full flex items-center rounded-md transition-colors ${
+                            isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
                           }`}
                         >
-                          <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleSelect(gp)}
+                            className="flex-1 flex items-center justify-between px-3 py-2 text-sm text-left"
+                          >
                             <span className={isActive ? "font-medium" : ""}>{gp.label}</span>
-                          </div>
-                          <span className={`tabular-nums text-sm ${isActive ? "" : "text-muted-foreground"}`}>
-                            {fmt(gp.total)}
-                          </span>
-                        </button>
+                            <span className={`tabular-nums text-sm ${isActive ? "" : "text-muted-foreground"}`}>
+                              {fmt(gp.total)}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingDelete(gp);
+                            }}
+                            title="Ta bort denna avräkningsperiod"
+                            className={`opacity-0 group-hover/row:opacity-100 transition-opacity p-2 mr-1 rounded hover:bg-destructive/10 ${
+                              isActive ? "text-primary-foreground hover:bg-primary-foreground/10" : "text-destructive"
+                            }`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       );
                     })}
+
                   </div>
                 </CollapsibleContent>
               </Collapsible>
