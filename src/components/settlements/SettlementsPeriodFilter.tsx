@@ -255,6 +255,33 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
           </p>
         )}
       </CardContent>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort avräkningsperiod?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Detta tar permanent bort <strong>{pendingDelete?.rowCount}</strong> rader för{" "}
+              <strong>{pendingDelete?.label}</strong> ({pendingDelete ? fmt(pendingDelete.total) : ""}).
+              Åtgärden kan inte ångras.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Tar bort..." : "Ta bort"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
+
