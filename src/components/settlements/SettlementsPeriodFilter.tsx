@@ -45,7 +45,32 @@ interface Props {
 
 export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Props) => {
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
+  const [pendingDelete, setPendingDelete] = useState<GroupedPeriod | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const queryClient = useQueryClient();
   const stimPayoutLabels = useMemo(() => resolveStimPayoutLabels(periods), [periods]);
+
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("settlements")
+      .delete()
+      .in("distribution_key", pendingDelete.keys);
+    setDeleting(false);
+    if (error) {
+      toast.error("Kunde inte ta bort: " + error.message);
+      return;
+    }
+    toast.success(`Tog bort ${pendingDelete.rowCount} rader (${pendingDelete.label})`);
+    if (pendingDelete.keys.join(",") === selectedKey) onSelect(null);
+    setPendingDelete(null);
+    queryClient.invalidateQueries({ queryKey: ["settlements"] });
+    queryClient.invalidateQueries({ queryKey: ["settlement-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["unmatched-settlement-works"] });
+    queryClient.invalidateQueries({ queryKey: ["work-settlements"] });
+  };
+
 
   // Group sub-periods by base name for STIM periods
   const groupedPeriods = useMemo((): GroupedPeriod[] => {
