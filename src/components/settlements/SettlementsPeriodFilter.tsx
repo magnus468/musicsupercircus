@@ -284,12 +284,16 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
         </div>
 
         {selectedGroupedPeriod && (
-          <p className="mt-3 text-xs text-muted-foreground border-t pt-2">
-            Visar data för: <span className="font-medium text-foreground">{selectedGroupedPeriod.label}</span>
-            {" — "}
-            {fmt(selectedGroupedPeriod.total)}
+          <p className="mt-3 text-xs text-muted-foreground border-t pt-2 flex items-center gap-2 flex-wrap">
+            <span>Visar data för:</span>
+            {publishersForKeys(selectedGroupedPeriod.keys).map((pub) => (
+              <PublisherBadge key={pub} pub={pub} />
+            ))}
+            <span className="font-medium text-foreground">{selectedGroupedPeriod.label}</span>
+            <span>— {fmt(selectedGroupedPeriod.total)}</span>
           </p>
         )}
+
       </CardContent>
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
