@@ -5,9 +5,13 @@ import { SettlementsOverview } from "@/components/settlements/SettlementsOvervie
 import { SettlementsWorksTab } from "@/components/settlements/SettlementsWorksTab";
 import { SettlementsDetailsTab } from "@/components/settlements/SettlementsDetailsTab";
 import { SettlementsPeriodFilter } from "@/components/settlements/SettlementsPeriodFilter";
+import { UploadSettlementsDialog } from "@/components/settlements/UploadSettlementsDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
 
 const SettlementsList = () => {
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [distributionKey, setDistributionKey] = useState<string | null>(null);
   const { data: stats, isLoading: statsLoading } = useSettlementStats(distributionKey);
   useScrollRestore(!statsLoading);
@@ -45,6 +49,14 @@ const SettlementsList = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button onClick={() => setUploadOpen(true)} size="sm">
+          <Upload className="h-4 w-4 mr-2" />
+          Ladda upp avräkning
+        </Button>
+      </div>
+      <UploadSettlementsDialog open={uploadOpen} onOpenChange={setUploadOpen} />
+
       <SettlementsPeriodFilter
         periods={stats.periods}
         selectedKey={distributionKey}
