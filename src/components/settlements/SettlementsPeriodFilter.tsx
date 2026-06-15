@@ -221,6 +221,11 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                       )}
                       <span className="font-semibold">{group.year}</span>
+                      <span className="flex items-center gap-1">
+                        {publishersForKeys(group.periods.flatMap((p) => p.keys)).map((pub) => (
+                          <PublisherBadge key={pub} pub={pub} />
+                        ))}
+                      </span>
                     </div>
                     <span className="font-medium tabular-nums text-sm">
                       {fmt(group.totalAmount)}
@@ -232,6 +237,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                     {group.periods.map((gp) => {
                       const keyStr = gp.keys.join(",");
                       const isActive = selectedKey === keyStr;
+                      const pubs = publishersForKeys(gp.keys);
                       return (
                         <div
                           key={keyStr}
@@ -243,11 +249,17 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                             onClick={() => handleSelect(gp)}
                             className="flex-1 flex items-center justify-between px-3 py-2 text-sm text-left"
                           >
-                            <span className={isActive ? "font-medium" : ""}>{gp.label}</span>
-                            <span className={`tabular-nums text-sm ${isActive ? "" : "text-muted-foreground"}`}>
+                            <span className="flex items-center gap-2 min-w-0">
+                              {pubs.map((pub) => (
+                                <PublisherBadge key={pub} pub={pub} />
+                              ))}
+                              <span className={`truncate ${isActive ? "font-medium" : ""}`}>{gp.label}</span>
+                            </span>
+                            <span className={`tabular-nums text-sm shrink-0 ml-2 ${isActive ? "" : "text-muted-foreground"}`}>
                               {fmt(gp.total)}
                             </span>
                           </button>
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
