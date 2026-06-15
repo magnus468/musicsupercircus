@@ -1,13 +1,27 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarRange, ChevronDown, ChevronRight } from "lucide-react";
+import { CalendarRange, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type { SettlementPeriod } from "@/hooks/useSettlements";
 import { extractYearFromLabel, isStimPeriod, resolveStimPayoutLabels } from "./settlementPeriodGrouping";
 
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
+
 
 interface GroupedPeriod {
   label: string;
@@ -31,7 +45,32 @@ interface Props {
 
 export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Props) => {
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
+  const [pendingDelete, setPendingDelete] = useState<GroupedPeriod | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const queryClient = useQueryClient();
   const stimPayoutLabels = useMemo(() => resolveStimPayoutLabels(periods), [periods]);
+
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("settlements")
+      .delete()
+      .in("distribution_key", pendingDelete.keys);
+    setDeleting(false);
+    if (error) {
+      toast.error("Kunde inte ta bort: " + error.message);
+      return;
+    }
+    toast.success(`Tog bort ${pendingDelete.rowCount} rader (${pendingDelete.label})`);
+    if (pendingDelete.keys.join(",") === selectedKey) onSelect(null);
+    setPendingDelete(null);
+    queryClient.invalidateQueries({ queryKey: ["settlements"] });
+    queryClient.invalidateQueries({ queryKey: ["settlement-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["unmatched-settlement-works"] });
+    queryClient.invalidateQueries({ queryKey: ["work-settlements"] });
+  };
+
 
   // Group sub-periods by base name for STIM periods
   const groupedPeriods = useMemo((): GroupedPeriod[] => {
@@ -170,24 +209,37 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                       const keyStr = gp.keys.join(",");
                       const isActive = selectedKey === keyStr;
                       return (
-                        <button
+                        <div
                           key={keyStr}
-                          onClick={() => handleSelect(gp)}
-                          className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
-                            isActive
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted/60"
+                          className={`group/row w-full flex items-center rounded-md transition-colors ${
+                            isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
                           }`}
                         >
-                          <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleSelect(gp)}
+                            className="flex-1 flex items-center justify-between px-3 py-2 text-sm text-left"
+                          >
                             <span className={isActive ? "font-medium" : ""}>{gp.label}</span>
-                          </div>
-                          <span className={`tabular-nums text-sm ${isActive ? "" : "text-muted-foreground"}`}>
-                            {fmt(gp.total)}
-                          </span>
-                        </button>
+                            <span className={`tabular-nums text-sm ${isActive ? "" : "text-muted-foreground"}`}>
+                              {fmt(gp.total)}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingDelete(gp);
+                            }}
+                            title="Ta bort denna avräkningsperiod"
+                            className={`opacity-0 group-hover/row:opacity-100 transition-opacity p-2 mr-1 rounded hover:bg-destructive/10 ${
+                              isActive ? "text-primary-foreground hover:bg-primary-foreground/10" : "text-destructive"
+                            }`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       );
                     })}
+
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -203,6 +255,33 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
           </p>
         )}
       </CardContent>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort avräkningsperiod?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Detta tar permanent bort <strong>{pendingDelete?.rowCount}</strong> rader för{" "}
+              <strong>{pendingDelete?.label}</strong> ({pendingDelete ? fmt(pendingDelete.total) : ""}).
+              Åtgärden kan inte ångras.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Tar bort..." : "Ta bort"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
+
