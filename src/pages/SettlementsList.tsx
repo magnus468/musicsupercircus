@@ -46,6 +46,8 @@ const SettlementsList = () => {
 
   return (
     <div className="space-y-6">
+      <SettlementsUpload />
+
       <SettlementsPeriodFilter
         periods={stats.periods}
         selectedKey={distributionKey}
