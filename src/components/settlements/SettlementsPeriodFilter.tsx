@@ -22,6 +22,30 @@ import { extractYearFromLabel, isStimPeriod, resolveStimPayoutLabels } from "./s
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
+// Publisher derivation: Warner/Chappell-administered uploads → MSCP, STIM direct → MSCE
+const publisherForKey = (key: string): "MSCE" | "MSCP" =>
+  key.startsWith("WC-") ? "MSCP" : "MSCE";
+
+const publishersForKeys = (keys: string[]): Array<"MSCE" | "MSCP"> => {
+  const set = new Set(keys.map(publisherForKey));
+  return Array.from(set).sort();
+};
+
+const PublisherBadge = ({ pub }: { pub: "MSCE" | "MSCP" }) => (
+  <span
+    className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${
+      pub === "MSCP"
+        ? "bg-blue-500/15 text-blue-700 dark:text-blue-300"
+        : "bg-primary/15 text-primary"
+    }`}
+    title={pub === "MSCP" ? "Music Super Circus Publishing (via Warner/Chappell)" : "Music Super Circus Extravaganza (STIM direkt)"}
+  >
+    {pub}
+  </span>
+);
+
+
+
 
 interface GroupedPeriod {
   label: string;
@@ -197,6 +221,11 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                       )}
                       <span className="font-semibold">{group.year}</span>
+                      <span className="flex items-center gap-1">
+                        {publishersForKeys(group.periods.flatMap((p) => p.keys)).map((pub) => (
+                          <PublisherBadge key={pub} pub={pub} />
+                        ))}
+                      </span>
                     </div>
                     <span className="font-medium tabular-nums text-sm">
                       {fmt(group.totalAmount)}
@@ -208,6 +237,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                     {group.periods.map((gp) => {
                       const keyStr = gp.keys.join(",");
                       const isActive = selectedKey === keyStr;
+                      const pubs = publishersForKeys(gp.keys);
                       return (
                         <div
                           key={keyStr}
@@ -219,11 +249,17 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                             onClick={() => handleSelect(gp)}
                             className="flex-1 flex items-center justify-between px-3 py-2 text-sm text-left"
                           >
-                            <span className={isActive ? "font-medium" : ""}>{gp.label}</span>
-                            <span className={`tabular-nums text-sm ${isActive ? "" : "text-muted-foreground"}`}>
+                            <span className="flex items-center gap-2 min-w-0">
+                              {pubs.map((pub) => (
+                                <PublisherBadge key={pub} pub={pub} />
+                              ))}
+                              <span className={`truncate ${isActive ? "font-medium" : ""}`}>{gp.label}</span>
+                            </span>
+                            <span className={`tabular-nums text-sm shrink-0 ml-2 ${isActive ? "" : "text-muted-foreground"}`}>
                               {fmt(gp.total)}
                             </span>
                           </button>
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -248,12 +284,16 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
         </div>
 
         {selectedGroupedPeriod && (
-          <p className="mt-3 text-xs text-muted-foreground border-t pt-2">
-            Visar data för: <span className="font-medium text-foreground">{selectedGroupedPeriod.label}</span>
-            {" — "}
-            {fmt(selectedGroupedPeriod.total)}
+          <p className="mt-3 text-xs text-muted-foreground border-t pt-2 flex items-center gap-2 flex-wrap">
+            <span>Visar data för:</span>
+            {publishersForKeys(selectedGroupedPeriod.keys).map((pub) => (
+              <PublisherBadge key={pub} pub={pub} />
+            ))}
+            <span className="font-medium text-foreground">{selectedGroupedPeriod.label}</span>
+            <span>— {fmt(selectedGroupedPeriod.total)}</span>
           </p>
         )}
+
       </CardContent>
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
