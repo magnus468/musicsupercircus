@@ -129,10 +129,18 @@ export const UploadSettlementsDialog = ({ open, onOpenChange }: Props) => {
     setBusy(true);
     setProgress(null);
     try {
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array", cellDates: true });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
+      let rows: Record<string, any>[] = [];
+      if (file.name.toLowerCase().endsWith(".csv")) {
+        const text = await file.text();
+        const wb = XLSX.read(text, { type: "string", cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
+      } else {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array", cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
+      }
       if (rows.length === 0) throw new Error("Filen innehåller inga rader.");
 
       const headers = Object.keys(rows[0]);
