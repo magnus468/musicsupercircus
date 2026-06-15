@@ -5,6 +5,7 @@ import { SettlementsOverview } from "@/components/settlements/SettlementsOvervie
 import { SettlementsWorksTab } from "@/components/settlements/SettlementsWorksTab";
 import { SettlementsDetailsTab } from "@/components/settlements/SettlementsDetailsTab";
 import { SettlementsPeriodFilter } from "@/components/settlements/SettlementsPeriodFilter";
+import { SettlementsUpload } from "@/components/settlements/SettlementsUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SettlementsList = () => {
