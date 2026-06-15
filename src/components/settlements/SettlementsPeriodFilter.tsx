@@ -22,6 +22,30 @@ import { extractYearFromLabel, isStimPeriod, resolveStimPayoutLabels } from "./s
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
+// Publisher derivation: Warner/Chappell-administered uploads → MSCP, STIM direct → MSCE
+const publisherForKey = (key: string): "MSCE" | "MSCP" =>
+  key.startsWith("WC-") ? "MSCP" : "MSCE";
+
+const publishersForKeys = (keys: string[]): Array<"MSCE" | "MSCP"> => {
+  const set = new Set(keys.map(publisherForKey));
+  return Array.from(set).sort();
+};
+
+const PublisherBadge = ({ pub }: { pub: "MSCE" | "MSCP" }) => (
+  <span
+    className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${
+      pub === "MSCP"
+        ? "bg-blue-500/15 text-blue-700 dark:text-blue-300"
+        : "bg-primary/15 text-primary"
+    }`}
+    title={pub === "MSCP" ? "Music Super Circus Publishing (via Warner/Chappell)" : "Music Super Circus Extravaganza (STIM direkt)"}
+  >
+    {pub}
+  </span>
+);
+
+
+
 
 interface GroupedPeriod {
   label: string;
