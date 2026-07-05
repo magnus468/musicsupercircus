@@ -96,11 +96,19 @@ Deno.serve(async (req) => {
 
       // Match by name first (name has a unique constraint), then by project_number
       let id: string | undefined;
-      if (name && byName.has(name.toLowerCase())) id = byName.get(name.toLowerCase());
-      else if (projectNumber && byNumber.has(projectNumber)) id = byNumber.get(projectNumber);
+      let matchedByName = false;
+      if (name && byName.has(name.toLowerCase())) {
+        id = byName.get(name.toLowerCase());
+        matchedByName = true;
+      } else if (projectNumber && byNumber.has(projectNumber)) {
+        id = byNumber.get(projectNumber);
+      }
 
       if (id) {
-        const { error } = await supabase.from("projects").update(record).eq("id", id);
+        // When matched by name, don't overwrite the name (preserves DB casing and avoids collisions)
+        const updateRecord: any = { ...record };
+        if (matchedByName) delete updateRecord.name;
+        const { error } = await supabase.from("projects").update(updateRecord).eq("id", id);
         if (error) throw new Error(`update row ${r} (${record.name}): ${error.message}`);
         updated++;
       } else {
