@@ -94,9 +94,10 @@ Deno.serve(async (req) => {
         status: norm(row[cols.status]),
       };
 
+      // Match by name first (name has a unique constraint), then by project_number
       let id: string | undefined;
-      if (projectNumber && byNumber.has(projectNumber)) id = byNumber.get(projectNumber);
-      else if (name && byName.has(name.toLowerCase())) id = byName.get(name.toLowerCase());
+      if (name && byName.has(name.toLowerCase())) id = byName.get(name.toLowerCase());
+      else if (projectNumber && byNumber.has(projectNumber)) id = byNumber.get(projectNumber);
 
       if (id) {
         const { error } = await supabase.from("projects").update(record).eq("id", id);
