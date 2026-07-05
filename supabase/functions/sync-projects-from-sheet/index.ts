@@ -100,11 +100,11 @@ Deno.serve(async (req) => {
 
       if (id) {
         const { error } = await supabase.from("projects").update(record).eq("id", id);
-        if (error) throw error;
+        if (error) throw new Error(`update row ${r} (${record.name}): ${error.message}`);
         updated++;
       } else {
         const { error } = await supabase.from("projects").insert(record);
-        if (error) throw error;
+        if (error) throw new Error(`insert row ${r} (${record.name}): ${error.message}`);
         inserted++;
       }
     }
