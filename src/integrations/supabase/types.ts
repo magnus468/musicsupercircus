@@ -393,6 +393,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       works: {
         Row: {
           co_publishers: string[] | null
@@ -458,8 +479,17 @@ export type Database = {
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
       get_unmatched_settlement_works: { Args: never; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      app_role: "admin" | "staff"
       publishing_type: "original" | "MSCE" | "MSCP" | "administration"
       stim_status: "anmäld" | "claimad" | "ej_anmäld"
     }
@@ -589,6 +619,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "staff"],
       publishing_type: ["original", "MSCE", "MSCP", "administration"],
       stim_status: ["anmäld", "claimad", "ej_anmäld"],
     },
