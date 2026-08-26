@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Pencil, TrendingUp } from "lucide-react";
+import { ArrowLeft, Pencil, TrendingUp, Music } from "lucide-react";
+import { toPlayableUrl, isLikelyAudioFile } from "@/lib/audioLink";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import WorkForm from "@/components/WorkForm";
 import CoPublisherAgreementDialog from "@/components/CoPublisherAgreementDialog";
@@ -159,11 +160,32 @@ const WorkDetail = () => {
         </DialogContent>
       </Dialog>
 
+      {(work as any).audio_url && (
+        <Card>
+          <CardContent className="pt-6 space-y-3">
+            {isLikelyAudioFile((work as any).audio_url) ? (
+              <audio controls preload="none" className="w-full" src={toPlayableUrl((work as any).audio_url) ?? undefined}>
+                Din webbläsare stöder inte ljuduppspelning.
+              </audio>
+            ) : null}
+            <a
+              href={(work as any).audio_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-2"
+            >
+              <Music className="h-4 w-4" /> Öppna ljudlänk
+            </a>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>{work.title}</CardTitle>
         </CardHeader>
         <CardContent>
+
           <dl className="grid gap-4 sm:grid-cols-2 text-sm">
             {work.project &&
             <div>

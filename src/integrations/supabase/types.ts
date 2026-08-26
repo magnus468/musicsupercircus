@@ -416,6 +416,7 @@ export type Database = {
       }
       works: {
         Row: {
+          audio_url: string | null
           co_publishers: string[] | null
           created_at: string
           creators: string
@@ -431,6 +432,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audio_url?: string | null
           co_publishers?: string[] | null
           created_at?: string
           creators: string
@@ -446,6 +448,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audio_url?: string | null
           co_publishers?: string[] | null
           created_at?: string
           creators?: string

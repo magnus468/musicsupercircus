@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, FileText } from "lucide-react";
+import { X, Plus, FileText, Music } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -129,6 +129,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
+  const [audioUrl, setAudioUrl] = useState((work as any)?.audio_url ?? "");
   const [nordicPublisherShare, setNordicPublisherShare] = useState(work?.nordic_publisher_share?.toString() ?? "50");
   const [rowPublisherShare, setRowPublisherShare] = useState(work?.row_publisher_share?.toString() ?? "50");
 
@@ -212,6 +213,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
       stim_status: stimStatus,
       stim_comment: stimComment.trim() || null,
       share_percentage: validCreators.filter((c) => c.represented).reduce((acc, c) => acc + (parseFloat(c.share) || 0), 0) || null,
+      audio_url: audioUrl.trim() || null,
       nordic_publisher_share: parseFloat(nordicPublisherShare) || 50,
       row_publisher_share: parseFloat(rowPublisherShare) || 50,
     };
@@ -342,6 +344,26 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Input id="stimComment" value={stimComment} onChange={(e) => setStimComment(e.target.value)} />
         </div>
       </div>
+
+      {/* Ljudlänk */}
+      <div className="space-y-2">
+        <Label htmlFor="audioUrl" className="flex items-center gap-2">
+          <Music className="h-3.5 w-3.5" />
+          Ljudlänk
+        </Label>
+        <Input
+          id="audioUrl"
+          type="url"
+          value={audioUrl}
+          onChange={(e) => setAudioUrl(e.target.value)}
+          placeholder="https://www.dropbox.com/scl/fi/.../lat.mp3?rlkey=..."
+        />
+        <p className="text-xs text-muted-foreground">
+          Klistra in en länk till ljudfilen (Dropbox, Google Drive eller direkt mp3-länk). Länkar till enskilda filer kan spelas upp direkt i appen.
+        </p>
+      </div>
+
+
 
       {/* Förlagsavtal */}
       <div className="space-y-2">
