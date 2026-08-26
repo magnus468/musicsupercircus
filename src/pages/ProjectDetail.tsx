@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, FileText, Pencil, Check, X } from "lucide-react";
+import InlineAudioButton from "@/components/works/InlineAudioButton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -296,7 +297,10 @@ const ProjectDetail = () => {
                     return (
                       <TableRow key={work.id}>
                         <TableCell className="font-medium">
-                          <Link to={`/works/${work.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">{work.title}</Link>
+                          <div className="flex items-center gap-1">
+                            <Link to={`/works/${work.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">{work.title}</Link>
+                            <InlineAudioButton url={(work as any).audio_url} />
+                          </div>
                         </TableCell>
                         <TableCell>
                           {creatorNames.map((name, i) => {
