@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, FileText, Pencil, Check, X } from "lucide-react";
 import InlineAudioButton from "@/components/works/InlineAudioButton";
+import { resolveAudioUrl } from "@/lib/audioLink";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
