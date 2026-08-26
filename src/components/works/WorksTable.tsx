@@ -116,7 +116,6 @@ const WorksTable = memo(({
             <TableRow key={work.id} id={`${WORK_ROW_ID_PREFIX}${work.id}`} data-work-id={work.id}>
               <TableCell className="font-medium max-w-[220px]">
                 <div className="flex items-center gap-1 min-w-0">
-                  <InlineAudioButton url={(work as any).audio_url} />
                   <Link
                     to={`/works/${work.id}`}
                     onClick={() => onOpenWork(work.id)}
@@ -124,6 +123,7 @@ const WorksTable = memo(({
                   >
                     {work.title}
                   </Link>
+                  <InlineAudioButton url={(work as any).audio_url} />
                 </div>
               </TableCell>
 
