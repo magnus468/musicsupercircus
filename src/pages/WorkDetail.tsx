@@ -58,6 +58,15 @@ const WorkDetail = () => {
   const work = works?.find((w) => w.id === id);
   const { data: workSettlements, isLoading: settlementsLoading } = useWorkSettlements(work?.title);
 
+  const audioRef = (work as any)?.audio_url as string | undefined;
+  const { data: audioSrc } = useQuery({
+    queryKey: ["audio-src", audioRef],
+    enabled: !!audioRef,
+    staleTime: 50 * 60 * 1000,
+    queryFn: () => resolveAudioUrl(audioRef),
+  });
+
+
   const clientMap = new Map<string, string>();
   clients?.forEach((c) => clientMap.set(`${c.first_name} ${c.last_name}`.trim().toLowerCase(), c.id));
 
