@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
     for (let from = 0; ; from += 1000) {
       const { data, error: exErr } = await supabase
         .from("works")
-        .select("id, title, project, creators, stim_status, stim_comment")
+        .select("id, title, project, creators, stim_status, stim_comment, publishing_type, co_publishers")
         .order("created_at", { ascending: true })
         .range(from, from + 999);
       if (exErr) throw exErr;
