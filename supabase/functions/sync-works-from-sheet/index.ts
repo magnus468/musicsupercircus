@@ -20,6 +20,58 @@ function stimStatus(comment: string | null): "anmäld" | "claimad" | "ej_anmäld
   return "ej_anmäld";
 }
 
+// Delar upp "A (..) / B (..)" på toppnivå (ignorerar / inuti parenteser)
+function splitTop(s: string): string[] {
+  const out: string[] = [];
+  let depth = 0, cur = "";
+  for (const ch of s) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth = Math.max(0, depth - 1);
+    if ((ch === "/" || ch === "&") && depth === 0) { out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.map((p) => p.trim()).filter(Boolean);
+}
+
+const numSv = (v: string) => parseFloat(v.replace(",", "."));
+
+// Tolkar "Ed Hargrave (CA_Norden_66,67%_ROW_50%)" -> "Ed Hargrave (CA, 66.67%, row:50%, repr)"
+function parseSplitEntry(part: string, defaultRole: "CA" | "E"): string | null {
+  const m = part.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+  if (!m) return null;
+  const name = m[1].trim();
+  const inner = m[2];
+  const split = inner.match(
+    /(?:^|[_\s])(CA|C|A|E|AR|SA)?[_\s]*(?:Norden[_\s]*)?(\d+(?:[.,]\d+)?)\s*%[_\s]*ROW[_\s:]*(\d+(?:[.,]\d+)?)\s*%/i,
+  );
+  if (!name || !split) return null;
+  const role = (split[1] || defaultRole).toUpperCase();
+  return `${name} (${role}, ${numSv(split[2])}%, row:${numSv(split[3])}%, repr)`;
+}
+
+// Bygger creators-strängen när arket innehåller split-notation, annars null
+function buildCreators(rawCreators: string, rawPublishers: string | null): {
+  creators: string;
+  publishers: string[];
+} | null {
+  const hasSplit = /ROW[_\s:]*\d/i.test(`${rawCreators} ${rawPublishers ?? ""}`);
+  if (!hasSplit) return null;
+
+  const entries: string[] = [];
+  for (const p of splitTop(rawCreators)) {
+    entries.push(parseSplitEntry(p, "CA") ?? p.trim());
+  }
+  const publishers: string[] = [];
+  for (const p of splitTop(rawPublishers ?? "")) {
+    const nameOnly = p.replace(/\s*\([^)]*\)\s*$/, "").trim();
+    if (!nameOnly) continue;
+    publishers.push(nameOnly);
+    entries.push(parseSplitEntry(p, "E") ?? `${nameOnly} (E, repr)`);
+  }
+  return { creators: entries.join(", "), publishers };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
