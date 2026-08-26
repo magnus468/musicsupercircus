@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { Link } from "react-router-dom";
-import { useProjects, Project } from "@/hooks/useProjects";
+import { useProjects, useDeleteProject, Project } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useAgreements } from "@/hooks/useAgreements";
 import { useQuery } from "@tanstack/react-query";
@@ -9,8 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FolderOpen, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight, FileText } from "lucide-react";
+import { FolderOpen, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight, FileText, Trash2 } from "lucide-react";
 
 type SortKey = keyof Pick<Project, "project_number" | "name" | "client" | "supervisor" | "composer" | "publishing" | "status">;
 type SortDir = "asc" | "desc";
