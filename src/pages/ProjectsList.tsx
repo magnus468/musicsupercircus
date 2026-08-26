@@ -190,6 +190,8 @@ const ProjectsList = () => {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [doneOpen, setDoneOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
+  const deleteProject = useDeleteProject();
 
   const projectAgreements = useMemo(() => {
     const map = new Map<string, AgreementLink[]>();
