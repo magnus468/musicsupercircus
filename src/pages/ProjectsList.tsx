@@ -143,6 +143,17 @@ const ProjectTable = ({
             <TableCell>
               {p.status ? <Badge variant={statusVariant(p.status)}>{p.status}</Badge> : "—"}
             </TableCell>
+            <TableCell>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                aria-label={`Radera projekt ${p.name}`}
+                onClick={(e) => { e.stopPropagation(); onDelete(p); }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </TableCell>
           </TableRow>
         );
       })}
