@@ -11,6 +11,7 @@ export type Project = {
   composer: string | null;
   publishing: string | null;
   status: string | null;
+  cover_url: string | null;
   created_at: string;
   updated_at: string;
 };

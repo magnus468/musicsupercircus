@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, FileText, Pencil, Check, X } from "lucide-react";
 import InlineAudioButton from "@/components/works/InlineAudioButton";
+import { resolveAudioUrl } from "@/lib/audioLink";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -46,6 +47,14 @@ const ProjectDetail = () => {
     publishing: "",
     status: "",
     description: "",
+    cover_url: "",
+  });
+
+  const { data: coverSrc } = useQuery({
+    queryKey: ["project-cover", project?.cover_url],
+    enabled: !!project?.cover_url,
+    queryFn: () => resolveAudioUrl(project?.cover_url),
+    staleTime: 30 * 60 * 1000,
   });
 
   const startEditing = () => {
@@ -59,6 +68,7 @@ const ProjectDetail = () => {
       publishing: project.publishing || "",
       status: project.status || "",
       description: project.description || "",
+      cover_url: project.cover_url || "",
     });
     setSelectedAgreementIds(directAgreementIds ?? []);
     setEditing(true);
@@ -80,6 +90,7 @@ const ProjectDetail = () => {
         publishing: form.publishing || null,
         status: form.status || null,
         description: form.description || null,
+        cover_url: form.cover_url || null,
       },
       {
         onSuccess: () => {
@@ -138,6 +149,14 @@ const ProjectDetail = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {!editing && coverSrc && (
+                <img
+                  src={coverSrc}
+                  alt={`Omslag för ${projectName}`}
+                  loading="lazy"
+                  className="h-16 w-16 rounded-md object-cover border border-border shrink-0"
+                />
+              )}
               {editing ? (
                 <Input
                   value={form.name}
@@ -186,6 +205,10 @@ const ProjectDetail = () => {
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Förlag</label>
                 <Input value={form.publishing} onChange={(e) => setForm((f) => ({ ...f, publishing: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Omslagsbild (länk)</label>
+                <Input value={form.cover_url} onChange={(e) => setForm((f) => ({ ...f, cover_url: e.target.value }))} placeholder="https://... eller storage:covers/fil.jpg" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Status</label>
