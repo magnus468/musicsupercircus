@@ -53,13 +53,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: existing, error: exErr } = await supabase
-      .from("works")
-      .select("id, title, project, creators, stim_status, stim_comment");
-    if (exErr) throw exErr;
-    const byTitle = new Map(
-      (existing ?? []).map((w) => [key(w.title), w]),
-    );
+    const existing: Record<string, any>[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error: exErr } = await supabase
+        .from("works")
+        .select("id, title, project, creators, stim_status, stim_comment")
+        .order("created_at", { ascending: true })
+        .range(from, from + 999);
+      if (exErr) throw exErr;
+      existing.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
+    }
+    const byTitle = new Map(existing.map((w) => [key(w.title), w]));
 
     const toInsert: Record<string, unknown>[] = [];
     const changed: { id: string; title: string; fields: string[]; patch: Record<string, unknown> }[] = [];
