@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, FileText } from "lucide-react";
+import { X, Plus, FileText, Music } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
