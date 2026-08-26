@@ -129,6 +129,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [stimStatus, setStimStatus] = useState<"anmäld" | "claimad" | "ej_anmäld">(work?.stim_status ?? "ej_anmäld");
   const [stimComment, setStimComment] = useState(work?.stim_comment ?? "");
   const [sharePercentage, setSharePercentage] = useState(work?.share_percentage?.toString() ?? "");
+  const [audioUrl, setAudioUrl] = useState((work as any)?.audio_url ?? "");
   const [nordicPublisherShare, setNordicPublisherShare] = useState(work?.nordic_publisher_share?.toString() ?? "50");
   const [rowPublisherShare, setRowPublisherShare] = useState(work?.row_publisher_share?.toString() ?? "50");
 
