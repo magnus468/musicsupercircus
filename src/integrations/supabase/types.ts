@@ -256,6 +256,7 @@ export type Database = {
         Row: {
           client: string | null
           composer: string | null
+          cover_url: string | null
           created_at: string
           description: string | null
           id: string
@@ -269,6 +270,7 @@ export type Database = {
         Insert: {
           client?: string | null
           composer?: string | null
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -282,6 +284,7 @@ export type Database = {
         Update: {
           client?: string | null
           composer?: string | null
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
