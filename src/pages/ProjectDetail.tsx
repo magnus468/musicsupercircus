@@ -297,7 +297,10 @@ const ProjectDetail = () => {
                     return (
                       <TableRow key={work.id}>
                         <TableCell className="font-medium">
-                          <Link to={`/works/${work.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">{work.title}</Link>
+                          <div className="flex items-center gap-1">
+                            <Link to={`/works/${work.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">{work.title}</Link>
+                            <InlineAudioButton url={(work as any).audio_url} />
+                          </div>
                         </TableCell>
                         <TableCell>
                           {creatorNames.map((name, i) => {
