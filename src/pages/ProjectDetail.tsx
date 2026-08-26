@@ -46,6 +46,14 @@ const ProjectDetail = () => {
     publishing: "",
     status: "",
     description: "",
+    cover_url: "",
+  });
+
+  const { data: coverSrc } = useQuery({
+    queryKey: ["project-cover", project?.cover_url],
+    enabled: !!project?.cover_url,
+    queryFn: () => resolveAudioUrl(project?.cover_url),
+    staleTime: 30 * 60 * 1000,
   });
 
   const startEditing = () => {
