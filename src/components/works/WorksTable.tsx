@@ -6,6 +6,8 @@ import { type Work } from "@/hooks/useWorks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import InlineAudioButton from "@/components/works/InlineAudioButton";
+
 
 type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_status" | "share_percentage" | "created_at";
 type SortDir = "asc" | "desc";
