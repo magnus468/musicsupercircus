@@ -126,9 +126,18 @@ Deno.serve(async (req) => {
       const title = norm(row[2]);
       if (!title || key(title) === "korrigering") { skipped++; continue; }
       const project = norm(row[1]);
-      const creators = norm(row[3]) ?? "";
+      const rawCreators = norm(row[3]) ?? "";
+      const rawPublishers = norm(row[5]);
       const comment = norm(row[4]);
       const status = stimStatus(comment);
+
+      const parsed = buildCreators(rawCreators, rawPublishers);
+      const creators = parsed?.creators ?? rawCreators;
+      const internal = parsed?.publishers.find((p) => /^MSC[EP]$/i.test(p));
+      const publishingType = internal ? internal.toUpperCase() : null;
+      const coPublishers = parsed
+        ? parsed.publishers.filter((p) => !/^MSC[EP]$/i.test(p))
+        : null;
 
       const current = byTitle.get(key(title));
       if (current) {
@@ -138,6 +147,12 @@ Deno.serve(async (req) => {
         if (creators && creators !== current.creators) { patch.creators = creators; fields.push("upphovspersoner"); }
         if (status !== current.stim_status) { patch.stim_status = status; fields.push("STIM-status"); }
         if (comment && comment !== current.stim_comment) { patch.stim_comment = comment; fields.push("STIM-kommentar"); }
+        if (publishingType && publishingType !== current.publishing_type) {
+          patch.publishing_type = publishingType; fields.push("förlag");
+        }
+        if (coPublishers && coPublishers.join(", ") !== (current.co_publishers ?? []).join(", ")) {
+          patch.co_publishers = coPublishers; fields.push("medförlag");
+        }
         if (fields.length > 0) {
           changed.push({ id: current.id, title: current.title, fields, patch });
         } else {
@@ -153,6 +168,8 @@ Deno.serve(async (req) => {
         creators,
         stim_status: status,
         stim_comment: comment,
+        publishing_type: publishingType ?? "original",
+        co_publishers: coPublishers ?? [],
       } as never);
       toInsert.push({
         title,
@@ -160,7 +177,8 @@ Deno.serve(async (req) => {
         creators,
         stim_status: status,
         stim_comment: comment,
-        publishing_type: "original",
+        publishing_type: publishingType ?? "original",
+        ...(coPublishers && coPublishers.length > 0 ? { co_publishers: coPublishers } : {}),
       });
     }
 
