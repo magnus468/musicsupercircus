@@ -68,6 +68,7 @@ const ProjectDetail = () => {
       publishing: project.publishing || "",
       status: project.status || "",
       description: project.description || "",
+      cover_url: project.cover_url || "",
     });
     setSelectedAgreementIds(directAgreementIds ?? []);
     setEditing(true);
@@ -89,6 +90,7 @@ const ProjectDetail = () => {
         publishing: form.publishing || null,
         status: form.status || null,
         description: form.description || null,
+        cover_url: form.cover_url || null,
       },
       {
         onSuccess: () => {
