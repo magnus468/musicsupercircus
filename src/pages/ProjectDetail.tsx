@@ -207,6 +207,10 @@ const ProjectDetail = () => {
                 <Input value={form.publishing} onChange={(e) => setForm((f) => ({ ...f, publishing: e.target.value }))} />
               </div>
               <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Omslagsbild (länk)</label>
+                <Input value={form.cover_url} onChange={(e) => setForm((f) => ({ ...f, cover_url: e.target.value }))} placeholder="https://... eller storage:covers/fil.jpg" />
+              </div>
+              <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Status</label>
                 <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
