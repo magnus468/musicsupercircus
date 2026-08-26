@@ -345,6 +345,26 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
         </div>
       </div>
 
+      {/* Ljudlänk */}
+      <div className="space-y-2">
+        <Label htmlFor="audioUrl" className="flex items-center gap-2">
+          <Music className="h-3.5 w-3.5" />
+          Ljudlänk
+        </Label>
+        <Input
+          id="audioUrl"
+          type="url"
+          value={audioUrl}
+          onChange={(e) => setAudioUrl(e.target.value)}
+          placeholder="https://www.dropbox.com/scl/fi/.../lat.mp3?rlkey=..."
+        />
+        <p className="text-xs text-muted-foreground">
+          Klistra in en länk till ljudfilen (Dropbox, Google Drive eller direkt mp3-länk). Länkar till enskilda filer kan spelas upp direkt i appen.
+        </p>
+      </div>
+
+
+
       {/* Förlagsavtal */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
