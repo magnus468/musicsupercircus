@@ -149,6 +149,14 @@ const ProjectDetail = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {!editing && coverSrc && (
+                <img
+                  src={coverSrc}
+                  alt={`Omslag för ${projectName}`}
+                  loading="lazy"
+                  className="h-16 w-16 rounded-md object-cover border border-border shrink-0"
+                />
+              )}
               {editing ? (
                 <Input
                   value={form.name}
