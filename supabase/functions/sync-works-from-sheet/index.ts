@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
 
 const SPREADSHEET_ID = "1EZhIQmpQ9-cGEsULqH9zRREwomTYwYkTf2XoBUz3PiI";
 const RANGE = "'Verk _ Avräkning'!A4:F2000";
@@ -84,6 +85,27 @@ Deno.serve(async (req) => {
 
     const summary = { ok: true, inserted, skipped, totalRows: rows.length, at: new Date().toISOString() };
     console.log("sync-works-from-sheet:", summary);
+
+    if (inserted > 0) {
+      try {
+        await sendTemplateEmail("works-sync-report", "magnus@musicsupercircus.com", {
+          templateData: {
+            inserted,
+            skipped,
+            totalRows: rows.length,
+            syncedAt: new Date().toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" }),
+            works: toInsert.slice(0, 200).map((w) => ({
+              title: w.title as string,
+              project: (w.project as string | null) ?? null,
+              creators: (w.creators as string | null) ?? null,
+            })),
+          },
+          idempotencyKey: `works-sync-report-${new Date().toISOString().slice(0, 16)}`,
+        });
+      } catch (mailErr) {
+        console.error("rapportmail misslyckades:", mailErr);
+      }
+    }
     return new Response(JSON.stringify(summary), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
