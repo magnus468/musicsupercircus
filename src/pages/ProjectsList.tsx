@@ -327,6 +327,36 @@ const ProjectsList = () => {
           )}
         </>
       )}
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Radera projekt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete ? `"${pendingDelete.name}" tas bort permanent, inklusive kopplingar till avtal. Verk och avtal påverkas inte.` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!pendingDelete) return;
+                const name = pendingDelete.name;
+                try {
+                  await deleteProject.mutateAsync(pendingDelete.id);
+                  toast({ title: "Projekt raderat", description: name });
+                } catch (e) {
+                  toast({ title: "Kunde inte radera", description: (e as Error).message, variant: "destructive" });
+                }
+                setPendingDelete(null);
+              }}
+            >
+              Radera
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
