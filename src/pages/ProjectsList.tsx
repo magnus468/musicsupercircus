@@ -66,6 +66,7 @@ const ProjectTable = ({
   showHeader = true,
   projectAgreements,
   projectPublishers,
+  onDelete,
 }: {
   items: Project[];
   sortKey: SortKey;
@@ -74,6 +75,7 @@ const ProjectTable = ({
   showHeader?: boolean;
   projectAgreements: Map<string, AgreementLink[]>;
   projectPublishers: Map<string, Set<string>>;
+  onDelete: (project: Project) => void;
 }) => (
   <Table>
     {showHeader && (
@@ -89,6 +91,7 @@ const ProjectTable = ({
               <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
             </TableHead>
           ))}
+          <TableHead className="w-12" />
         </TableRow>
       </TableHeader>
     )}
