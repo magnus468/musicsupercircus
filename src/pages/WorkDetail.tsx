@@ -166,21 +166,24 @@ const WorkDetail = () => {
         <Card>
           <CardContent className="pt-6 space-y-3">
             {isLikelyAudioFile((work as any).audio_url) ? (
-              <audio controls preload="none" className="w-full" src={toPlayableUrl((work as any).audio_url) ?? undefined}>
+              <audio controls preload="none" className="w-full" src={audioSrc ?? undefined}>
                 Din webbläsare stöder inte ljuduppspelning.
               </audio>
             ) : null}
-            <a
-              href={(work as any).audio_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-2"
-            >
-              <Music className="h-4 w-4" /> Öppna ljudlänk
-            </a>
+            {!isStorageRef((work as any).audio_url) && (
+              <a
+                href={(work as any).audio_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-2"
+              >
+                <Music className="h-4 w-4" /> Öppna ljudlänk
+              </a>
+            )}
           </CardContent>
         </Card>
       )}
+
 
       <Card>
         <CardHeader>
