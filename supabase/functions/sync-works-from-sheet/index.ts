@@ -53,24 +53,61 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: existing, error: exErr } = await supabase.from("works").select("title");
-    if (exErr) throw exErr;
-    const seen = new Set((existing ?? []).map((w) => key(w.title)));
+    const existing: Record<string, any>[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error: exErr } = await supabase
+        .from("works")
+        .select("id, title, project, creators, stim_status, stim_comment")
+        .order("created_at", { ascending: true })
+        .range(from, from + 999);
+      if (exErr) throw exErr;
+      existing.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
+    }
+    const byTitle = new Map(existing.map((w) => [key(w.title), w]));
 
     const toInsert: Record<string, unknown>[] = [];
+    const changed: { id: string; title: string; fields: string[]; patch: Record<string, unknown> }[] = [];
     let skipped = 0;
 
     for (const row of rows) {
       const title = norm(row[2]);
       if (!title || key(title) === "korrigering") { skipped++; continue; }
-      if (seen.has(key(title))) { skipped++; continue; }
-      seen.add(key(title));
+      const project = norm(row[1]);
+      const creators = norm(row[3]) ?? "";
+      const comment = norm(row[4]);
+      const status = stimStatus(comment);
+
+      const current = byTitle.get(key(title));
+      if (current) {
+        const patch: Record<string, unknown> = {};
+        const fields: string[] = [];
+        if (project && project !== current.project) { patch.project = project; fields.push("projekt"); }
+        if (creators && creators !== current.creators) { patch.creators = creators; fields.push("upphovspersoner"); }
+        if (status !== current.stim_status) { patch.stim_status = status; fields.push("STIM-status"); }
+        if (comment && comment !== current.stim_comment) { patch.stim_comment = comment; fields.push("STIM-kommentar"); }
+        if (fields.length > 0) {
+          changed.push({ id: current.id, title: current.title, fields, patch });
+        } else {
+          skipped++;
+        }
+        continue;
+      }
+
+      byTitle.set(key(title), {
+        id: "new",
+        title,
+        project,
+        creators,
+        stim_status: status,
+        stim_comment: comment,
+      } as never);
       toInsert.push({
         title,
-        project: norm(row[1]),
-        creators: norm(row[3]) ?? "",
-        stim_status: stimStatus(norm(row[4])),
-        stim_comment: norm(row[4]),
+        project,
+        creators,
+        stim_status: status,
+        stim_comment: comment,
         publishing_type: "original",
       });
     }
@@ -83,14 +120,25 @@ Deno.serve(async (req) => {
       inserted += batch.length;
     }
 
-    const summary = { ok: true, inserted, skipped, totalRows: rows.length, at: new Date().toISOString() };
+    let updated = 0;
+    for (const c of changed) {
+      const { error } = await supabase.from("works").update(c.patch).eq("id", c.id);
+      if (error) {
+        console.error(`update ${c.title} misslyckades: ${error.message}`);
+        continue;
+      }
+      updated++;
+    }
+
+    const summary = { ok: true, inserted, updated, skipped, totalRows: rows.length, at: new Date().toISOString() };
     console.log("sync-works-from-sheet:", summary);
 
-    if (inserted > 0) {
+    if (inserted > 0 || updated > 0) {
       try {
         await sendTemplateEmail("works-sync-report", "magnus@musicsupercircus.com", {
           templateData: {
             inserted,
+            updated,
             skipped,
             totalRows: rows.length,
             syncedAt: new Date().toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" }),
@@ -98,6 +146,10 @@ Deno.serve(async (req) => {
               title: w.title as string,
               project: (w.project as string | null) ?? null,
               creators: (w.creators as string | null) ?? null,
+            })),
+            updatedWorks: changed.slice(0, 200).map((c) => ({
+              title: c.title,
+              fields: c.fields.join(", "),
             })),
           },
           idempotencyKey: `works-sync-report-${new Date().toISOString().slice(0, 16)}`,
