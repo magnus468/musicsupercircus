@@ -18,25 +18,40 @@ interface AddedWork {
   creators?: string | null
 }
 
+interface UpdatedWork {
+  title?: string
+  fields?: string
+}
+
 interface Props {
   inserted?: number
+  updated?: number
   skipped?: number
   totalRows?: number
   syncedAt?: string
   works?: AddedWork[]
+  updatedWorks?: UpdatedWork[]
 }
 
-const Email = ({ inserted = 0, skipped = 0, totalRows = 0, syncedAt, works = [] }: Props) => (
+const Email = ({
+  inserted = 0,
+  updated = 0,
+  skipped = 0,
+  totalRows = 0,
+  syncedAt,
+  works = [],
+  updatedWorks = [],
+}: Props) => (
   <Html lang="sv" dir="ltr">
     <Head />
-    <Preview>{`${inserted} nya verk tillagda i katalogen`}</Preview>
+    <Preview>{`${inserted} nya och ${updated} uppdaterade verk i katalogen`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Verksynk klar</Heading>
         <Text style={muted}>{syncedAt ?? ''}</Text>
         <Section style={statBox}>
           <Text style={stat}>
-            <strong>{inserted}</strong> nya verk tillagda
+            <strong>{inserted}</strong> nya verk tillagda · <strong>{updated}</strong> uppdaterade
           </Text>
           <Text style={muted}>
             {totalRows} rader lästa · {skipped} hoppades över (fanns redan)
@@ -58,6 +73,20 @@ const Email = ({ inserted = 0, skipped = 0, totalRows = 0, syncedAt, works = [] 
             </Section>
           ))
         )}
+        <Hr style={hr} />
+        <Heading as="h2" style={h2}>
+          Uppdaterade verk
+        </Heading>
+        {updatedWorks.length === 0 ? (
+          <Text style={muted}>Inga ändringar denna gång.</Text>
+        ) : (
+          updatedWorks.map((w, i) => (
+            <Section key={`u${i}`} style={rowStyle}>
+              <Text style={titleStyle}>{w.title ?? 'Utan titel'}</Text>
+              <Text style={muted}>{w.fields ? `Ändrat: ${w.fields}` : 'Ändrat'}</Text>
+            </Section>
+          ))
+        )}
       </Container>
     </Body>
   </Html>
@@ -66,11 +95,12 @@ const Email = ({ inserted = 0, skipped = 0, totalRows = 0, syncedAt, works = [] 
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `Verksynk: ${data?.inserted ?? 0} nya verk i katalogen`,
+    `Verksynk: ${data?.inserted ?? 0} nya, ${data?.updated ?? 0} uppdaterade verk`,
   displayName: 'Verksynk-rapport',
   to: 'magnus@musicsupercircus.com',
   previewData: {
     inserted: 2,
+    updated: 1,
     skipped: 1004,
     totalRows: 1620,
     syncedAt: '2026-08-26 20:45',
@@ -78,6 +108,7 @@ export const template = {
       { title: 'Sommarnatt', project: 'Trion', creators: 'A. Andersson' },
       { title: 'Vinterljus', project: 'Sagan', creators: 'B. Berg' },
     ],
+    updatedWorks: [{ title: 'Höstregn', fields: 'STIM-status, projekt' }],
   },
 } satisfies TemplateEntry
 
