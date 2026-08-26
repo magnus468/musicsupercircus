@@ -182,7 +182,11 @@ const WorkDetail = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>{work.title}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <InlineAudioButton url={(work as any).audio_url} />
+            {work.title}
+          </CardTitle>
+
         </CardHeader>
         <CardContent>
 
