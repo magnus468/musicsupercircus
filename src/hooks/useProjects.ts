@@ -61,3 +61,24 @@ export const useUpdateProject = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 };
+
+export const useDeleteProject = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error: linkError } = await supabase
+        .from("project_agreements")
+        .delete()
+        .eq("project_id", id);
+      if (linkError) throw linkError;
+
+      const { error } = await supabase.from("projects").delete().eq("id", id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["all-project-agreements"] });
+    },
+  });
+};
