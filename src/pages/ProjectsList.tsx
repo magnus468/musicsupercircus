@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { Link } from "react-router-dom";
-import { useProjects, Project } from "@/hooks/useProjects";
+import { useProjects, useDeleteProject, Project } from "@/hooks/useProjects";
 import { useWorks } from "@/hooks/useWorks";
 import { useAgreements } from "@/hooks/useAgreements";
 import { useQuery } from "@tanstack/react-query";
@@ -9,8 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FolderOpen, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight, FileText } from "lucide-react";
+import { FolderOpen, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight, FileText, Trash2 } from "lucide-react";
 
 type SortKey = keyof Pick<Project, "project_number" | "name" | "client" | "supervisor" | "composer" | "publishing" | "status">;
 type SortDir = "asc" | "desc";
@@ -54,6 +66,7 @@ const ProjectTable = ({
   showHeader = true,
   projectAgreements,
   projectPublishers,
+  onDelete,
 }: {
   items: Project[];
   sortKey: SortKey;
@@ -62,6 +75,7 @@ const ProjectTable = ({
   showHeader?: boolean;
   projectAgreements: Map<string, AgreementLink[]>;
   projectPublishers: Map<string, Set<string>>;
+  onDelete: (project: Project) => void;
 }) => (
   <Table>
     {showHeader && (
@@ -77,6 +91,7 @@ const ProjectTable = ({
               <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
             </TableHead>
           ))}
+          <TableHead className="w-12" />
         </TableRow>
       </TableHeader>
     )}
@@ -128,6 +143,17 @@ const ProjectTable = ({
             <TableCell>
               {p.status ? <Badge variant={statusVariant(p.status)}>{p.status}</Badge> : "—"}
             </TableCell>
+            <TableCell>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                aria-label={`Radera projekt ${p.name}`}
+                onClick={(e) => { e.stopPropagation(); onDelete(p); }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </TableCell>
           </TableRow>
         );
       })}
@@ -164,6 +190,8 @@ const ProjectsList = () => {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [doneOpen, setDoneOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
+  const deleteProject = useDeleteProject();
 
   const projectAgreements = useMemo(() => {
     const map = new Map<string, AgreementLink[]>();
@@ -274,7 +302,7 @@ const ProjectsList = () => {
             <Card>
               <CardContent className="p-0">
                 <div className="rounded-lg overflow-x-auto">
-                  <ProjectTable items={active} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} projectPublishers={projectPublishers} />
+                  <ProjectTable items={active} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} projectPublishers={projectPublishers} onDelete={setPendingDelete} />
                 </div>
               </CardContent>
             </Card>
@@ -290,7 +318,7 @@ const ProjectsList = () => {
                 <Card>
                   <CardContent className="p-0">
                     <div className="rounded-lg overflow-x-auto">
-                      <ProjectTable items={done} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} projectPublishers={projectPublishers} />
+                      <ProjectTable items={done} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} projectPublishers={projectPublishers} onDelete={setPendingDelete} />
                     </div>
                   </CardContent>
                 </Card>
@@ -299,6 +327,36 @@ const ProjectsList = () => {
           )}
         </>
       )}
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Radera projekt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete ? `"${pendingDelete.name}" tas bort permanent, inklusive kopplingar till avtal. Verk och avtal påverkas inte.` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!pendingDelete) return;
+                const name = pendingDelete.name;
+                try {
+                  await deleteProject.mutateAsync(pendingDelete.id);
+                  toast({ title: "Projekt raderat", description: name });
+                } catch (e) {
+                  toast({ title: "Kunde inte radera", description: (e as Error).message, variant: "destructive" });
+                }
+                setPendingDelete(null);
+              }}
+            >
+              Radera
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
