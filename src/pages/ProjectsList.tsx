@@ -300,7 +300,7 @@ const ProjectsList = () => {
             <Card>
               <CardContent className="p-0">
                 <div className="rounded-lg overflow-x-auto">
-                  <ProjectTable items={active} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} projectPublishers={projectPublishers} />
+                  <ProjectTable items={active} sortKey={sortKey} sortDir={sortDir} onToggleSort={toggleSort} projectAgreements={projectAgreements} projectPublishers={projectPublishers} onDelete={setPendingDelete} />
                 </div>
               </CardContent>
             </Card>
