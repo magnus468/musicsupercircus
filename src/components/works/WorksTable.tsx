@@ -6,6 +6,8 @@ import { type Work } from "@/hooks/useWorks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import InlineAudioButton from "@/components/works/InlineAudioButton";
+
 
 type SortKey = "title" | "project" | "creators" | "publishing_type" | "stim_status" | "share_percentage" | "created_at";
 type SortDir = "asc" | "desc";
@@ -112,15 +114,19 @@ const WorksTable = memo(({
         <TableBody>
           {works?.map((work) => (
             <TableRow key={work.id} id={`${WORK_ROW_ID_PREFIX}${work.id}`} data-work-id={work.id}>
-              <TableCell className="font-medium max-w-[200px] truncate">
-                <Link
-                  to={`/works/${work.id}`}
-                  onClick={() => onOpenWork(work.id)}
-                  className="text-primary underline underline-offset-2 hover:text-primary/80"
-                >
-                  {work.title}
-                </Link>
+              <TableCell className="font-medium max-w-[220px]">
+                <div className="flex items-center gap-1 min-w-0">
+                  <InlineAudioButton url={(work as any).audio_url} />
+                  <Link
+                    to={`/works/${work.id}`}
+                    onClick={() => onOpenWork(work.id)}
+                    className="text-primary underline underline-offset-2 hover:text-primary/80 truncate"
+                  >
+                    {work.title}
+                  </Link>
+                </div>
               </TableCell>
+
               <TableCell className="text-muted-foreground max-w-[150px] truncate">
                 {work.project ? (
                   <Link to={`/projects/${encodeURIComponent(work.project)}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
