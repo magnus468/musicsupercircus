@@ -53,7 +53,7 @@ const InlineAudioButton = ({ url, className }: Props) => {
       size="icon"
       onClick={toggle}
       aria-label={playing ? "Pausa låten" : "Spela låten"}
-      className={`h-7 w-7 shrink-0 text-primary hover:text-primary ${className ?? ""}`}
+      className={`h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted ${className ?? ""}`}
     >
       {loading ? (
         <Loader2 className="h-4 w-4 animate-spin" />
