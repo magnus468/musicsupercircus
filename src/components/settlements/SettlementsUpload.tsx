@@ -352,7 +352,8 @@ export const SettlementsUpload = () => {
             <div className="text-xs text-muted-foreground truncate">
               {uploading
                 ? progress
-                : "STIM- eller Warner/Chappell-CSV (semikolonseparerad, svenska decimaler)"}
+                : "STIM (semikolon, svenska decimaler) eller Warner/Chappell-statement (komma, engelska rubriker)"}
+
             </div>
           </div>
         </div>
