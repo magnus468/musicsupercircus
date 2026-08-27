@@ -118,6 +118,95 @@ interface ParsedRow {
 
 const BATCH_SIZE = 500;
 
+// --- Warner/Chappell (WCM) statement support -------------------------------
+// WCM-exporter är kommaseparerade med engelska kolumnnamn och punkt som decimaltecken.
+const isWcmHeaderSet = (fields: string[]) =>
+  fields.includes("tango_work_title") || fields.includes("tango_work_code");
+
+const parseDotNumber = (raw: string | undefined | null): number => {
+  if (raw == null) return 0;
+  const s = String(raw).trim().replace(/[@\s]/g, "");
+  if (!s) return 0;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+};
+
+// "202504" -> 2025-04-01 (start) eller sista dagen i månaden (slut)
+const parseYearMonth = (raw: string | undefined | null, end = false): string | null => {
+  const s = String(raw ?? "").trim();
+  const m = s.match(/^(\d{4})(\d{2})/);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return null;
+  const day = end ? new Date(Date.UTC(year, month, 0)).getUTCDate() : 1;
+  return `${m[1]}-${m[2]}-${String(day).padStart(2, "0")}`;
+};
+
+// Statementperiod från filnamn: Statement_2026-01-01_2026-06-30.csv -> 2026 / H1
+const periodFromFileName = (fileName: string): { year: string; half: "H1" | "H2" } | null => {
+  const m = fileName.match(/(\d{4})-(\d{2})-\d{2}/);
+  if (!m) return null;
+  return { year: m[1], half: Number(m[2]) <= 6 ? "H1" : "H2" };
+};
+
+const periodFromRoyaltyPeriod = (raw: string | undefined): { year: string; half: "H1" | "H2" } | null => {
+  const m = String(raw ?? "").match(/^(\d{4})(\d{2})/);
+  if (!m) return null;
+  return { year: m[1], half: Number(m[2]) <= 6 ? "H1" : "H2" };
+};
+
+const parseWcmRows = (
+  data: Record<string, string>[],
+  fileName: string
+): ParsedRow[] => {
+  const first = data[0] ?? {};
+  const period =
+    periodFromFileName(fileName) ?? periodFromRoyaltyPeriod(first["royalty_period"]);
+  const distribution_key = period ? `WC-${period.year}${period.half}` : "WC-okänd";
+  const distribution = period
+    ? `Warner/Chappell ${period.half} ${period.year}`
+    : "Warner/Chappell";
+
+  const rows: ParsedRow[] = [];
+  for (const raw of data) {
+    const val = (k: string) => {
+      const v = raw[k];
+      return v != null && String(v).trim() !== "" ? String(v).trim() : null;
+    };
+    const work_title = val("tango_work_title") ?? val("source_work_id") ?? "";
+    if (!work_title) continue;
+
+    const units = val("units");
+    const rate = val("rate_percentage");
+
+    rows.push({
+      work_title,
+      work_key: val("tango_work_code"),
+      amount: parseDotNumber(val("amount_paid")),
+      distribution,
+      distribution_key,
+      recipient_name: val("deal_scope_name"),
+      member_number: null,
+      ipi_name_number: null,
+      role: null,
+      share: rate ? parseDotNumber(rate) : null,
+      type_of_right: val("tango_income_type_name") ?? val("source_income_type"),
+      country: val("exploitation_territory_name") ?? val("processing_territory_name"),
+      source: val("income_provider_name"),
+      sub_source: val("exploitation_source"),
+      production_title: val("product_description"),
+      episode_title: null,
+      agreement_key: val("deal_contract_brief_number"),
+      number_of_uses: units ? Math.trunc(parseDotNumber(units)) : null,
+      from_date: parseYearMonth(val("distribution_start")),
+      to_date: parseYearMonth(val("distribution_end"), true),
+      composers: val("creator_names") ?? val("composer"),
+    });
+  }
+  return rows;
+};
+
 export const SettlementsUpload = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -130,7 +219,7 @@ export const SettlementsUpload = () => {
 
     try {
       const text = await file.text();
-      // Detect delimiter — STIM uses ; but fall back to , for safety.
+      // Detect delimiter — STIM uses ; but Warner/Chappell (WCM) uses ,
       const firstLine = text.split(/\r?\n/, 1)[0] ?? "";
       const delimiter = firstLine.includes(";") ? ";" : ",";
 
@@ -145,8 +234,12 @@ export const SettlementsUpload = () => {
         console.warn("CSV parse warnings", result.errors.slice(0, 5));
       }
 
-      const rows: ParsedRow[] = [];
-      for (const raw of result.data) {
+      const headers = result.meta.fields ?? [];
+      const isWcm = isWcmHeaderSet(headers);
+
+      const rows: ParsedRow[] = isWcm ? parseWcmRows(result.data, file.name) : [];
+      if (!isWcm) for (const raw of result.data) {
+
         const get = (col: string): string | undefined => {
           for (const [header, mapped] of Object.entries(HEADER_MAP)) {
             if (mapped === col) {
