@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
               fields: c.fields.join(", "),
             })),
           },
-          idempotencyKey: `works-sync-report-${new Date().toISOString().slice(0, 16)}`,
+          idempotencyKey: `works-sync-report-${crypto.randomUUID()}`,
         });
       } catch (mailErr) {
         console.error("rapportmail misslyckades:", mailErr);
