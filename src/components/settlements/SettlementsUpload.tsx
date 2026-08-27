@@ -282,7 +282,14 @@ export const SettlementsUpload = () => {
       }
 
       if (rows.length === 0) {
-        toast.error("Inga rader att importera — kontrollera kolumnrubrikerna.");
+        const isPayoutSummary = headers.some((h) =>
+          ["utbetalningsdatum", "relationstyp", "belopp stim"].includes(h.replace(/^\ufeff/, ""))
+        );
+        toast.error(
+          isPayoutSummary
+            ? "Det här är STIM:s utbetalningsspecifikation (summering per relationstyp) — den innehåller inga verkrader. Ladda upp verkspecifikationen (kolumner som Work title / Verkets titel)."
+            : "Inga rader att importera — kontrollera kolumnrubrikerna."
+        );
         return;
       }
 
