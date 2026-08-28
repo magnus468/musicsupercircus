@@ -119,7 +119,13 @@ Deno.serve(async (req) => {
     const byTitle = new Map(existing.map((w) => [key(w.title), w]));
 
     const toInsert: Record<string, unknown>[] = [];
-    const changed: { id: string; title: string; fields: string[]; patch: Record<string, unknown> }[] = [];
+    const changed: {
+      id: string;
+      title: string;
+      fields: string[];
+      diffs: { field: string; from: string; to: string }[];
+      patch: Record<string, unknown>;
+    }[] = [];
     let skipped = 0;
 
     for (const row of rows) {
