@@ -125,7 +125,16 @@ export const template = {
       { title: 'Sommarnatt', project: 'Trion', creators: 'A. Andersson' },
       { title: 'Vinterljus', project: 'Sagan', creators: 'B. Berg' },
     ],
-    updatedWorks: [{ title: 'Höstregn', fields: 'STIM-status, projekt' }],
+    updatedWorks: [
+      {
+        title: 'Höstregn',
+        fields: 'STIM-status, Projekt',
+        diffs: [
+          { field: 'STIM-status', from: 'ej_anmäld', to: 'anmäld' },
+          { field: 'Projekt', from: '(tomt)', to: 'Sagan' },
+        ],
+      },
+    ],
   },
 } satisfies TemplateEntry
 
@@ -144,3 +153,7 @@ const stat = { fontSize: '16px', color: '#1a1a1a', margin: '0 0 4px' }
 const hr = { borderColor: '#e5e7eb', margin: '16px 0' }
 const rowStyle = { padding: '6px 0', borderBottom: '1px solid #f0f0f0' }
 const titleStyle = { fontSize: '14px', color: '#1a1a1a', margin: '0', fontWeight: 600 }
+const diffBlock = { padding: '4px 0 4px 10px', borderLeft: '2px solid #e5e7eb', margin: '4px 0' }
+const fieldStyle = { fontSize: '13px', color: '#1a1a1a', margin: '0', fontWeight: 600 }
+const fromStyle = { fontSize: '13px', color: '#b91c1c', margin: '1px 0', whiteSpace: 'pre-wrap' as const }
+const toStyle = { fontSize: '13px', color: '#15803d', margin: '1px 0', whiteSpace: 'pre-wrap' as const }
