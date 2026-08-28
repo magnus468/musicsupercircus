@@ -90,7 +90,17 @@ const Email = ({
           updatedWorks.map((w, i) => (
             <Section key={`u${i}`} style={rowStyle}>
               <Text style={titleStyle}>{w.title ?? 'Utan titel'}</Text>
-              <Text style={muted}>{w.fields ? `Ändrat: ${w.fields}` : 'Ändrat'}</Text>
+              {w.diffs && w.diffs.length > 0 ? (
+                w.diffs.map((d, j) => (
+                  <Section key={`d${i}-${j}`} style={diffBlock}>
+                    <Text style={fieldStyle}>{d.field ?? 'Fält'}</Text>
+                    <Text style={fromStyle}>Från: {d.from ?? '(tomt)'}</Text>
+                    <Text style={toStyle}>Till: {d.to ?? '(tomt)'}</Text>
+                  </Section>
+                ))
+              ) : (
+                <Text style={muted}>{w.fields ? `Ändrat: ${w.fields}` : 'Ändrat'}</Text>
+              )}
             </Section>
           ))
         )}
