@@ -18,9 +18,16 @@ interface AddedWork {
   creators?: string | null
 }
 
+interface Diff {
+  field?: string
+  from?: string
+  to?: string
+}
+
 interface UpdatedWork {
   title?: string
   fields?: string
+  diffs?: Diff[]
 }
 
 interface Props {
