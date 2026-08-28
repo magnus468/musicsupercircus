@@ -149,18 +149,39 @@ Deno.serve(async (req) => {
       if (current) {
         const patch: Record<string, unknown> = {};
         const fields: string[] = [];
-        if (project && project !== current.project) { patch.project = project; fields.push("projekt"); }
-        if (creators && creators !== current.creators) { patch.creators = creators; fields.push("upphovspersoner"); }
-        if (status !== current.stim_status) { patch.stim_status = status; fields.push("STIM-status"); }
-        if (comment && comment !== current.stim_comment) { patch.stim_comment = comment; fields.push("STIM-kommentar"); }
+        const diffs: { field: string; from: string; to: string }[] = [];
+        const track = (
+          field: string,
+          column: string,
+          before: unknown,
+          after: unknown,
+        ) => {
+          patch[column] = after;
+          fields.push(field);
+          diffs.push({
+            field,
+            from: before == null || before === "" ? "(tomt)" : String(before),
+            to: after == null || after === "" ? "(tomt)" : String(after),
+          });
+        };
+        if (project && project !== current.project) track("Projekt", "project", current.project, project);
+        if (creators && creators !== current.creators) track("Upphovspersoner", "creators", current.creators, creators);
+        if (status !== current.stim_status) track("STIM-status", "stim_status", current.stim_status, status);
+        if (comment && comment !== current.stim_comment) track("STIM-kommentar", "stim_comment", current.stim_comment, comment);
         if (publishingType && publishingType !== current.publishing_type) {
-          patch.publishing_type = publishingType; fields.push("förlag");
+          track("Förlag", "publishing_type", current.publishing_type, publishingType);
         }
         if (coPublishers && coPublishers.join(", ") !== (current.co_publishers ?? []).join(", ")) {
-          patch.co_publishers = coPublishers; fields.push("medförlag");
+          patch.co_publishers = coPublishers;
+          fields.push("Medförlag");
+          diffs.push({
+            field: "Medförlag",
+            from: (current.co_publishers ?? []).join(", ") || "(tomt)",
+            to: coPublishers.join(", ") || "(tomt)",
+          });
         }
         if (fields.length > 0) {
-          changed.push({ id: current.id, title: current.title, fields, patch });
+          changed.push({ id: current.id, title: current.title, fields, diffs, patch });
         } else {
           skipped++;
         }
