@@ -247,6 +247,7 @@ Deno.serve(async (req) => {
             updatedWorks: changed.slice(0, 200).map((c) => ({
               title: c.title,
               fields: c.fields.join(", "),
+              diffs: c.diffs,
             })),
           },
           idempotencyKey: `works-sync-report-${crypto.randomUUID()}`,
