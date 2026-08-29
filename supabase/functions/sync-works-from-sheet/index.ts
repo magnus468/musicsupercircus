@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      byTitle.set(key(title), {
+      const newWork = {
         id: "new",
         title,
         project,
@@ -252,7 +252,11 @@ Deno.serve(async (req) => {
         stim_comment: comment,
         publishing_type: publishingType ?? "original",
         co_publishers: coPublishers ?? [],
-      } as never);
+      } as Record<string, any>;
+      const list = byTitle.get(key(title));
+      if (list) list.push(newWork);
+      else byTitle.set(key(title), [newWork]);
+
       toInsert.push({
         title,
         project,
