@@ -116,7 +116,62 @@ Deno.serve(async (req) => {
       existing.push(...(data ?? []));
       if (!data || data.length < 1000) break;
     }
-    const byTitle = new Map(existing.map((w) => [key(w.title), w]));
+    // Flera verk kan ha samma titel men olika upphovspersoner – indexera som lista
+    const byTitle = new Map<string, Record<string, any>[]>();
+    for (const w of existing) {
+      const k = key(w.title);
+      const list = byTitle.get(k);
+      if (list) list.push(w);
+      else byTitle.set(k, [w]);
+    }
+
+    // Namnord (efternamn/förnamn) ur creators-strängen, exkl. förlag/roller/procent
+    const nameWords = (creators: string | null): Set<string> => {
+      const out = new Set<string>();
+      for (const part of (creators ?? "").split(/[,/&]/)) {
+        const nameOnly = part.replace(/\([^)]*\)?/g, " ").trim();
+        for (const w of nameOnly.split(/\s+/)) {
+          const t = w.toLowerCase().replace(/[^a-zåäöéèüæø]/g, "");
+          if (t.length > 2 && !["music", "super", "circus", "extravaganza", "publishing", "repr"].includes(t)) {
+            out.add(t);
+          }
+        }
+      }
+      return out;
+    };
+
+    const overlaps = (a: Set<string>, b: Set<string>) => {
+      for (const w of a) if (b.has(w)) return true;
+      return false;
+    };
+
+    // Matchar en arkrad mot befintligt verk: projekt först, annars gemensamma upphovspersoner.
+    // Ingen match => nytt verk (skriver ALDRIG över ett verk med andra upphovspersoner).
+    const findMatch = (
+      title: string,
+      project: string | null,
+      creators: string,
+    ): Record<string, any> | null => {
+      const candidates = byTitle.get(key(title)) ?? [];
+      if (candidates.length === 0) return null;
+      const words = nameWords(creators);
+      if (project) {
+        const byProject = candidates.filter(
+          (c) => c.project && key(c.project) === key(project),
+        );
+        if (byProject.length === 1) return byProject[0];
+        if (byProject.length > 1) {
+          return byProject.find((c) => overlaps(words, nameWords(c.creators))) ?? null;
+        }
+      }
+      const byCreator = candidates.filter((c) => overlaps(words, nameWords(c.creators)));
+      if (byCreator.length === 1) return byCreator[0];
+      if (byCreator.length > 1) {
+        return byCreator.find((c) => !c.project || !project || key(c.project) === key(project)) ?? null;
+      }
+      return null;
+    };
+
 
     const toInsert: Record<string, unknown>[] = [];
     const changed: {
