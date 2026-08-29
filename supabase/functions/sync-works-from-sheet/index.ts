@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
         ? parsed.publishers.filter((p) => !/^MSC[EP]$/i.test(p))
         : null;
 
-      const current = byTitle.get(key(title));
+      const current = findMatch(title, project, creators);
       if (current) {
         const patch: Record<string, unknown> = {};
         const fields: string[] = [];
