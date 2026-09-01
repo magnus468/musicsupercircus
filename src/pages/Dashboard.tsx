@@ -1,10 +1,21 @@
 import { useWorksStats } from "@/hooks/useWorks";
+import { useSettlementStats } from "@/hooks/useSettlements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Music2, Users, FileCheck, BookOpen } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const Dashboard = () => {
   const { data: stats, isLoading } = useWorksStats();
+  const { data: allTimeSettlements } = useSettlementStats(null);
+  const latestPeriodKey =
+    allTimeSettlements?.periods
+      ?.map((p) => p.distributionKey)
+      .sort()
+      .at(-1) ?? null;
+  const { data: latestSettlements } = useSettlementStats(latestPeriodKey);
+  const latestPeriodName =
+    allTimeSettlements?.periods?.find((p) => p.distributionKey === latestPeriodKey)?.distribution ??
+    latestPeriodKey;
 
   if (isLoading) {
     return <div className="flex items-center justify-center py-20 text-muted-foreground">Laddar statistik...</div>;
