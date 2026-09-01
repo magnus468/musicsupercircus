@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useWorksStats } from "@/hooks/useWorks";
 import { useSettlementStats } from "@/hooks/useSettlements";
 import { isStimPeriod, resolveStimPayoutLabels } from "@/components/settlements/settlementPeriodGrouping";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music2, Users, FileCheck, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Music2, Users, FileCheck, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const fmtKr = (n: number) =>
@@ -25,6 +26,65 @@ const periodSortDate = (label: string): number => {
     return Number(halfMatch[2]) * 100 + (halfMatch[1] === "2" ? 12 : 6);
   }
   return 0;
+};
+
+interface TopWorksCardProps {
+  title: string;
+  works: [string, number][];
+  isLoading?: boolean;
+}
+
+const INITIAL_SHOWN = 10;
+
+const TopWorksCard = ({ title, works, isLoading }: TopWorksCardProps) => {
+  const [expanded, setExpanded] = useState(false);
+  const displayed = expanded ? works : works.slice(0, INITIAL_SHOWN);
+  const canExpand = works.length > INITIAL_SHOWN;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {displayed.map(([name, amount], idx) => (
+            <div key={name} className="flex items-center justify-between gap-4 text-sm">
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                  {idx + 1}
+                </span>
+                <span className="truncate">{name}</span>
+              </span>
+              <span className="font-medium tabular-nums whitespace-nowrap">{fmtKr(amount)}</span>
+            </div>
+          ))}
+          {isLoading && <p className="text-sm text-muted-foreground">Laddar…</p>}
+          {!isLoading && works.length === 0 && (
+            <p className="text-sm text-muted-foreground">Ingen avräkningsdata ännu</p>
+          )}
+        </div>
+        {canExpand && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-4 w-full"
+            onClick={() => setExpanded((v) => !v)}
+          >
+            {expanded ? (
+              <>
+                Visa färre <ChevronUp className="ml-2 h-4 w-4" />
+              </>
+            ) : (
+              <>
+                Visa alla ({works.length}) <ChevronDown className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
 };
 
 const Dashboard = () => {
@@ -55,7 +115,7 @@ const Dashboard = () => {
   const latestPeriodName = latestPeriod?.label ?? null;
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-20 text-muted-foreground">Laddar statistik...</div>;
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Laddar statistik…</div>;
   }
 
   if (!stats) return null;
@@ -119,51 +179,16 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Top songs all time */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Topp verk – alla tider</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(allTimeSettlements?.topWorks ?? []).map(([name, amount]) => (
-                <div key={name} className="flex items-center justify-between gap-4 text-sm">
-                  <span className="truncate">{name}</span>
-                  <span className="font-medium tabular-nums whitespace-nowrap">{fmtKr(amount)}</span>
-                </div>
-              ))}
-              {!allTimeSettlements && (
-                <p className="text-sm text-muted-foreground">Laddar…</p>
-              )}
-              {allTimeSettlements && allTimeSettlements.topWorks.length === 0 && (
-                <p className="text-sm text-muted-foreground">Ingen avräkningsdata ännu</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top songs latest settlement */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Topp verk – senaste avräkningen{latestPeriodName ? ` (${latestPeriodName})` : ""}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(latestSettlements?.topWorks ?? []).map(([name, amount]) => (
-                <div key={name} className="flex items-center justify-between gap-4 text-sm">
-                  <span className="truncate">{name}</span>
-                  <span className="font-medium tabular-nums whitespace-nowrap">{fmtKr(amount)}</span>
-                </div>
-              ))}
-              {!latestSettlements && (
-                <p className="text-sm text-muted-foreground">Laddar…</p>
-              )}
-              {latestSettlements && latestSettlements.topWorks.length === 0 && (
-                <p className="text-sm text-muted-foreground">Ingen avräkningsdata ännu</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <TopWorksCard
+          title="Topp verk – alla tider"
+          works={allTimeSettlements?.topWorks ?? []}
+          isLoading={!allTimeSettlements}
+        />
+        <TopWorksCard
+          title={`Topp verk – senaste avräkningen${latestPeriodName ? ` (${latestPeriodName})` : ""}`}
+          works={latestSettlements?.topWorks ?? []}
+          isLoading={!latestSettlements}
+        />
       </div>
 
       {/* Top creators chart */}
