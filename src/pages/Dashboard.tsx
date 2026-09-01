@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Music2, Users, FileCheck, BookOpen } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+const fmtKr = (n: number) =>
+  n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
+
 const Dashboard = () => {
   const { data: stats, isLoading } = useWorksStats();
   const { data: allTimeSettlements } = useSettlementStats(null);
@@ -87,41 +90,47 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Publishing type breakdown */}
+        {/* Top songs all time */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Internt förlag</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Topp verk – alla tider</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {typeData.map((d) => (
-                <div key={d.name} className="flex items-center gap-3">
-                  <span className="w-16 text-sm text-muted-foreground">{d.name}</span>
-                  <div className="flex-1 h-8 bg-muted rounded-md overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-md transition-all duration-500 flex items-center px-3"
-                      style={{ width: `${Math.max((d.value / stats.total) * 100, 4)}%` }}
-                    >
-                      <span className="text-xs font-medium text-primary-foreground">{d.value}</span>
-                    </div>
-                  </div>
+            <div className="space-y-2">
+              {(allTimeSettlements?.topWorks ?? []).map(([name, amount]) => (
+                <div key={name} className="flex items-center justify-between gap-4 text-sm">
+                  <span className="truncate">{name}</span>
+                  <span className="font-medium tabular-nums whitespace-nowrap">{fmtKr(amount)}</span>
                 </div>
               ))}
+              {!allTimeSettlements && (
+                <p className="text-sm text-muted-foreground">Laddar…</p>
+              )}
+              {allTimeSettlements && allTimeSettlements.topWorks.length === 0 && (
+                <p className="text-sm text-muted-foreground">Ingen avräkningsdata ännu</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Co-publishers */}
+        {/* Top songs latest settlement */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Top co-publishers</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Topp verk – senaste avräkningen{latestPeriodName ? ` (${latestPeriodName})` : ""}
+            </CardTitle>
+          </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {stats.topCoPublishers.map(([name, count]) => (
-                <div key={name} className="flex items-center justify-between text-sm">
-                  <span>{name}</span>
-                  <span className="font-medium text-muted-foreground">{count} verk</span>
+              {(latestSettlements?.topWorks ?? []).map(([name, amount]) => (
+                <div key={name} className="flex items-center justify-between gap-4 text-sm">
+                  <span className="truncate">{name}</span>
+                  <span className="font-medium tabular-nums whitespace-nowrap">{fmtKr(amount)}</span>
                 </div>
               ))}
-              {stats.topCoPublishers.length === 0 && (
-                <p className="text-sm text-muted-foreground">Ingen data ännu</p>
+              {!latestSettlements && (
+                <p className="text-sm text-muted-foreground">Laddar…</p>
+              )}
+              {latestSettlements && latestSettlements.topWorks.length === 0 && (
+                <p className="text-sm text-muted-foreground">Ingen avräkningsdata ännu</p>
               )}
             </div>
           </CardContent>
