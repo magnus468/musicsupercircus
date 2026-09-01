@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import { useWorksStats } from "@/hooks/useWorks";
 import { useSettlementStats } from "@/hooks/useSettlements";
+import { isStimPeriod, resolveStimPayoutLabels } from "@/components/settlements/settlementPeriodGrouping";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Music2, Users, FileCheck, BookOpen } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
@@ -7,18 +9,50 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 const fmtKr = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
+const MONTH_INDEX: Record<string, number> = {
+  januari: 1, februari: 2, mars: 3, april: 4, maj: 5, juni: 6,
+  juli: 7, augusti: 8, september: 9, oktober: 10, november: 11, december: 12,
+};
+
+/** Chronological sort value for a period label like "Juni 2026" or "Warner/Chappell H1 2026" */
+const periodSortDate = (label: string): number => {
+  const monthMatch = label.match(/(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\s+(\d{4})/i);
+  if (monthMatch) {
+    return Number(monthMatch[2]) * 100 + (MONTH_INDEX[monthMatch[1].toLowerCase()] ?? 0);
+  }
+  const halfMatch = label.match(/H([12])\s*(\d{4})/i);
+  if (halfMatch) {
+    return Number(halfMatch[2]) * 100 + (halfMatch[1] === "2" ? 12 : 6);
+  }
+  return 0;
+};
+
 const Dashboard = () => {
   const { data: stats, isLoading } = useWorksStats();
   const { data: allTimeSettlements } = useSettlementStats(null);
-  const latestPeriodKey =
-    allTimeSettlements?.periods
-      ?.map((p) => p.distributionKey)
-      .sort()
-      .at(-1) ?? null;
+
+  // Group periods the same way as the settlements page, then pick the chronologically latest
+  const latestPeriod = useMemo(() => {
+    const periods = allTimeSettlements?.periods;
+    if (!periods || periods.length === 0) return null;
+    const stimLabels = resolveStimPayoutLabels(periods);
+    const groups = new Map<string, { label: string; keys: string[]; sortDate: number }>();
+    for (const p of periods) {
+      const label = isStimPeriod(p.distributionKey)
+        ? stimLabels.get(p.distributionKey) ?? p.distribution
+        : p.distribution;
+      const groupKey = isStimPeriod(p.distributionKey) ? `stim-${label}` : p.distributionKey;
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, { label, keys: [], sortDate: periodSortDate(label) });
+      }
+      groups.get(groupKey)!.keys.push(p.distributionKey);
+    }
+    return Array.from(groups.values()).sort((a, b) => b.sortDate - a.sortDate)[0] ?? null;
+  }, [allTimeSettlements]);
+
+  const latestPeriodKey = latestPeriod ? latestPeriod.keys.join(",") : null;
   const { data: latestSettlements } = useSettlementStats(latestPeriodKey);
-  const latestPeriodName =
-    allTimeSettlements?.periods?.find((p) => p.distributionKey === latestPeriodKey)?.distribution ??
-    latestPeriodKey;
+  const latestPeriodName = latestPeriod?.label ?? null;
 
   if (isLoading) {
     return <div className="flex items-center justify-center py-20 text-muted-foreground">Laddar statistik...</div>;
