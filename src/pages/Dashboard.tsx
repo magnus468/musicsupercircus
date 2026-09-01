@@ -26,11 +26,6 @@ const Dashboard = () => {
 
   if (!stats) return null;
 
-  const typeData = [
-    { name: "Original", value: stats.byType.original },
-    { name: "MSCE", value: stats.byType.MSCE },
-    { name: "MSCP", value: stats.byType.MSCP },
-  ];
 
   const creatorData = stats.topCreators.map(([name, count]) => ({ name: name.length > 20 ? name.slice(0, 18) + "…" : name, fullName: name, count }));
   const barColors = ["hsl(220, 70%, 45%)", "hsl(220, 70%, 55%)", "hsl(220, 70%, 65%)", "hsl(220, 60%, 50%)", "hsl(36, 90%, 55%)"];
