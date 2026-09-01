@@ -42,6 +42,12 @@ function parseSplitEntry(part: string, defaultRole: "CA" | "E"): string | null {
   if (!m) return null;
   const name = m[1].trim();
   const inner = m[2];
+  // "NOT CONTROLLED" = vi representerar inte denna upphovsperson (ingen repr, inga andelar)
+  if (/NOT[_\s]*CONTROLLED/i.test(inner)) {
+    const roleM = inner.match(/(CA|C|A|E|AR|SA)/i);
+    const role = (roleM?.[1] || defaultRole).toUpperCase();
+    return `${name} (${role})`;
+  }
   const split = inner.match(
     /(?:^|[_\s])(CA|C|A|E|AR|SA)?[_\s]*(?:Norden[_\s]*)?(\d+(?:[.,]\d+)?)\s*%[_\s]*ROW[_\s:]*(\d+(?:[.,]\d+)?)\s*%/i,
   );
