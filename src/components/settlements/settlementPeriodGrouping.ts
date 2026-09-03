@@ -22,6 +22,22 @@ const DIRECT_PAYOUT_PATTERN = new RegExp(`^\\s*${monthPatternSource}\\s*$`, "i")
 
 const toTitleCase = (month: string) => month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
 
+export type SettlementPublisher = "MSCE" | "MSCP";
+
+export const encodeSettlementPeriodKey = (publisher: SettlementPublisher, key: string) =>
+  `${publisher}::${key}`;
+
+export const decodeSettlementPeriodKey = (value: string): { publisher: SettlementPublisher | null; key: string } => {
+  const separatorIndex = value.indexOf("::");
+  if (separatorIndex < 0) return { publisher: null, key: value };
+
+  const publisher = value.slice(0, separatorIndex);
+  return {
+    publisher: publisher === "MSCE" || publisher === "MSCP" ? publisher : null,
+    key: value.slice(separatorIndex + 2),
+  };
+};
+
 export function isStimPeriod(distributionKey: string): boolean {
   return !distributionKey.startsWith("WC-");
 }

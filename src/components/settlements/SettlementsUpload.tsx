@@ -98,6 +98,7 @@ interface ParsedRow {
   amount: number;
   distribution: string | null;
   distribution_key: string | null;
+  publisher: "MSCE" | "MSCP";
   recipient_name: string | null;
   member_number: string | null;
   ipi_name_number: string | null;
@@ -186,6 +187,7 @@ const parseWcmRows = (
       amount: parseDotNumber(val("amount_paid")),
       distribution,
       distribution_key,
+      publisher: "MSCP",
       recipient_name: val("deal_scope_name"),
       member_number: null,
       ipi_name_number: null,
@@ -205,6 +207,14 @@ const parseWcmRows = (
     });
   }
   return rows;
+};
+
+const detectStimPublisher = (data: Record<string, string>[]): "MSCE" | "MSCP" => {
+  const recipients = data
+    .map((row) => String(row.name ?? "").trim().toLowerCase())
+    .filter(Boolean);
+
+  return recipients.some((name) => name.includes("music super circus publishing")) ? "MSCP" : "MSCE";
 };
 
 export const SettlementsUpload = () => {
@@ -262,6 +272,7 @@ export const SettlementsUpload = () => {
           amount: parseSwedishNumber(get("amount")),
           distribution: get("distribution") ?? null,
           distribution_key: get("distribution_key") ?? null,
+          publisher: detectStimPublisher(result.data),
           recipient_name: get("recipient_name") ?? null,
           member_number: get("member_number") ?? null,
           ipi_name_number: get("ipi_name_number") ?? null,
@@ -293,20 +304,22 @@ export const SettlementsUpload = () => {
         return;
       }
 
-      // Duplicate check: warn if any distribution_key in the file already exists.
+      // Duplicate check: warn if a distribution key for the same publisher already exists.
       const keys = Array.from(
         new Set(rows.map((r) => r.distribution_key).filter((k): k is string => !!k))
       );
+      const publisher = rows[0]?.publisher ?? "MSCE";
       if (keys.length > 0) {
         const { data: existing } = await supabase
           .from("settlements")
           .select("distribution_key")
           .in("distribution_key", keys)
+          .eq("publisher", publisher)
           .limit(1);
         if (existing && existing.length > 0) {
           const dupKey = existing[0].distribution_key;
           const ok = window.confirm(
-            `Avräkningsnyckel "${dupKey}" finns redan i databasen. ` +
+            `Avräkningsnyckel "${dupKey}" finns redan för ${publisher}. ` +
               `Vill du ändå ladda upp filen? (Detta kan skapa dubbletter.)`
           );
           if (!ok) {
@@ -329,7 +342,7 @@ export const SettlementsUpload = () => {
 
       const total = rows.reduce((sum, r) => sum + r.amount, 0);
       toast.success(
-        `Importerade ${inserted} rader (${total.toLocaleString("sv-SE", {
+        `Importerade ${inserted} rader för ${publisher} (${total.toLocaleString("sv-SE", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })} kr)`

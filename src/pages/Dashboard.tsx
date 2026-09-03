@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useWorksStats } from "@/hooks/useWorks";
 import { useSettlementStats } from "@/hooks/useSettlements";
-import { isStimPeriod, resolveStimPayoutLabels } from "@/components/settlements/settlementPeriodGrouping";
+import { encodeSettlementPeriodKey, isStimPeriod, resolveStimPayoutLabels } from "@/components/settlements/settlementPeriodGrouping";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music2, Users, FileCheck, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
@@ -91,7 +91,8 @@ const Dashboard = () => {
   const { data: stats, isLoading } = useWorksStats();
   const { data: allTimeSettlements } = useSettlementStats(null);
 
-  // Group periods the same way as the settlements page, then pick the chronologically latest
+  // Group by the displayed payout period and keep publisher-qualified keys so that
+  // the dashboard includes both publishers when their latest period is the same.
   const latestPeriod = useMemo(() => {
     const periods = allTimeSettlements?.periods;
     if (!periods || periods.length === 0) return null;
@@ -102,10 +103,16 @@ const Dashboard = () => {
         ? stimLabels.get(p.distributionKey) ?? p.distribution
         : p.distribution;
       const groupKey = isStimPeriod(p.distributionKey) ? `stim-${label}` : p.distributionKey;
-      if (!groups.has(groupKey)) {
-        groups.set(groupKey, { label, keys: [], sortDate: periodSortDate(label) });
+      const existing = groups.get(groupKey);
+      if (existing) {
+        existing.keys.push(encodeSettlementPeriodKey(p.publisher, p.distributionKey));
+      } else {
+        groups.set(groupKey, {
+          label,
+          keys: [encodeSettlementPeriodKey(p.publisher, p.distributionKey)],
+          sortDate: periodSortDate(label),
+        });
       }
-      groups.get(groupKey)!.keys.push(p.distributionKey);
     }
     return Array.from(groups.values()).sort((a, b) => b.sortDate - a.sortDate)[0] ?? null;
   }, [allTimeSettlements]);

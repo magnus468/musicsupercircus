@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { decodeSettlementPeriodKey, type SettlementPublisher } from "@/components/settlements/settlementPeriodGrouping";
 
 export interface Settlement {
   id: string;
@@ -8,6 +9,7 @@ export interface Settlement {
   amount: number;
   distribution: string | null;
   distribution_key: string | null;
+  publisher: SettlementPublisher;
   recipient_name: string | null;
   member_number: string | null;
   ipi_name_number: string | null;
@@ -30,6 +32,7 @@ export interface Settlement {
 export interface SettlementPeriod {
   distribution: string;
   distributionKey: string;
+  publisher: SettlementPublisher;
   rowCount: number;
   total: number;
 }
@@ -70,11 +73,23 @@ export const useSettlements = (
         .range(from, to);
 
       if (distributionKey) {
-        const keys = distributionKey.split(",");
-        if (keys.length === 1) {
-          query = query.eq("distribution_key", keys[0]);
+        const selected = distributionKey.split(",").map(decodeSettlementPeriodKey);
+        const publishers = new Set(selected.map((item) => item.publisher).filter(Boolean));
+        const rawKeys = selected.map((item) => item.key);
+
+        if (publishers.size === 1 && selected.every((item) => item.publisher)) {
+          query = query.in("distribution_key", rawKeys).eq("publisher", Array.from(publishers)[0]);
+        } else if (selected.every((item) => !item.publisher)) {
+          query = query.in("distribution_key", rawKeys);
         } else {
-          query = query.in("distribution_key", keys);
+          query = query.or(
+            selected
+              .map((item) => item.publisher
+                ? `and(distribution_key.eq.${item.key},publisher.eq.${item.publisher})`
+                : `distribution_key.eq.${item.key}`
+              )
+              .join(",")
+          );
         }
       }
 
