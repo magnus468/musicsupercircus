@@ -209,12 +209,16 @@ const parseWcmRows = (
   return rows;
 };
 
+// STIM: MSCP = "MUSIC SUPER CIRCUS PUBLISHING" (medlemsnr 5080309),
+// MSCE = "MUSIC SUPER CIRCUS EXTRAVAGANZA AB" (medlemsnr 5022077).
 const detectStimPublisher = (data: Record<string, string>[]): "MSCE" | "MSCP" => {
-  const recipients = data
-    .map((row) => String(row.name ?? "").trim().toLowerCase())
-    .filter(Boolean);
-
-  return recipients.some((name) => name.includes("music super circus publishing")) ? "MSCP" : "MSCE";
+  for (const row of data) {
+    const name = String(row.name ?? "").trim().toLowerCase();
+    const member = String(row.medlemsnummer ?? row["member number"] ?? "").trim();
+    if (name.includes("music super circus publishing") || member === "5080309") return "MSCP";
+    if (name.includes("music super circus extravaganza") || member === "5022077") return "MSCE";
+  }
+  return "MSCE";
 };
 
 export const SettlementsUpload = () => {
