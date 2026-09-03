@@ -332,19 +332,21 @@ const WorkDetail = () => {
             <div className="rounded-lg border overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Period</TableHead>
-                    <TableHead className="text-right">Belopp</TableHead>
-                    <TableHead className="text-right">Rader</TableHead>
-                    <TableHead>Länder</TableHead>
-                    <TableHead>Källor</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {workSettlements.map((ws) => (
-                    <TableRow key={ws.distribution_key}>
-                      <TableCell className="font-medium whitespace-nowrap">{ws.distribution}</TableCell>
-                      <TableCell className="text-right tabular-nums whitespace-nowrap">{fmtKr(ws.total_amount)}</TableCell>
+                   <TableRow>
+                     <TableHead>Period</TableHead>
+                     <TableHead>Förlag</TableHead>
+                     <TableHead className="text-right">Belopp</TableHead>
+                     <TableHead className="text-right">Rader</TableHead>
+                     <TableHead>Länder</TableHead>
+                     <TableHead>Källor</TableHead>
+                   </TableRow>
+                 </TableHeader>
+                 <TableBody>
+                   {workSettlements.map((ws) => (
+                     <TableRow key={`${ws.publisher}-${ws.distribution_key}`}>
+                       <TableCell className="font-medium whitespace-nowrap">{ws.distribution}</TableCell>
+                       <TableCell><Badge variant="secondary" className="text-xs">{ws.publisher}</Badge></TableCell>
+                       <TableCell className="text-right tabular-nums whitespace-nowrap">{fmtKr(ws.total_amount)}</TableCell>
                       <TableCell className="text-right tabular-nums">{ws.row_count}</TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
                         {ws.countries.slice(0, 5).join(", ")}{ws.countries.length > 5 ? ` +${ws.countries.length - 5}` : ""}

@@ -110,6 +110,7 @@ export const useSettlements = (
 export interface WorkSettlementSummary {
   distribution: string;
   distribution_key: string;
+  publisher: SettlementPublisher;
   total_amount: number;
   row_count: number;
   countries: string[];
@@ -128,17 +129,20 @@ export const useWorkSettlements = (workTitle: string | undefined) => {
       if (!workTitle) return [];
       const { data, error } = await supabase
         .from("settlements")
-        .select("distribution, distribution_key, amount, country, source")
+        .select("distribution, distribution_key, publisher, amount, country, source")
         .ilike("work_title", workTitle.trim());
       if (error) throw error;
 
-      const byPeriod = new Map<string, { distribution: string; distribution_key: string; total: number; count: number; countries: Set<string>; sources: Set<string> }>();
+      const byPeriod = new Map<string, { distribution: string; distribution_key: string; publisher: SettlementPublisher; total: number; count: number; countries: Set<string>; sources: Set<string> }>();
       (data as any[]).forEach((r) => {
         const key = r.distribution_key || "unknown";
-        if (!byPeriod.has(key)) {
-          byPeriod.set(key, { distribution: r.distribution || key, distribution_key: key, total: 0, count: 0, countries: new Set(), sources: new Set() });
+        const publisher = (r.publisher === "MSCP" ? "MSCP" : "MSCE") as SettlementPublisher;
+        const groupKey = `${publisher}::${key}`;
+        if (!byPeriod.has(groupKey)) {
+          byPeriod.set(groupKey, { distribution: r.distribution || key, distribution_key: key, publisher, total: 0, count: 0, countries: new Set(), sources: new Set() });
         }
-        const p = byPeriod.get(key)!;
+        const p = byPeriod.get(groupKey);
+        if (!p) return;
         p.total += Number(r.amount);
         p.count += 1;
         if (r.country) p.countries.add(r.country);
@@ -149,12 +153,13 @@ export const useWorkSettlements = (workTitle: string | undefined) => {
         .map((p) => ({
           distribution: p.distribution,
           distribution_key: p.distribution_key,
+          publisher: p.publisher,
           total_amount: p.total,
           row_count: p.count,
           countries: Array.from(p.countries),
           sources: Array.from(p.sources),
         }))
-        .sort((a, b) => b.distribution_key.localeCompare(a.distribution_key));
+        .sort((a, b) => `${b.publisher}::${b.distribution_key}`.localeCompare(`${a.publisher}::${a.distribution_key}`));
     },
   });
 };
