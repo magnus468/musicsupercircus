@@ -63,38 +63,37 @@ function extractMonthYearAnywhere(distribution: string | null): string | null {
 }
 
 export function resolveStimPayoutLabels(periods: SettlementPeriod[]): Map<string, string> {
-  const directPayouts: { key: number; label: string }[] = [];
+  const directPayouts = new Map<SettlementPublisher, { key: number; label: string }[]>();
 
   for (const period of periods) {
     if (!isStimPeriod(period.distributionKey)) continue;
     const key = Number.parseInt(period.distributionKey, 10);
     const label = extractDirectPayoutLabel(period.distribution);
     if (Number.isNaN(key) || !label) continue;
-    directPayouts.push({ key, label });
+    const payouts = directPayouts.get(period.publisher) ?? [];
+    payouts.push({ key, label });
+    directPayouts.set(period.publisher, payouts);
   }
 
-  directPayouts.sort((a, b) => a.key - b.key);
+  for (const payouts of directPayouts.values()) payouts.sort((a, b) => a.key - b.key);
 
-  const findNearestDirectLabel = (distributionKey: string): string | null => {
+  const findNearestDirectLabel = (publisher: SettlementPublisher, distributionKey: string): string | null => {
+    const payouts = directPayouts.get(publisher) ?? [];
     const key = Number.parseInt(distributionKey, 10);
-    if (Number.isNaN(key) || directPayouts.length === 0) return null;
+    if (Number.isNaN(key) || payouts.length === 0) return null;
 
     // Sub-periods always have keys >= their main period's key,
     // so pick the nearest preceding (or equal) direct payout.
     let best: { key: number; label: string } | null = null;
-    for (const payout of directPayouts) {
-      if (payout.key <= key) {
-        if (!best || payout.key > best.key) {
-          best = payout;
-        }
-      }
+    for (const payout of payouts) {
+      if (payout.key <= key && (!best || payout.key > best.key)) best = payout;
     }
 
-    // Fallback: if no preceding payout exists, use the closest one overall
+    // Fallback: if no preceding payout exists, use the closest one overall.
     if (!best) {
-      best = directPayouts[0];
+      best = payouts[0];
       let minDistance = Math.abs(key - best.key);
-      for (const payout of directPayouts) {
+      for (const payout of payouts) {
         const distance = Math.abs(key - payout.key);
         if (distance < minDistance) {
           best = payout;
@@ -103,21 +102,23 @@ export function resolveStimPayoutLabels(periods: SettlementPeriod[]): Map<string
       }
     }
 
-    return best?.label ?? null;
+    return best.label;
   };
 
   const resolved = new Map<string, string>();
-
   for (const period of periods) {
     if (!isStimPeriod(period.distributionKey)) continue;
 
+    const qualifiedKey = encodeSettlementPeriodKey(period.publisher, period.distributionKey);
     const label =
       extractDirectPayoutLabel(period.distribution) ??
       extractMonthYearAnywhere(period.distribution) ??
-      findNearestDirectLabel(period.distributionKey) ??
+      findNearestDirectLabel(period.publisher, period.distributionKey) ??
       period.distribution;
 
-    resolved.set(period.distributionKey, label);
+    resolved.set(qualifiedKey, label);
+    // Keep a raw-key fallback for callers working with legacy, unqualified data.
+    if (!resolved.has(period.distributionKey)) resolved.set(period.distributionKey, label);
   }
 
   return resolved;

@@ -99,10 +99,11 @@ const Dashboard = () => {
     const stimLabels = resolveStimPayoutLabels(periods);
     const groups = new Map<string, { label: string; keys: string[]; sortDate: number }>();
     for (const p of periods) {
+      const qualifiedKey = encodeSettlementPeriodKey(p.publisher, p.distributionKey);
       const label = isStimPeriod(p.distributionKey)
-        ? stimLabels.get(p.distributionKey) ?? p.distribution
+        ? stimLabels.get(qualifiedKey) ?? p.distribution
         : p.distribution;
-      const groupKey = isStimPeriod(p.distributionKey) ? `stim-${label}` : p.distributionKey;
+      const groupKey = isStimPeriod(p.distributionKey) ? `stim-${label}` : qualifiedKey;
       const existing = groups.get(groupKey);
       if (existing) {
         existing.keys.push(encodeSettlementPeriodKey(p.publisher, p.distributionKey));

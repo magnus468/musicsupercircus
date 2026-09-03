@@ -90,7 +90,7 @@ const parseDate = (raw: string | undefined | null): string | null => {
 };
 
 const normalizeHeader = (h: string) =>
-  h.toLowerCase().replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  h.replace(/^\ufeff/, "").toLowerCase().replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 
 interface ParsedRow {
   work_title: string;

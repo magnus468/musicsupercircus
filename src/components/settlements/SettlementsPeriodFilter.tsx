@@ -101,8 +101,9 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
     if (!periods || periods.length === 0) return [];
     const map = new Map<string, GroupedPeriod>();
     for (const p of periods) {
+      const qualifiedKey = encodeSettlementPeriodKey(p.publisher, p.distributionKey);
       const label = isStimPeriod(p.distributionKey)
-        ? stimPayoutLabels.get(p.distributionKey) ?? p.distribution
+        ? stimPayoutLabels.get(qualifiedKey) ?? p.distribution
         : p.distribution;
       const groupKey = `${p.publisher}-${isStimPeriod(p.distributionKey) ? `stim-${label}` : p.distributionKey}`;
       if (!map.has(groupKey)) {
@@ -125,7 +126,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       const first = decodeSettlementPeriodKey(gp.keys[0]);
       const year = first.key.startsWith("WC-")
         ? first.key.slice(3, 7)
-        : extractYearFromLabel(stimPayoutLabels.get(first.key) ?? gp.label) ?? "Övrigt";
+        : extractYearFromLabel(stimPayoutLabels.get(gp.keys[0]) ?? gp.label) ?? "Övrigt";
       if (!map.has(year)) {
         map.set(year, { year, periods: [], publishers: [], totalAmount: 0, totalRows: 0 });
       }
