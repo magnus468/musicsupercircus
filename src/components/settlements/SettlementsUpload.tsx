@@ -187,7 +187,7 @@ const parseWcmRows = (
       amount: parseDotNumber(val("amount_paid")),
       distribution,
       distribution_key,
-      publisher: "MSCP",
+      publisher: "MSCE",
       recipient_name: val("deal_scope_name"),
       member_number: null,
       ipi_name_number: null,
