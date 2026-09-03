@@ -17,33 +17,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { SettlementPeriod } from "@/hooks/useSettlements";
-import { extractYearFromLabel, isStimPeriod, resolveStimPayoutLabels } from "./settlementPeriodGrouping";
+import {
+  decodeSettlementPeriodKey,
+  encodeSettlementPeriodKey,
+  extractYearFromLabel,
+  isStimPeriod,
+  resolveStimPayoutLabels,
+  type SettlementPublisher,
+} from "./settlementPeriodGrouping";
 
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
 
-// Publisher derivation: all uploaded settlements are currently MSCE (STIM direkt).
-// MSCP uploads (via Warner/Chappell) haven't been imported yet.
-const publishersForKeys = (_keys: string[]): Array<"MSCE" | "MSCP"> => ["MSCE"];
-
-const PublisherBadge = ({ pub }: { pub: "MSCE" | "MSCP" }) => (
+const PublisherBadge = ({ pub }: { pub: SettlementPublisher }) => (
   <span
     className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${
       pub === "MSCP"
         ? "bg-blue-500/15 text-blue-700 dark:text-blue-300"
         : "bg-primary/15 text-primary"
     }`}
-    title={pub === "MSCP" ? "Music Super Circus Publishing (via Warner/Chappell)" : "Music Super Circus Extravaganza (STIM direkt)"}
+    title={pub === "MSCP" ? "Music Super Circus Publishing" : "Music Super Circus Extravaganza"}
   >
     {pub}
   </span>
 );
 
-
-
-
 interface GroupedPeriod {
   label: string;
+  publisher: SettlementPublisher;
   keys: string[];
   total: number;
   rowCount: number;
@@ -52,6 +53,7 @@ interface GroupedPeriod {
 interface YearGroup {
   year: string;
   periods: GroupedPeriod[];
+  publishers: SettlementPublisher[];
   totalAmount: number;
   totalRows: number;
 }
@@ -72,10 +74,12 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
   const handleDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
+    const rawKeys = pendingDelete.keys.map((key) => decodeSettlementPeriodKey(key).key);
     const { error } = await supabase
       .from("settlements")
       .delete()
-      .in("distribution_key", pendingDelete.keys);
+      .in("distribution_key", rawKeys)
+      .eq("publisher", pendingDelete.publisher);
     setDeleting(false);
     if (error) {
       toast.error("Kunde inte ta bort: " + error.message);
@@ -91,25 +95,23 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
   };
 
 
-  // Group sub-periods by base name for STIM periods
+  // Group STIM sub-periods by payout month and publisher. This keeps MSCE and MSCP
+  // separate even when they share the same numeric distribution key.
   const groupedPeriods = useMemo((): GroupedPeriod[] => {
     if (!periods || periods.length === 0) return [];
     const map = new Map<string, GroupedPeriod>();
     for (const p of periods) {
-      let groupKey: string;
-      let label: string;
-      if (isStimPeriod(p.distributionKey)) {
-        label = stimPayoutLabels.get(p.distributionKey) ?? p.distribution;
-        groupKey = `stim-${label}`;
-      } else {
-        label = p.distribution;
-        groupKey = p.distributionKey;
-      }
+      const qualifiedKey = encodeSettlementPeriodKey(p.publisher, p.distributionKey);
+      const label = isStimPeriod(p.distributionKey)
+        ? stimPayoutLabels.get(qualifiedKey) ?? p.distribution
+        : p.distribution;
+      const groupKey = `${p.publisher}-${isStimPeriod(p.distributionKey) ? `stim-${label}` : p.distributionKey}`;
       if (!map.has(groupKey)) {
-        map.set(groupKey, { label, keys: [], total: 0, rowCount: 0 });
+        map.set(groupKey, { label, publisher: p.publisher, keys: [], total: 0, rowCount: 0 });
       }
-      const g = map.get(groupKey)!;
-      g.keys.push(p.distributionKey);
+      const g = map.get(groupKey);
+      if (!g) continue;
+      g.keys.push(encodeSettlementPeriodKey(p.publisher, p.distributionKey));
       g.total += p.total;
       g.rowCount += p.rowCount;
     }
@@ -121,15 +123,17 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
 
     const map = new Map<string, YearGroup>();
     for (const gp of groupedPeriods) {
-      const firstKey = gp.keys[0];
-      const year = firstKey.startsWith("WC-")
-        ? firstKey.slice(3, 7)
-        : extractYearFromLabel(stimPayoutLabels.get(firstKey) ?? gp.label) ?? "Övrigt";
+      const first = decodeSettlementPeriodKey(gp.keys[0]);
+      const year = first.key.startsWith("WC-")
+        ? first.key.slice(3, 7)
+        : extractYearFromLabel(stimPayoutLabels.get(gp.keys[0]) ?? gp.label) ?? "Övrigt";
       if (!map.has(year)) {
-        map.set(year, { year, periods: [], totalAmount: 0, totalRows: 0 });
+        map.set(year, { year, periods: [], publishers: [], totalAmount: 0, totalRows: 0 });
       }
-      const g = map.get(year)!;
+      const g = map.get(year);
+      if (!g) continue;
       g.periods.push(gp);
+      if (!g.publishers.includes(gp.publisher)) g.publishers.push(gp.publisher);
       g.totalAmount += gp.total;
       g.totalRows += gp.rowCount;
     }
@@ -217,7 +221,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                       )}
                       <span className="font-semibold">{group.year}</span>
                       <span className="flex items-center gap-1">
-                        {publishersForKeys(group.periods.flatMap((p) => p.keys)).map((pub) => (
+                        {group.publishers.map((pub) => (
                           <PublisherBadge key={pub} pub={pub} />
                         ))}
                       </span>
@@ -232,7 +236,6 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                     {group.periods.map((gp) => {
                       const keyStr = gp.keys.join(",");
                       const isActive = selectedKey === keyStr;
-                      const pubs = publishersForKeys(gp.keys);
                       return (
                         <div
                           key={keyStr}
@@ -245,9 +248,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                             className="flex-1 flex items-center justify-between px-3 py-2 text-sm text-left"
                           >
                             <span className="flex items-center gap-2 min-w-0">
-                              {pubs.map((pub) => (
-                                <PublisherBadge key={pub} pub={pub} />
-                              ))}
+                              <PublisherBadge pub={gp.publisher} />
                               <span className={`truncate ${isActive ? "font-medium" : ""}`}>{gp.label}</span>
                             </span>
                             <span className={`tabular-nums text-sm shrink-0 ml-2 ${isActive ? "" : "text-muted-foreground"}`}>
@@ -281,9 +282,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
         {selectedGroupedPeriod && (
           <p className="mt-3 text-xs text-muted-foreground border-t pt-2 flex items-center gap-2 flex-wrap">
             <span>Visar data för:</span>
-            {publishersForKeys(selectedGroupedPeriod.keys).map((pub) => (
-              <PublisherBadge key={pub} pub={pub} />
-            ))}
+            <PublisherBadge pub={selectedGroupedPeriod.publisher} />
             <span className="font-medium text-foreground">{selectedGroupedPeriod.label}</span>
             <span>— {fmt(selectedGroupedPeriod.total)}</span>
           </p>

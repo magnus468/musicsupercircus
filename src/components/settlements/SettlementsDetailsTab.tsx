@@ -58,9 +58,10 @@ export const SettlementsDetailsTab = ({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Verk</TableHead>
-                    <TableHead className="text-right">Belopp</TableHead>
-                    <TableHead>Kompositör</TableHead>
+                     <TableHead>Verk</TableHead>
+                     <TableHead>Förlag</TableHead>
+                     <TableHead className="text-right">Belopp</TableHead>
+                     <TableHead>Kompositör</TableHead>
                     <TableHead>Rättighet</TableHead>
                     <TableHead>Land</TableHead>
                     <TableHead>Källa</TableHead>
@@ -71,11 +72,14 @@ export const SettlementsDetailsTab = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium whitespace-nowrap">{s.work_title}</TableCell>
-                      <TableCell className="text-right tabular-nums whitespace-nowrap">{fmt(Number(s.amount))}</TableCell>
-                      <TableCell>{s.composers}</TableCell>
+                   {rows.map((s) => (
+                     <TableRow key={s.id}>
+                       <TableCell className="font-medium whitespace-nowrap">{s.work_title}</TableCell>
+                       <TableCell>
+                         <Badge variant="secondary" className="text-xs">{s.publisher}</Badge>
+                       </TableCell>
+                       <TableCell className="text-right tabular-nums whitespace-nowrap">{fmt(Number(s.amount))}</TableCell>
+                       <TableCell>{s.composers}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs whitespace-nowrap">
                           {s.type_of_right}
