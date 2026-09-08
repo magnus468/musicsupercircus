@@ -213,6 +213,7 @@ Deno.serve(async (req) => {
 
       const current = findMatch(title, project, creators);
       if (current) {
+        if (claimed.has(current.id)) { skipped++; continue; }
         const patch: Record<string, unknown> = {};
         const fields: string[] = [];
         const diffs: { field: string; from: string; to: string }[] = [];
