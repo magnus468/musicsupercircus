@@ -297,6 +297,24 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_statement_map: {
+        Row: {
+          distribution_key: string
+          label: string
+          publisher: string
+        }
+        Insert: {
+          distribution_key: string
+          label: string
+          publisher: string
+        }
+        Update: {
+          distribution_key?: string
+          label?: string
+          publisher?: string
+        }
+        Relationships: []
+      }
       settlement_title_mappings: {
         Row: {
           created_at: string
@@ -339,6 +357,7 @@ export type Database = {
           role: string | null
           share: number | null
           source: string | null
+          statement_label: string | null
           sub_source: string | null
           to_date: string | null
           type_of_right: string | null
@@ -365,6 +384,7 @@ export type Database = {
           role?: string | null
           share?: number | null
           source?: string | null
+          statement_label?: string | null
           sub_source?: string | null
           to_date?: string | null
           type_of_right?: string | null
@@ -391,6 +411,7 @@ export type Database = {
           role?: string | null
           share?: number | null
           source?: string | null
+          statement_label?: string | null
           sub_source?: string | null
           to_date?: string | null
           type_of_right?: string | null
