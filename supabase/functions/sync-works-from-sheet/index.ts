@@ -253,6 +253,9 @@ Deno.serve(async (req) => {
           });
         }
         if (fields.length > 0) {
+          claimed.add(current.id);
+          // Uppdatera minnesbilden så att senare rader jämför mot nytt värde
+          Object.assign(current, patch);
           changed.push({ id: current.id, title: current.title, fields, diffs, patch });
         } else {
           skipped++;
