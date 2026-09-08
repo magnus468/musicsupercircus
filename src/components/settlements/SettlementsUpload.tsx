@@ -308,32 +308,49 @@ export const SettlementsUpload = () => {
         return;
       }
 
-      // Duplicate check: warn if a distribution key for the same publisher already exists.
+      // Duplicate check per avräkningsnyckel: hoppa över redan importerade perioder,
+      // men ladda upp resten av filen.
       const keys = Array.from(
         new Set(rows.map((r) => r.distribution_key).filter((k): k is string => !!k))
       );
       const publisher = rows[0]?.publisher ?? "MSCE";
+      let rowsToInsert = rows;
       if (keys.length > 0) {
         const { data: existing } = await supabase
           .from("settlements")
           .select("distribution_key")
           .in("distribution_key", keys)
-          .eq("publisher", publisher)
-          .limit(1);
-        if (existing && existing.length > 0) {
-          const dupKey = existing[0].distribution_key;
-          const ok = window.confirm(
-            `Avräkningsnyckel "${dupKey}" finns redan för ${publisher}. ` +
-              `Vill du ändå ladda upp filen? (Detta kan skapa dubbletter.)`
-          );
-          if (!ok) {
-            toast.info("Uppladdning avbruten.");
-            return;
+          .eq("publisher", publisher);
+        const dupKeys = new Set(
+          (existing ?? []).map((e) => e.distribution_key).filter((k): k is string => !!k)
+        );
+        if (dupKeys.size > 0) {
+          const newKeys = keys.filter((k) => !dupKeys.has(k));
+          if (newKeys.length === 0) {
+            const ok = window.confirm(
+              `Alla avräkningsnycklar i filen (${keys.join(", ")}) finns redan för ${publisher}. ` +
+                `Vill du ladda upp ändå? (Detta skapar dubbletter.)`
+            );
+            if (!ok) {
+              toast.info("Uppladdning avbruten.");
+              return;
+            }
+          } else {
+            const ok = window.confirm(
+              `Perioderna ${Array.from(dupKeys).join(", ")} finns redan för ${publisher} och hoppas över.\n` +
+                `Nya perioder som importeras: ${newKeys.join(", ")}.\n\nFortsätta?`
+            );
+            if (!ok) {
+              toast.info("Uppladdning avbruten.");
+              return;
+            }
+            rowsToInsert = rows.filter((r) => r.distribution_key && !dupKeys.has(r.distribution_key));
           }
         }
       }
 
       let inserted = 0;
+      const rows2 = rowsToInsert;
       for (let i = 0; i < rows.length; i += BATCH_SIZE) {
         const batch = rows.slice(i, i + BATCH_SIZE);
         setProgress(`Laddar upp ${inserted + batch.length} / ${rows.length}…`);
