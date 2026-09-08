@@ -339,6 +339,7 @@ export type Database = {
           role: string | null
           share: number | null
           source: string | null
+          statement_label: string | null
           sub_source: string | null
           to_date: string | null
           type_of_right: string | null
@@ -365,6 +366,7 @@ export type Database = {
           role?: string | null
           share?: number | null
           source?: string | null
+          statement_label?: string | null
           sub_source?: string | null
           to_date?: string | null
           type_of_right?: string | null
@@ -391,6 +393,7 @@ export type Database = {
           role?: string | null
           share?: number | null
           source?: string | null
+          statement_label?: string | null
           sub_source?: string | null
           to_date?: string | null
           type_of_right?: string | null
