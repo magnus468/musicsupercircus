@@ -232,7 +232,12 @@ Deno.serve(async (req) => {
           });
         };
         if (project && project !== current.project) track("Projekt", "project", current.project, project);
-        if (creators && creators !== current.creators) track("Upphovspersoner", "creators", current.creators, creators);
+        // Skriv aldrig över en detaljerad upphovspersonslista (med roller/andelar)
+        // med en enklare variant utan split-information.
+        const creatorsDowngrade = hasSplitInfo(current.creators) && !hasSplitInfo(creators);
+        if (creators && creators !== current.creators && !creatorsDowngrade) {
+          track("Upphovspersoner", "creators", current.creators, creators);
+        }
         if (status !== current.stim_status) track("STIM-status", "stim_status", current.stim_status, status);
         if (comment && comment !== current.stim_comment) track("STIM-kommentar", "stim_comment", current.stim_comment, comment);
         if (publishingType && publishingType !== current.publishing_type) {
