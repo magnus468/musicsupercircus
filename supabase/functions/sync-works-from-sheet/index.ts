@@ -161,6 +161,15 @@ Deno.serve(async (req) => {
       const candidates = byTitle.get(key(title)) ?? [];
       if (candidates.length === 0) return null;
       const words = nameWords(creators);
+      // Saknas namn helt (t.ex. "(Okänd)") kan vi inte jämföra upphovspersoner –
+      // matcha då på titel + projekt så att raden inte läggs in som nytt verk varje dag.
+      if (words.size === 0) {
+        const same = candidates.filter(
+          (c) => key(c.project ?? "") === key(project ?? ""),
+        );
+        if (same.length >= 1) return same[0];
+        return candidates.length === 1 ? candidates[0] : null;
+      }
       if (project) {
         const byProject = candidates.filter(
           (c) => c.project && key(c.project) === key(project),
