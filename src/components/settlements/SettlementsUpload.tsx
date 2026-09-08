@@ -350,10 +350,9 @@ export const SettlementsUpload = () => {
       }
 
       let inserted = 0;
-      const rows2 = rowsToInsert;
-      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-        const batch = rows.slice(i, i + BATCH_SIZE);
-        setProgress(`Laddar upp ${inserted + batch.length} / ${rows.length}…`);
+      for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+        const batch = rowsToInsert.slice(i, i + BATCH_SIZE);
+        setProgress(`Laddar upp ${inserted + batch.length} / ${rowsToInsert.length}…`);
         const { error } = await supabase.from("settlements").insert(batch);
         if (error) {
           throw new Error(error.message);
@@ -361,7 +360,7 @@ export const SettlementsUpload = () => {
         inserted += batch.length;
       }
 
-      const total = rows.reduce((sum, r) => sum + r.amount, 0);
+      const total = rowsToInsert.reduce((sum, r) => sum + r.amount, 0);
       toast.success(
         `Importerade ${inserted} rader för ${publisher} (${total.toLocaleString("sv-SE", {
           minimumFractionDigits: 2,
