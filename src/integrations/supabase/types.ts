@@ -297,6 +297,24 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_statement_map: {
+        Row: {
+          distribution_key: string
+          label: string
+          publisher: string
+        }
+        Insert: {
+          distribution_key: string
+          label: string
+          publisher: string
+        }
+        Update: {
+          distribution_key?: string
+          label?: string
+          publisher?: string
+        }
+        Relationships: []
+      }
       settlement_title_mappings: {
         Row: {
           created_at: string
