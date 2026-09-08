@@ -188,6 +188,11 @@ Deno.serve(async (req) => {
       patch: Record<string, unknown>;
     }[] = [];
     let skipped = 0;
+    // Ett befintligt verk får bara uppdateras av EN arkrad per körning.
+    // Annars kan två rader med samma titel skriva över varandra och ge
+    // "uppdaterade verk" i rapporten varje dag utan att något faktiskt ändrats.
+    const claimed = new Set<string>();
+    const hasSplitInfo = (s: string | null | undefined) => /\brepr\b|row:/i.test(s ?? "");
 
     for (const row of rows) {
       const title = norm(row[2]);
