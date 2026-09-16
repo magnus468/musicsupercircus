@@ -115,9 +115,49 @@ interface ParsedRow {
   from_date: string | null;
   to_date: string | null;
   composers: string | null;
+  /** Vilken avräkning (utbetalning) raderna kom i — hela filen listas ihop under denna */
+  statement_label: string | null;
 }
 
 const BATCH_SIZE = 500;
+
+const SV_MONTHS = [
+  "januari","februari","mars","april","maj","juni",
+  "juli","augusti","september","oktober","november","december",
+] as const;
+
+const MONTH_YEAR_RE = new RegExp(`(${SV_MONTHS.join("|")})\\s+(\\d{4})`, "i");
+
+// Namnet på avräkningen = den månad/år som förekommer oftast bland filens perioder.
+// Faller tillbaka på datumet i filnamnet och sist på den största periodens namn.
+const resolveStatementLabel = (
+  distributions: (string | null)[],
+  fileName: string
+): string | null => {
+  const counts = new Map<string, number>();
+  for (const d of distributions) {
+    const m = (d ?? "").match(MONTH_YEAR_RE);
+    if (!m) continue;
+    const label = `${m[1].charAt(0).toUpperCase()}${m[1].slice(1).toLowerCase()} ${m[2]}`;
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [label, count] of counts) {
+    if (count > bestCount) {
+      best = label;
+      bestCount = count;
+    }
+  }
+  if (best) return best;
+
+  const fromFile = fileName.match(/(\d{4})-(\d{2})-\d{2}/);
+  if (fromFile) {
+    const month = SV_MONTHS[Number(fromFile[2]) - 1];
+    if (month) return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${fromFile[1]}`;
+  }
+  return distributions.find((d) => !!d) ?? null;
+};
 
 // --- Warner/Chappell (WCM) statement support -------------------------------
 // WCM-exporter är kommaseparerade med engelska kolumnnamn och punkt som decimaltecken.
@@ -204,6 +244,7 @@ const parseWcmRows = (
       from_date: parseYearMonth(val("distribution_start")),
       to_date: parseYearMonth(val("distribution_end"), true),
       composers: val("creator_names") ?? val("composer"),
+      statement_label: distribution,
     });
   }
   return rows;
@@ -293,7 +334,18 @@ export const SettlementsUpload = () => {
           from_date: parseDate(get("from_date")),
           to_date: parseDate(get("to_date")),
           composers: get("composers") ?? null,
+          statement_label: null,
         });
+      }
+
+      // Hela STIM-filen hör till samma avräkning — märk alla rader med den,
+      // så att summan i listan kan stämmas av mot STIM:s utbetalning.
+      if (!isWcm && rows.length > 0) {
+        const statementLabel = resolveStatementLabel(
+          rows.map((r) => r.distribution),
+          file.name
+        );
+        for (const r of rows) r.statement_label = statementLabel;
       }
 
       if (rows.length === 0) {

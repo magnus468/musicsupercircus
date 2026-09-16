@@ -95,17 +95,20 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
   };
 
 
-  // Group STIM sub-periods by payout month and publisher. This keeps MSCE and MSCP
-  // separate even when they share the same numeric distribution key.
+  // Allt som kom i samma avräkning (utbetalning) från STIM/Warner grupperas ihop,
+  // oavsett hur många delperioder/avräkningsnycklar den innehåller. MSCE och MSCP
+  // hålls alltid isär.
   const groupedPeriods = useMemo((): GroupedPeriod[] => {
     if (!periods || periods.length === 0) return [];
     const map = new Map<string, GroupedPeriod>();
     for (const p of periods) {
       const qualifiedKey = encodeSettlementPeriodKey(p.publisher, p.distributionKey);
-      const label = isStimPeriod(p.distributionKey)
-        ? stimPayoutLabels.get(qualifiedKey) ?? p.distribution
-        : p.distribution;
-      const groupKey = `${p.publisher}-${isStimPeriod(p.distributionKey) ? `stim-${label}` : p.distributionKey}`;
+      const label =
+        p.statementLabel ??
+        (isStimPeriod(p.distributionKey)
+          ? stimPayoutLabels.get(qualifiedKey) ?? p.distribution
+          : p.distribution);
+      const groupKey = `${p.publisher}-${label}`;
       if (!map.has(groupKey)) {
         map.set(groupKey, { label, publisher: p.publisher, keys: [], total: 0, rowCount: 0 });
       }
@@ -126,7 +129,10 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       const first = decodeSettlementPeriodKey(gp.keys[0]);
       const year = first.key.startsWith("WC-")
         ? first.key.slice(3, 7)
-        : extractYearFromLabel(stimPayoutLabels.get(gp.keys[0]) ?? gp.label) ?? "Övrigt";
+        : extractYearFromLabel(gp.label) ??
+          extractYearFromLabel(stimPayoutLabels.get(gp.keys[0]) ?? "") ??
+          gp.label.match(/(\d{4})/)?.[1] ??
+          "Övrigt";
       if (!map.has(year)) {
         map.set(year, { year, periods: [], publishers: [], totalAmount: 0, totalRows: 0 });
       }

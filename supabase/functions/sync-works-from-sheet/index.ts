@@ -131,24 +131,48 @@ Deno.serve(async (req) => {
       else byTitle.set(k, [w]);
     }
 
-    // Namnord (efternamn/förnamn) ur creators-strängen, exkl. förlag/roller/procent
+    const STOP_WORDS = [
+      "music", "super", "circus", "extravaganza", "extravagnza", "publishing",
+      "repr", "row", "norden", "controlled", "not", "okänd", "okand",
+    ];
+
+    // Namnord (efternamn/förnamn) ur creators-strängen, exkl. förlag/roller/andelar.
+    // Parenteser tas bort på hela strängen först – annars läcker t.ex. "row:50%"
+    // in som ett "namn" och gör att alla verk matchar varandra.
     const nameWords = (creators: string | null): Set<string> => {
       const out = new Set<string>();
-      for (const part of (creators ?? "").split(/[,/&]/)) {
-        const nameOnly = part.replace(/\([^)]*\)?/g, " ").trim();
-        for (const w of nameOnly.split(/\s+/)) {
+      const withoutParens = (creators ?? "").replace(/\([^)]*\)?/g, " ");
+      for (const part of withoutParens.split(/[,/&]/)) {
+        for (const w of part.trim().split(/\s+/)) {
           const t = w.toLowerCase().replace(/[^a-zåäöéèüæø]/g, "");
-          if (t.length > 2 && !["music", "super", "circus", "extravaganza", "publishing", "repr"].includes(t)) {
-            out.add(t);
-          }
+          if (t.length > 2 && !STOP_WORDS.includes(t)) out.add(t);
         }
       }
       return out;
     };
 
-    const overlaps = (a: Set<string>, b: Set<string>) => {
-      for (const w of a) if (b.has(w)) return true;
-      return false;
+    const overlapCount = (a: Set<string>, b: Set<string>) => {
+      let n = 0;
+      for (const w of a) if (b.has(w)) n++;
+      return n;
+    };
+
+    const overlaps = (a: Set<string>, b: Set<string>) => overlapCount(a, b) > 0;
+
+    // Väljer kandidaten med flest gemensamma namnord. Vid lika resultat väljs
+    // alltid samma verk (äldsta id) så att synken inte pendlar mellan två verk
+    // och rapporterar falska ändringar dag efter dag.
+    const bestByCreators = (
+      candidates: Record<string, any>[],
+      words: Set<string>,
+    ): Record<string, any> | null => {
+      const scored = candidates
+        .map((c) => ({ c, score: overlapCount(words, nameWords(c.creators)) }))
+        .filter((s) => s.score > 0)
+        .sort((a, b) =>
+          b.score - a.score || String(a.c.id).localeCompare(String(b.c.id))
+        );
+      return scored[0]?.c ?? null;
     };
 
     // Matchar en arkrad mot befintligt verk: projekt först, annars gemensamma upphovspersoner.
@@ -176,13 +200,16 @@ Deno.serve(async (req) => {
         );
         if (byProject.length === 1) return byProject[0];
         if (byProject.length > 1) {
-          return byProject.find((c) => overlaps(words, nameWords(c.creators))) ?? null;
+          return bestByCreators(byProject, words);
         }
       }
       const byCreator = candidates.filter((c) => overlaps(words, nameWords(c.creators)));
       if (byCreator.length === 1) return byCreator[0];
       if (byCreator.length > 1) {
-        return byCreator.find((c) => !c.project || !project || key(c.project) === key(project)) ?? null;
+        const sameProject = byCreator.filter(
+          (c) => !c.project || !project || key(c.project) === key(project),
+        );
+        return bestByCreators(sameProject.length > 0 ? sameProject : byCreator, words);
       }
       return null;
     };

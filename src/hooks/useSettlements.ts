@@ -33,6 +33,8 @@ export interface SettlementPeriod {
   distribution: string;
   distributionKey: string;
   publisher: SettlementPublisher;
+  /** Vilken avräkning (utbetalning) från STIM/Warner raden kom i */
+  statementLabel?: string | null;
   rowCount: number;
   total: number;
 }
