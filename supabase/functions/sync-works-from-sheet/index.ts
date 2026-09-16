@@ -159,26 +159,20 @@ Deno.serve(async (req) => {
 
     const overlaps = (a: Set<string>, b: Set<string>) => overlapCount(a, b) > 0;
 
-    // Väljer kandidaten med flest gemensamma namnord – men bara om den är
-    // entydigt bäst. Annars ingen match (hellre inget än fel verk).
+    // Väljer kandidaten med flest gemensamma namnord. Vid lika resultat väljs
+    // alltid samma verk (äldsta id) så att synken inte pendlar mellan två verk
+    // och rapporterar falska ändringar dag efter dag.
     const bestByCreators = (
       candidates: Record<string, any>[],
       words: Set<string>,
     ): Record<string, any> | null => {
-      let best: Record<string, any> | null = null;
-      let bestScore = 0;
-      let tie = false;
-      for (const c of candidates) {
-        const score = overlapCount(words, nameWords(c.creators));
-        if (score > bestScore) {
-          best = c;
-          bestScore = score;
-          tie = false;
-        } else if (score === bestScore && score > 0) {
-          tie = true;
-        }
-      }
-      return bestScore > 0 && !tie ? best : null;
+      const scored = candidates
+        .map((c) => ({ c, score: overlapCount(words, nameWords(c.creators)) }))
+        .filter((s) => s.score > 0)
+        .sort((a, b) =>
+          b.score - a.score || String(a.c.id).localeCompare(String(b.c.id))
+        );
+      return scored[0]?.c ?? null;
     };
 
     // Matchar en arkrad mot befintligt verk: projekt först, annars gemensamma upphovspersoner.
