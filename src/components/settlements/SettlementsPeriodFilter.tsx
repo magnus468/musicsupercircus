@@ -129,7 +129,10 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       const first = decodeSettlementPeriodKey(gp.keys[0]);
       const year = first.key.startsWith("WC-")
         ? first.key.slice(3, 7)
-        : extractYearFromLabel(stimPayoutLabels.get(gp.keys[0]) ?? gp.label) ?? "Övrigt";
+        : extractYearFromLabel(gp.label) ??
+          extractYearFromLabel(stimPayoutLabels.get(gp.keys[0]) ?? "") ??
+          gp.label.match(/(\d{4})/)?.[1] ??
+          "Övrigt";
       if (!map.has(year)) {
         map.set(year, { year, periods: [], publishers: [], totalAmount: 0, totalRows: 0 });
       }
