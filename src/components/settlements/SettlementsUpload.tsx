@@ -244,6 +244,7 @@ const parseWcmRows = (
       from_date: parseYearMonth(val("distribution_start")),
       to_date: parseYearMonth(val("distribution_end"), true),
       composers: val("creator_names") ?? val("composer"),
+      statement_label: distribution,
     });
   }
   return rows;
