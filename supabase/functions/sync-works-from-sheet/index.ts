@@ -131,24 +131,54 @@ Deno.serve(async (req) => {
       else byTitle.set(k, [w]);
     }
 
-    // Namnord (efternamn/förnamn) ur creators-strängen, exkl. förlag/roller/procent
+    const STOP_WORDS = [
+      "music", "super", "circus", "extravaganza", "extravagnza", "publishing",
+      "repr", "row", "norden", "controlled", "not", "okänd", "okand",
+    ];
+
+    // Namnord (efternamn/förnamn) ur creators-strängen, exkl. förlag/roller/andelar.
+    // Parenteser tas bort på hela strängen först – annars läcker t.ex. "row:50%"
+    // in som ett "namn" och gör att alla verk matchar varandra.
     const nameWords = (creators: string | null): Set<string> => {
       const out = new Set<string>();
-      for (const part of (creators ?? "").split(/[,/&]/)) {
-        const nameOnly = part.replace(/\([^)]*\)?/g, " ").trim();
-        for (const w of nameOnly.split(/\s+/)) {
+      const withoutParens = (creators ?? "").replace(/\([^)]*\)?/g, " ");
+      for (const part of withoutParens.split(/[,/&]/)) {
+        for (const w of part.trim().split(/\s+/)) {
           const t = w.toLowerCase().replace(/[^a-zåäöéèüæø]/g, "");
-          if (t.length > 2 && !["music", "super", "circus", "extravaganza", "publishing", "repr"].includes(t)) {
-            out.add(t);
-          }
+          if (t.length > 2 && !STOP_WORDS.includes(t)) out.add(t);
         }
       }
       return out;
     };
 
-    const overlaps = (a: Set<string>, b: Set<string>) => {
-      for (const w of a) if (b.has(w)) return true;
-      return false;
+    const overlapCount = (a: Set<string>, b: Set<string>) => {
+      let n = 0;
+      for (const w of a) if (b.has(w)) n++;
+      return n;
+    };
+
+    const overlaps = (a: Set<string>, b: Set<string>) => overlapCount(a, b) > 0;
+
+    // Väljer kandidaten med flest gemensamma namnord – men bara om den är
+    // entydigt bäst. Annars ingen match (hellre inget än fel verk).
+    const bestByCreators = (
+      candidates: Record<string, any>[],
+      words: Set<string>,
+    ): Record<string, any> | null => {
+      let best: Record<string, any> | null = null;
+      let bestScore = 0;
+      let tie = false;
+      for (const c of candidates) {
+        const score = overlapCount(words, nameWords(c.creators));
+        if (score > bestScore) {
+          best = c;
+          bestScore = score;
+          tie = false;
+        } else if (score === bestScore && score > 0) {
+          tie = true;
+        }
+      }
+      return bestScore > 0 && !tie ? best : null;
     };
 
     // Matchar en arkrad mot befintligt verk: projekt först, annars gemensamma upphovspersoner.
