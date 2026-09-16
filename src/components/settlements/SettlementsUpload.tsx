@@ -334,7 +334,18 @@ export const SettlementsUpload = () => {
           from_date: parseDate(get("from_date")),
           to_date: parseDate(get("to_date")),
           composers: get("composers") ?? null,
+          statement_label: null,
         });
+      }
+
+      // Hela STIM-filen hör till samma avräkning — märk alla rader med den,
+      // så att summan i listan kan stämmas av mot STIM:s utbetalning.
+      if (!isWcm && rows.length > 0) {
+        const statementLabel = resolveStatementLabel(
+          rows.map((r) => r.distribution),
+          file.name
+        );
+        for (const r of rows) r.statement_label = statementLabel;
       }
 
       if (rows.length === 0) {
