@@ -206,13 +206,16 @@ Deno.serve(async (req) => {
         );
         if (byProject.length === 1) return byProject[0];
         if (byProject.length > 1) {
-          return byProject.find((c) => overlaps(words, nameWords(c.creators))) ?? null;
+          return bestByCreators(byProject, words);
         }
       }
       const byCreator = candidates.filter((c) => overlaps(words, nameWords(c.creators)));
       if (byCreator.length === 1) return byCreator[0];
       if (byCreator.length > 1) {
-        return byCreator.find((c) => !c.project || !project || key(c.project) === key(project)) ?? null;
+        const sameProject = byCreator.filter(
+          (c) => !c.project || !project || key(c.project) === key(project),
+        );
+        return bestByCreators(sameProject.length > 0 ? sameProject : byCreator, words);
       }
       return null;
     };
