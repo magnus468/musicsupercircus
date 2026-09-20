@@ -315,6 +315,24 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_stats_cache: {
+        Row: {
+          cache_key: string
+          payload: Json
+          updated_at: string
+        }
+        Insert: {
+          cache_key: string
+          payload: Json
+          updated_at?: string
+        }
+        Update: {
+          cache_key?: string
+          payload?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       settlement_title_mappings: {
         Row: {
           created_at: string
@@ -497,6 +515,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      compute_settlement_stats: {
+        Args: { p_distribution_key?: string }
+        Returns: Json
+      }
       get_country_works: {
         Args: {
           p_country: string
