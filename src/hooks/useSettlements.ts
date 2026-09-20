@@ -192,9 +192,10 @@ export const useUnmatchedSettlementWorks = () => {
 export const useSettlementStats = (distributionKey: string | null) => {
   return useQuery<SettlementStats>({
     queryKey: ["settlement-stats", distributionKey],
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_settlement_stats", {
         p_distribution_key: distributionKey,
