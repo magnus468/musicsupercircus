@@ -372,7 +372,14 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
                 </div>
               );
             })}
+            {creatorsList.filter((c) => c.role === "E").length === 0 && (
+              <p className="text-xs text-muted-foreground">Inget förlag tillagt ännu</p>
+            )}
           </div>
+          <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => addEmptyCreator("E")}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            Lägg till förlag
+          </Button>
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
