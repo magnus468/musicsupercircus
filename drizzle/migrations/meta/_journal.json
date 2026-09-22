@@ -15,6 +15,13 @@
       "when": 1790100007336,
       "tag": "0001_fix_stats_cache_invalidation_where",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790100179386,
+      "tag": "0002_settlement_stats_cache_version_guard",
+      "breakpoints": true
     }
   ]
 }
