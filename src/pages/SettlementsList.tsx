@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SettlementsList = () => {
   const [distributionKey, setDistributionKey] = useState<string | null>(null);
-  const { data: stats, isLoading: statsLoading } = useSettlementStats(distributionKey);
+  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useSettlementStats(distributionKey);
   useScrollRestore(!statsLoading);
   const [tab, setTab] = useState("overview");
   const [search, setSearch] = useState("");
@@ -21,7 +21,8 @@ const SettlementsList = () => {
     page,
     pageSize,
     tab === "details" ? search : "",
-    distributionKey
+    distributionKey,
+    tab === "details"
   );
 
   const handleSearch = (value: string) => {
@@ -38,6 +39,17 @@ const SettlementsList = () => {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
         Laddar avräkningsdata...
+      </div>
+    );
+  }
+
+  if (statsError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+        <p className="text-sm text-destructive">Avräkningsdata kunde inte laddas.</p>
+        <button className="text-sm font-medium text-primary underline" onClick={() => refetchStats()}>
+          Försök igen
+        </button>
       </div>
     );
   }

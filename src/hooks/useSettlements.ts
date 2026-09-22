@@ -57,10 +57,12 @@ export const useSettlements = (
   page: number,
   pageSize: number,
   search: string,
-  distributionKey: string | null
+  distributionKey: string | null,
+  enabled = true
 ) => {
   return useQuery({
     queryKey: ["settlements", page, pageSize, search, distributionKey],
+    enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -73,7 +75,7 @@ export const useSettlements = (
         .from("settlements")
         // Exakt räkning över hela tabellen tar för lång tid vid fritextsökning —
         // använd uppskattad räkning då (exakt för små resultat).
-        .select("*", { count: isSearching ? "estimated" : "exact" })
+        .select("*", { count: "estimated" })
         .order("amount", { ascending: false })
         .range(from, to);
 
