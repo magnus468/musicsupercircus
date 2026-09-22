@@ -286,6 +286,21 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Input id="project" value={project} onChange={(e) => setProject(e.target.value)} />
         </div>
       </div>
+      {possibleDuplicates.length > 0 && (
+        <div className="flex gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-warning-foreground" />
+          <div className="space-y-1">
+            <p className="font-medium text-warning-foreground">
+              Möjlig dubblett: {possibleDuplicates.length} verk har redan denna titel
+            </p>
+            <ul className="text-muted-foreground">
+              {possibleDuplicates.map((d) => (
+                <li key={d.id}>{d.title}{d.project ? ` — ${d.project}` : ""}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       <div className="space-y-4">
         {/* Upphovspersoner */}
         <div className="space-y-2">
