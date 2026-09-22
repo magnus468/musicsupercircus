@@ -359,15 +359,6 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                                 <span className={`truncate ${isActive ? "font-medium" : ""}`}>
                                   {payout.label}
                                 </span>
-                                {hasChildren && (
-                                  <span
-                                    className={`text-[10px] shrink-0 ${
-                                      isActive ? "opacity-80" : "text-muted-foreground"
-                                    }`}
-                                  >
-                                    {payout.periods.length} områden
-                                  </span>
-                                )}
                               </span>
                               <span
                                 className={`tabular-nums text-sm shrink-0 ml-2 ${
