@@ -210,6 +210,15 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (possibleDuplicates.length > 0) {
+      const list = possibleDuplicates
+        .map((d) => `• ${d.title}${d.project ? ` (${d.project})` : ""}`)
+        .join("\n");
+      const ok = window.confirm(
+        `Det finns redan ${possibleDuplicates.length} verk med samma titel:\n\n${list}\n\nVill du spara ändå?`
+      );
+      if (!ok) return;
+    }
     // Filter out empty entries
     const validCreators = creatorsList.filter((c) => fullName(c));
     // Auto-create clients for new person creators
