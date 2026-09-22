@@ -49,9 +49,18 @@ interface GroupedPeriod {
   rowCount: number;
 }
 
+interface PayoutGroup {
+  label: string;
+  publisher: SettlementPublisher;
+  keys: string[];
+  periods: GroupedPeriod[];
+  total: number;
+  rowCount: number;
+}
+
 interface YearGroup {
   year: string;
-  periods: GroupedPeriod[];
+  payouts: PayoutGroup[];
   publishers: SettlementPublisher[];
   totalAmount: number;
   totalRows: number;
