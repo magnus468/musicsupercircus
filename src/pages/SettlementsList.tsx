@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useSettlements, useSettlementStats } from "@/hooks/useSettlements";
 import { SettlementsOverview } from "@/components/settlements/SettlementsOverview";
@@ -33,6 +34,8 @@ const SettlementsList = () => {
   const handlePeriodChange = (key: string | null) => {
     setDistributionKey(key);
     setPage(0);
+    setTab("overview");
+    window.scrollTo({ top: 0 });
   };
 
   if (statsLoading) {
@@ -56,15 +59,55 @@ const SettlementsList = () => {
 
   if (!stats) return null;
 
+  const selectedKeys = distributionKey ? distributionKey.split(",") : [];
+  const selectedPeriods = stats.periods.filter((p) =>
+    selectedKeys.includes(`${p.publisher}::${p.distributionKey}`)
+  );
+  const selectedTotal = selectedPeriods.reduce((sum, p) => sum + p.total, 0);
+  const selectedPublisher = selectedPeriods[0]?.publisher ?? null;
+  const selectedLabel =
+    selectedPeriods.length === 1
+      ? selectedPeriods[0].distribution || selectedPeriods[0].distributionKey
+      : `${selectedPeriods.length} avräkningsområden`;
+
+  const isDetailView = !!distributionKey;
+
   return (
     <div className="space-y-6">
-      <SettlementsUpload />
+      {isDetailView ? (
+        <div className="rounded-lg border bg-card p-4">
+          <button
+            onClick={() => handlePeriodChange(null)}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Tillbaka till avräkningsperioder
+          </button>
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="text-lg font-semibold">{selectedLabel}</h2>
+            {selectedPublisher && (
+              <span className="text-xs font-semibold text-muted-foreground">{selectedPublisher}</span>
+            )}
+            <span className="tabular-nums text-sm text-muted-foreground">
+              {selectedTotal.toLocaleString("sv-SE", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{" "}
+              kr
+            </span>
+          </div>
+        </div>
+      ) : (
+        <>
+          <SettlementsUpload />
 
-      <SettlementsPeriodFilter
-        periods={stats.periods}
-        selectedKey={distributionKey}
-        onSelect={handlePeriodChange}
-      />
+          <SettlementsPeriodFilter
+            periods={stats.periods}
+            selectedKey={distributionKey}
+            onSelect={handlePeriodChange}
+          />
+        </>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
