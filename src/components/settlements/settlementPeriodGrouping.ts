@@ -48,6 +48,25 @@ export function extractYearFromLabel(label: string | null): string | null {
   return match ? match[2] : null;
 }
 
+/**
+ * Kronologiskt sorteringsvärde för en avräkning inom ett år.
+ * Högre värde = senare i tiden.
+ */
+export function payoutChronoValue(label: string | null, distributionKey: string): number {
+  const monthMatch = label?.match(MONTH_PATTERN);
+  if (monthMatch) {
+    const monthIndex = MONTH_NAMES.indexOf(monthMatch[1].toLowerCase() as (typeof MONTH_NAMES)[number]);
+    if (monthIndex >= 0) return (monthIndex + 1) * 1000;
+  }
+
+  // Warner-nycklar: WC-2026H1 / WC-2026H2
+  const halfMatch = distributionKey.match(/^WC-\d{4}H(\d)/i);
+  if (halfMatch) return Number(halfMatch[1]) * 6000;
+
+  const numeric = Number.parseInt(distributionKey, 10);
+  return Number.isNaN(numeric) ? 0 : numeric;
+}
+
 function extractDirectPayoutLabel(distribution: string | null): string | null {
   if (!distribution) return null;
   const match = distribution.match(DIRECT_PAYOUT_PATTERN);
