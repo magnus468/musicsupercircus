@@ -21,6 +21,7 @@ import {
   decodeSettlementPeriodKey,
   encodeSettlementPeriodKey,
   extractYearFromLabel,
+  payoutChronoValue,
   resolveStimPayoutLabels,
   type SettlementPublisher,
 } from "./settlementPeriodGrouping";
@@ -174,10 +175,23 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
       yg.totalRows += gp.rowCount;
     }
 
+    // Senaste avräkningen högst upp, den första längst ner
+    const chrono = (label: string, keys: string[]) =>
+      Math.max(...keys.map((k) => payoutChronoValue(label, decodeSettlementPeriodKey(k).key)));
+
     for (const yg of map.values()) {
-      yg.payouts.sort((a, b) =>
-        decodeSettlementPeriodKey(b.keys[0]).key.localeCompare(decodeSettlementPeriodKey(a.keys[0]).key)
-      );
+      yg.payouts.sort((a, b) => {
+        const diff = chrono(b.label, b.keys) - chrono(a.label, a.keys);
+        if (diff !== 0) return diff;
+        return decodeSettlementPeriodKey(b.keys[0]).key.localeCompare(
+          decodeSettlementPeriodKey(a.keys[0]).key
+        );
+      });
+      for (const payout of yg.payouts) {
+        payout.periods.sort((a, b) =>
+          decodeSettlementPeriodKey(a.keys[0]).key.localeCompare(decodeSettlementPeriodKey(b.keys[0]).key)
+        );
+      }
     }
 
     return Array.from(map.values()).sort((a, b) => b.year.localeCompare(a.year));
