@@ -95,31 +95,26 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
   };
 
 
-  // Allt som kom i samma avräkning (utbetalning) från STIM/Warner grupperas ihop,
-  // oavsett hur många delperioder/avräkningsnycklar den innehåller. MSCE och MSCP
-  // hålls alltid isär.
+  // Varje avräkning (distributionsnyckel) listas separat så historiken syns
+  // avräkning för avräkning. MSCE och MSCP hålls alltid isär.
   const groupedPeriods = useMemo((): GroupedPeriod[] => {
     if (!periods || periods.length === 0) return [];
     const map = new Map<string, GroupedPeriod>();
     for (const p of periods) {
       const qualifiedKey = encodeSettlementPeriodKey(p.publisher, p.distributionKey);
-      const label =
-        p.statementLabel ??
-        (isStimPeriod(p.distributionKey)
-          ? stimPayoutLabels.get(qualifiedKey) ?? p.distribution
-          : p.distribution);
-      const groupKey = `${p.publisher}-${label}`;
-      if (!map.has(groupKey)) {
-        map.set(groupKey, { label, publisher: p.publisher, keys: [], total: 0, rowCount: 0 });
+      const label = p.distribution || p.distributionKey;
+      if (!map.has(qualifiedKey)) {
+        map.set(qualifiedKey, { label, publisher: p.publisher, keys: [qualifiedKey], total: 0, rowCount: 0 });
       }
-      const g = map.get(groupKey);
+      const g = map.get(qualifiedKey);
       if (!g) continue;
-      g.keys.push(encodeSettlementPeriodKey(p.publisher, p.distributionKey));
       g.total += p.total;
       g.rowCount += p.rowCount;
     }
-    return Array.from(map.values());
-  }, [periods, stimPayoutLabels]);
+    return Array.from(map.values()).sort((a, b) =>
+      decodeSettlementPeriodKey(b.keys[0]).key.localeCompare(decodeSettlementPeriodKey(a.keys[0]).key)
+    );
+  }, [periods]);
 
   const yearGroups = useMemo((): YearGroup[] => {
     if (groupedPeriods.length === 0) return [];
