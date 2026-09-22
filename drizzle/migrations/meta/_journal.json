@@ -29,6 +29,13 @@
       "when": 1790100202316,
       "tag": "0003_settlements_search_trgm_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790101057334,
+      "tag": "0004_optimize_settlement_stats_single_pass",
+      "breakpoints": true
     }
   ]
 }
