@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useCreateWork, useUpdateWork, type Work, type WorkInsert } from "@/hooks/useWorks";
 import { useCreateClient, useClients } from "@/hooks/useClients";
 import { useAgreements, useWorkAgreements, useSetWorkAgreements } from "@/hooks/useAgreements";
@@ -8,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, FileText, Music } from "lucide-react";
+import { X, Plus, FileText, Music, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -143,6 +145,29 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [selectedAgreementIds, setSelectedAgreementIds] = useState<string[]>([]);
   const isEdit = !!work;
 
+  // Varna om ett verk med samma titel redan finns
+  const trimmedTitle = title.trim();
+  const [debouncedTitle, setDebouncedTitle] = useState(trimmedTitle);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTitle(trimmedTitle), 400);
+    return () => clearTimeout(t);
+  }, [trimmedTitle]);
+
+  const { data: possibleDuplicates = [] } = useQuery({
+    queryKey: ["work-duplicate-check", debouncedTitle, work?.id ?? null],
+    enabled: debouncedTitle.length > 1,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("works")
+        .select("id, title, project, creators")
+        .ilike("title", debouncedTitle)
+        .limit(10);
+      if (error) throw error;
+      return (data || []).filter((d) => d.id !== work?.id);
+    },
+  });
+
   useEffect(() => {
     if (linkedAgreementIds) setSelectedAgreementIds(linkedAgreementIds);
   }, [linkedAgreementIds]);
@@ -185,6 +210,15 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (possibleDuplicates.length > 0) {
+      const list = possibleDuplicates
+        .map((d) => `• ${d.title}${d.project ? ` (${d.project})` : ""}`)
+        .join("\n");
+      const ok = window.confirm(
+        `Det finns redan ${possibleDuplicates.length} verk med samma titel:\n\n${list}\n\nVill du spara ändå?`
+      );
+      if (!ok) return;
+    }
     // Filter out empty entries
     const validCreators = creatorsList.filter((c) => fullName(c));
     // Auto-create clients for new person creators
@@ -252,6 +286,21 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
           <Input id="project" value={project} onChange={(e) => setProject(e.target.value)} />
         </div>
       </div>
+      {possibleDuplicates.length > 0 && (
+        <div className="flex gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-warning-foreground" />
+          <div className="space-y-1">
+            <p className="font-medium text-warning-foreground">
+              Möjlig dubblett: {possibleDuplicates.length} verk har redan denna titel
+            </p>
+            <ul className="text-muted-foreground">
+              {possibleDuplicates.map((d) => (
+                <li key={d.id}>{d.title}{d.project ? ` — ${d.project}` : ""}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       <div className="space-y-4">
         {/* Upphovspersoner */}
         <div className="space-y-2">
