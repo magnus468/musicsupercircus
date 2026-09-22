@@ -49,9 +49,18 @@ interface GroupedPeriod {
   rowCount: number;
 }
 
+interface PayoutGroup {
+  label: string;
+  publisher: SettlementPublisher;
+  keys: string[];
+  periods: GroupedPeriod[];
+  total: number;
+  rowCount: number;
+}
+
 interface YearGroup {
   year: string;
-  periods: GroupedPeriod[];
+  payouts: PayoutGroup[];
   publishers: SettlementPublisher[];
   totalAmount: number;
   totalRows: number;
@@ -65,6 +74,7 @@ interface Props {
 
 export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Props) => {
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
+  const [expandedPayouts, setExpandedPayouts] = useState<Set<string>>(new Set());
   const [pendingDelete, setPendingDelete] = useState<GroupedPeriod | null>(null);
   const [deleting, setDeleting] = useState(false);
   const queryClient = useQueryClient();
@@ -115,49 +125,103 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
     );
   }, [periods]);
 
+  // Varje utbetalning (t.ex. "Augusti 2026") samlas som en rad. Expanderas den
+  // syns varje avräkningsområde som ingick i utbetalningen.
   const yearGroups = useMemo((): YearGroup[] => {
     if (groupedPeriods.length === 0) return [];
 
     const map = new Map<string, YearGroup>();
+    const payoutMap = new Map<string, PayoutGroup>();
+
     for (const gp of groupedPeriods) {
       const first = decodeSettlementPeriodKey(gp.keys[0]);
-      const year = first.key.startsWith("WC-")
+      const isWc = first.key.startsWith("WC-");
+      const payoutLabel = isWc ? gp.label : stimPayoutLabels.get(gp.keys[0]) ?? gp.label;
+      const year = isWc
         ? first.key.slice(3, 7)
         : extractYearFromLabel(gp.label) ??
-          extractYearFromLabel(stimPayoutLabels.get(gp.keys[0]) ?? "") ??
+          extractYearFromLabel(payoutLabel) ??
           gp.label.match(/(\d{4})/)?.[1] ??
           "Övrigt";
+
       if (!map.has(year)) {
-        map.set(year, { year, periods: [], publishers: [], totalAmount: 0, totalRows: 0 });
+        map.set(year, { year, payouts: [], publishers: [], totalAmount: 0, totalRows: 0 });
       }
-      const g = map.get(year);
-      if (!g) continue;
-      g.periods.push(gp);
-      if (!g.publishers.includes(gp.publisher)) g.publishers.push(gp.publisher);
-      g.totalAmount += gp.total;
-      g.totalRows += gp.rowCount;
+      const yg = map.get(year);
+      if (!yg) continue;
+
+      const payoutId = `${year}|${gp.publisher}|${payoutLabel}`;
+      let payout = payoutMap.get(payoutId);
+      if (!payout) {
+        payout = {
+          label: payoutLabel,
+          publisher: gp.publisher,
+          keys: [],
+          periods: [],
+          total: 0,
+          rowCount: 0,
+        };
+        payoutMap.set(payoutId, payout);
+        yg.payouts.push(payout);
+      }
+      payout.periods.push(gp);
+      payout.keys.push(...gp.keys);
+      payout.total += gp.total;
+      payout.rowCount += gp.rowCount;
+
+      if (!yg.publishers.includes(gp.publisher)) yg.publishers.push(gp.publisher);
+      yg.totalAmount += gp.total;
+      yg.totalRows += gp.rowCount;
     }
+
+    for (const yg of map.values()) {
+      yg.payouts.sort((a, b) =>
+        decodeSettlementPeriodKey(b.keys[0]).key.localeCompare(decodeSettlementPeriodKey(a.keys[0]).key)
+      );
+    }
+
     return Array.from(map.values()).sort((a, b) => b.year.localeCompare(a.year));
   }, [groupedPeriods, stimPayoutLabels]);
 
   const selectedKeys = useMemo(() => (selectedKey ? selectedKey.split(",") : []), [selectedKey]);
 
-  // Find which grouped period is currently selected
-  const selectedGroupedPeriod = useMemo(() => {
-    if (selectedKeys.length === 0) return null;
-    return groupedPeriods.find((gp) =>
-      gp.keys.length === selectedKeys.length && gp.keys.every((k) => selectedKeys.includes(k))
-    ) ?? null;
-  }, [selectedKeys, groupedPeriods]);
+  const matchesSelection = (keys: string[]) =>
+    keys.length === selectedKeys.length && keys.every((k) => selectedKeys.includes(k));
 
-  const selectedYear = useMemo(() => {
-    if (!selectedGroupedPeriod) return null;
-    // Find the year group that contains this grouped period
+  // Markerad rad kan vara antingen en hel utbetalning eller ett enskilt område
+  const selectedGroupedPeriod = useMemo((): GroupedPeriod | null => {
+    if (selectedKeys.length === 0) return null;
     for (const yg of yearGroups) {
-      if (yg.periods.some((gp) => gp === selectedGroupedPeriod)) return yg.year;
+      for (const payout of yg.payouts) {
+        if (matchesSelection(payout.keys)) {
+          return {
+            label: payout.label,
+            publisher: payout.publisher,
+            keys: payout.keys,
+            total: payout.total,
+            rowCount: payout.rowCount,
+          };
+        }
+        for (const gp of payout.periods) {
+          if (matchesSelection(gp.keys)) return gp;
+        }
+      }
     }
     return null;
-  }, [selectedGroupedPeriod, yearGroups]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKeys, yearGroups]);
+
+  const selectedYear = useMemo(() => {
+    if (selectedKeys.length === 0) return null;
+    for (const yg of yearGroups) {
+      for (const payout of yg.payouts) {
+        if (matchesSelection(payout.keys)) return yg.year;
+        if (payout.periods.some((gp) => matchesSelection(gp.keys))) return yg.year;
+      }
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKeys, yearGroups]);
 
   const toggleYear = (year: string) => {
     setExpandedYears((prev) => {
@@ -168,8 +232,17 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
     });
   };
 
-  const handleSelect = (gp: GroupedPeriod) => {
-    const keyStr = gp.keys.join(",");
+  const togglePayout = (id: string) => {
+    setExpandedPayouts((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectKeys = (keys: string[]) => {
+    const keyStr = keys.join(",");
     onSelect(selectedKey === keyStr ? null : keyStr);
   };
 
@@ -196,10 +269,7 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
         <div className="space-y-1">
           {yearGroups.map((group) => {
             const isExpanded = expandedYears.has(group.year) || selectedYear === group.year;
-            const hasSelectedPeriod = group.periods.some((gp) => {
-              const keyStr = gp.keys.join(",");
-              return keyStr === selectedKey;
-            });
+            const hasSelectedPeriod = selectedYear === group.year;
 
             return (
               <Collapsible
@@ -233,45 +303,136 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="ml-5 mt-1 space-y-0.5 pb-1">
-                    {group.periods.map((gp) => {
-                      const keyStr = gp.keys.join(",");
-                      const isActive = selectedKey === keyStr;
-                      return (
-                        <div
-                          key={keyStr}
-                          className={`group/row w-full flex items-center rounded-md transition-colors ${
-                            isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
-                          }`}
-                        >
-                          <button
-                            onClick={() => handleSelect(gp)}
-                            className="flex-1 flex items-center justify-between px-3 py-2 text-sm text-left"
-                          >
-                            <span className="flex items-center gap-2 min-w-0">
-                              <PublisherBadge pub={gp.publisher} />
-                              <span className={`truncate ${isActive ? "font-medium" : ""}`}>{gp.label}</span>
-                            </span>
-                            <span className={`tabular-nums text-sm shrink-0 ml-2 ${isActive ? "" : "text-muted-foreground"}`}>
-                              {fmt(gp.total)}
-                            </span>
-                          </button>
+                    {group.payouts.map((payout) => {
+                      const payoutId = `${group.year}|${payout.publisher}|${payout.label}`;
+                      const payoutKeyStr = payout.keys.join(",");
+                      const isActive = selectedKey === payoutKeyStr;
+                      const hasChildren = payout.periods.length > 1;
+                      const childSelected = payout.periods.some(
+                        (gp) => gp.keys.join(",") === selectedKey
+                      );
+                      const isOpen = expandedPayouts.has(payoutId) || childSelected;
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPendingDelete(gp);
-                            }}
-                            title="Ta bort denna avräkningsperiod"
-                            className={`opacity-0 group-hover/row:opacity-100 transition-opacity p-2 mr-1 rounded hover:bg-destructive/10 ${
-                              isActive ? "text-primary-foreground hover:bg-primary-foreground/10" : "text-destructive"
+                      return (
+                        <div key={payoutId}>
+                          <div
+                            className={`group/row w-full flex items-center rounded-md transition-colors ${
+                              isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
                             }`}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                            {hasChildren ? (
+                              <button
+                                onClick={() => togglePayout(payoutId)}
+                                title={isOpen ? "Dölj avräkningsområden" : "Visa avräkningsområden"}
+                                className="pl-2 pr-1 py-2"
+                              >
+                                {isOpen ? (
+                                  <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                                ) : (
+                                  <ChevronRight className="h-3.5 w-3.5 opacity-70" />
+                                )}
+                              </button>
+                            ) : (
+                              <span className="pl-5" />
+                            )}
+
+                            <button
+                              onClick={() => handleSelectKeys(payout.keys)}
+                              className="flex-1 flex items-center justify-between px-2 py-2 text-sm text-left"
+                            >
+                              <span className="flex items-center gap-2 min-w-0">
+                                <PublisherBadge pub={payout.publisher} />
+                                <span className={`truncate ${isActive ? "font-medium" : ""}`}>
+                                  {payout.label}
+                                </span>
+                                {hasChildren && (
+                                  <span
+                                    className={`text-[10px] shrink-0 ${
+                                      isActive ? "opacity-80" : "text-muted-foreground"
+                                    }`}
+                                  >
+                                    {payout.periods.length} områden
+                                  </span>
+                                )}
+                              </span>
+                              <span
+                                className={`tabular-nums text-sm shrink-0 ml-2 ${
+                                  isActive ? "" : "text-muted-foreground"
+                                }`}
+                              >
+                                {fmt(payout.total)}
+                              </span>
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingDelete({
+                                  label: payout.label,
+                                  publisher: payout.publisher,
+                                  keys: payout.keys,
+                                  total: payout.total,
+                                  rowCount: payout.rowCount,
+                                });
+                              }}
+                              title="Ta bort hela denna avräkning"
+                              className={`opacity-0 group-hover/row:opacity-100 transition-opacity p-2 mr-1 rounded hover:bg-destructive/10 ${
+                                isActive ? "text-primary-foreground hover:bg-primary-foreground/10" : "text-destructive"
+                              }`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+
+                          {hasChildren && isOpen && (
+                            <div className="ml-6 mt-0.5 space-y-0.5 border-l pl-2">
+                              {payout.periods.map((gp) => {
+                                const keyStr = gp.keys.join(",");
+                                const childActive = selectedKey === keyStr;
+                                return (
+                                  <div
+                                    key={keyStr}
+                                    className={`group/child w-full flex items-center rounded-md transition-colors ${
+                                      childActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
+                                    }`}
+                                  >
+                                    <button
+                                      onClick={() => handleSelectKeys(gp.keys)}
+                                      className="flex-1 flex items-center justify-between px-2 py-1.5 text-xs text-left"
+                                    >
+                                      <span className={`truncate ${childActive ? "font-medium" : ""}`}>
+                                        {gp.label}
+                                      </span>
+                                      <span
+                                        className={`tabular-nums shrink-0 ml-2 ${
+                                          childActive ? "" : "text-muted-foreground"
+                                        }`}
+                                      >
+                                        {fmt(gp.total)}
+                                      </span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPendingDelete(gp);
+                                      }}
+                                      title="Ta bort detta avräkningsområde"
+                                      className={`opacity-0 group-hover/child:opacity-100 transition-opacity p-1.5 mr-1 rounded hover:bg-destructive/10 ${
+                                        childActive
+                                          ? "text-primary-foreground hover:bg-primary-foreground/10"
+                                          : "text-destructive"
+                                      }`}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
-
                   </div>
                 </CollapsibleContent>
               </Collapsible>
