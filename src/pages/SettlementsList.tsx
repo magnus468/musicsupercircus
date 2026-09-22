@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { useSettlements, useSettlementStats } from "@/hooks/useSettlements";
 import { SettlementsOverview } from "@/components/settlements/SettlementsOverview";
