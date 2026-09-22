@@ -325,7 +325,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             {creatorsList.map((creator, idx) => {
               if (creator.role === "E") return null;
               return (
-                <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                <div key={idx} className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                   <Select value={creator.role} onValueChange={(v) => updateCreatorField(idx, { role: v as CreatorEntry["role"] })}>
                     <SelectTrigger className="h-7 w-16 text-xs shrink-0"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -377,7 +377,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             {creatorsList.map((creator, idx) => {
               if (creator.role !== "E") return null;
               return (
-                <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                <div key={idx} className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                   <span className="text-xs text-muted-foreground w-8 shrink-0">E</span>
                   <Input value={creator.firstName} onChange={(e) => updateCreatorField(idx, { firstName: e.target.value })} placeholder="Förlagsnamn" className="h-7 min-w-0 flex-[3] text-xs" />
                   <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground shrink-0">
