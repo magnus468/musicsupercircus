@@ -145,6 +145,29 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
   const [selectedAgreementIds, setSelectedAgreementIds] = useState<string[]>([]);
   const isEdit = !!work;
 
+  // Varna om ett verk med samma titel redan finns
+  const trimmedTitle = title.trim();
+  const [debouncedTitle, setDebouncedTitle] = useState(trimmedTitle);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTitle(trimmedTitle), 400);
+    return () => clearTimeout(t);
+  }, [trimmedTitle]);
+
+  const { data: possibleDuplicates = [] } = useQuery({
+    queryKey: ["work-duplicate-check", debouncedTitle, work?.id ?? null],
+    enabled: debouncedTitle.length > 1,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("works")
+        .select("id, title, project, creators")
+        .ilike("title", debouncedTitle)
+        .limit(10);
+      if (error) throw error;
+      return (data || []).filter((d) => d.id !== work?.id);
+    },
+  });
+
   useEffect(() => {
     if (linkedAgreementIds) setSelectedAgreementIds(linkedAgreementIds);
   }, [linkedAgreementIds]);
