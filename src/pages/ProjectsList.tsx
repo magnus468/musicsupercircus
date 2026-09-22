@@ -211,7 +211,7 @@ const ProjectsList = () => {
     });
 
     // Also include direct project_agreements links
-    if (allProjectAgreements && projects) {
+    if (Array.isArray(allProjectAgreements) && Array.isArray(projects)) {
       const projectIdToName = new Map(projects.map((p) => [p.id, p.name]));
       allProjectAgreements.forEach((pa) => {
         const projName = projectIdToName.get(pa.project_id);
