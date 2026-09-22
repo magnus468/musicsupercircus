@@ -21,7 +21,6 @@ import {
   decodeSettlementPeriodKey,
   encodeSettlementPeriodKey,
   extractYearFromLabel,
-  isStimPeriod,
   resolveStimPayoutLabels,
   type SettlementPublisher,
 } from "./settlementPeriodGrouping";
