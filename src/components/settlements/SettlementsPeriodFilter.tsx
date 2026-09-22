@@ -321,120 +321,51 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
                       const payoutId = `${group.year}|${payout.publisher}|${payout.label}`;
                       const payoutKeyStr = payout.keys.join(",");
                       const isActive = selectedKey === payoutKeyStr;
-                      const hasChildren = payout.periods.length > 1;
-                      const childSelected = payout.periods.some(
-                        (gp) => gp.keys.join(",") === selectedKey
-                      );
-                      const isOpen = expandedPayouts.has(payoutId) || childSelected;
 
                       return (
-                        <div key={payoutId}>
-                          <div
-                            className={`group/row w-full flex items-center rounded-md transition-colors ${
-                              isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
-                            }`}
+                        <div
+                          key={payoutId}
+                          className={`group/row w-full flex items-center rounded-md transition-colors ${
+                            isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
+                          }`}
+                        >
+                          <button
+                            onClick={() => handleSelectKeys(payout.keys)}
+                            className="flex-1 flex items-center justify-between px-3 py-2 text-sm text-left"
                           >
-                            {hasChildren ? (
-                              <button
-                                onClick={() => togglePayout(payoutId)}
-                                title={isOpen ? "Dölj avräkningsområden" : "Visa avräkningsområden"}
-                                className="pl-2 pr-1 py-2"
-                              >
-                                {isOpen ? (
-                                  <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-                                ) : (
-                                  <ChevronRight className="h-3.5 w-3.5 opacity-70" />
-                                )}
-                              </button>
-                            ) : (
-                              <span className="pl-5" />
-                            )}
-
-                            <button
-                              onClick={() => handleSelectKeys(payout.keys)}
-                              className="flex-1 flex items-center justify-between px-2 py-2 text-sm text-left"
-                            >
-                              <span className="flex items-center gap-2 min-w-0">
-                                <PublisherBadge pub={payout.publisher} />
-                                <span className={`truncate ${isActive ? "font-medium" : ""}`}>
-                                  {payout.label}
-                                </span>
+                            <span className="flex items-center gap-2 min-w-0">
+                              <PublisherBadge pub={payout.publisher} />
+                              <span className={`truncate ${isActive ? "font-medium" : ""}`}>
+                                {payout.label}
                               </span>
-                              <span
-                                className={`tabular-nums text-sm shrink-0 ml-2 ${
-                                  isActive ? "" : "text-muted-foreground"
-                                }`}
-                              >
-                                {fmt(payout.total)}
-                              </span>
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPendingDelete({
-                                  label: payout.label,
-                                  publisher: payout.publisher,
-                                  keys: payout.keys,
-                                  total: payout.total,
-                                  rowCount: payout.rowCount,
-                                });
-                              }}
-                              title="Ta bort hela denna avräkning"
-                              className={`opacity-0 group-hover/row:opacity-100 transition-opacity p-2 mr-1 rounded hover:bg-destructive/10 ${
-                                isActive ? "text-primary-foreground hover:bg-primary-foreground/10" : "text-destructive"
+                            </span>
+                            <span
+                              className={`tabular-nums text-sm shrink-0 ml-2 ${
+                                isActive ? "" : "text-muted-foreground"
                               }`}
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+                              {fmt(payout.total)}
+                            </span>
+                          </button>
 
-                          {hasChildren && isOpen && (
-                            <div className="ml-6 mt-0.5 space-y-0.5 border-l pl-2">
-                              {payout.periods.map((gp) => {
-                                const keyStr = gp.keys.join(",");
-                                const childActive = selectedKey === keyStr;
-                                return (
-                                  <div
-                                    key={keyStr}
-                                    className={`group/child w-full flex items-center rounded-md transition-colors ${
-                                      childActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"
-                                    }`}
-                                  >
-                                    <button
-                                      onClick={() => handleSelectKeys(gp.keys)}
-                                      className="flex-1 flex items-center justify-between px-2 py-1.5 text-xs text-left"
-                                    >
-                                      <span className={`truncate ${childActive ? "font-medium" : ""}`}>
-                                        {gp.label}
-                                      </span>
-                                      <span
-                                        className={`tabular-nums shrink-0 ml-2 ${
-                                          childActive ? "" : "text-muted-foreground"
-                                        }`}
-                                      >
-                                        {fmt(gp.total)}
-                                      </span>
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setPendingDelete(gp);
-                                      }}
-                                      title="Ta bort detta avräkningsområde"
-                                      className={`opacity-0 group-hover/child:opacity-100 transition-opacity p-1.5 mr-1 rounded hover:bg-destructive/10 ${
-                                        childActive
-                                          ? "text-primary-foreground hover:bg-primary-foreground/10"
-                                          : "text-destructive"
-                                      }`}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingDelete({
+                                label: payout.label,
+                                publisher: payout.publisher,
+                                keys: payout.keys,
+                                total: payout.total,
+                                rowCount: payout.rowCount,
+                              });
+                            }}
+                            title="Ta bort hela denna avräkning"
+                            className={`opacity-0 group-hover/row:opacity-100 transition-opacity p-2 mr-1 rounded hover:bg-destructive/10 ${
+                              isActive ? "text-primary-foreground hover:bg-primary-foreground/10" : "text-destructive"
+                            }`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       );
                     })}
