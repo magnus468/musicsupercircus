@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useCreateWork, useUpdateWork, type Work, type WorkInsert } from "@/hooks/useWorks";
 import { useCreateClient, useClients } from "@/hooks/useClients";
 import { useAgreements, useWorkAgreements, useSetWorkAgreements } from "@/hooks/useAgreements";
@@ -8,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, FileText, Music } from "lucide-react";
+import { X, Plus, FileText, Music, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
