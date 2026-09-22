@@ -8,6 +8,13 @@
       "when": 1789903066994,
       "tag": "0000_cache_settlement_stats",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790100007336,
+      "tag": "0001_fix_stats_cache_invalidation_where",
+      "breakpoints": true
     }
   ]
 }
