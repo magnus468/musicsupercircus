@@ -246,14 +246,6 @@ export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Prop
     });
   };
 
-  const togglePayout = (id: string) => {
-    setExpandedPayouts((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   const handleSelectKeys = (keys: string[]) => {
     const keyStr = keys.join(",");
