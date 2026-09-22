@@ -75,7 +75,6 @@ interface Props {
 
 export const SettlementsPeriodFilter = ({ periods, selectedKey, onSelect }: Props) => {
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
-  const [expandedPayouts, setExpandedPayouts] = useState<Set<string>>(new Set());
   const [pendingDelete, setPendingDelete] = useState<GroupedPeriod | null>(null);
   const [deleting, setDeleting] = useState(false);
   const queryClient = useQueryClient();
