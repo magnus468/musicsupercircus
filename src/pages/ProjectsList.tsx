@@ -173,7 +173,7 @@ const ProjectsList = () => {
         .from("agreement_works")
         .select("agreement_id, work_id");
       if (error) throw error;
-      return data as { agreement_id: string; work_id: string }[];
+      return (Array.isArray(data) ? data : []) as { agreement_id: string; work_id: string }[];
     },
   });
   const { data: allProjectAgreements } = useQuery({
@@ -183,7 +183,7 @@ const ProjectsList = () => {
         .from("project_agreements")
         .select("project_id, agreement_id");
       if (error) throw error;
-      return data as { project_id: string; agreement_id: string }[];
+      return (Array.isArray(data) ? data : []) as { project_id: string; agreement_id: string }[];
     },
   });
 
@@ -195,7 +195,7 @@ const ProjectsList = () => {
 
   const projectAgreements = useMemo(() => {
     const map = new Map<string, AgreementLink[]>();
-    if (!works || !allAgreementWorks || !agreements) return map;
+    if (!Array.isArray(works) || !Array.isArray(allAgreementWorks) || !Array.isArray(agreements)) return map;
 
     const workProject = new Map<string, string>();
     works.forEach((w) => { if (w.project) workProject.set(w.id, w.project); });
@@ -211,7 +211,7 @@ const ProjectsList = () => {
     });
 
     // Also include direct project_agreements links
-    if (allProjectAgreements && projects) {
+    if (Array.isArray(allProjectAgreements) && Array.isArray(projects)) {
       const projectIdToName = new Map(projects.map((p) => [p.id, p.name]));
       allProjectAgreements.forEach((pa) => {
         const projName = projectIdToName.get(pa.project_id);
