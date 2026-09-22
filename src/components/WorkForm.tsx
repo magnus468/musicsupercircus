@@ -28,8 +28,23 @@ const fullName = (c: CreatorEntry) => `${c.firstName} ${c.lastName}`.trim();
 // Parse "Name (CA, 50%, row:40%, repr)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
   if (!str) return [];
-  // Split on "), " to correctly handle names with spaces/commas
-  const parts = str.split(/\),\s*/).map((p, i, arr) => i < arr.length - 1 ? p + ")" : p);
+  // Split on commas that are outside parentheses, so "Norden, Name (E, 50%, repr)"
+  // becomes ["Norden", "Name (E, 50%, repr)"] instead of one merged entry.
+  const parts: string[] = [];
+  let buf = "";
+  let depth = 0;
+  for (const ch of str) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+    if (ch === "," && depth === 0) {
+      parts.push(buf);
+      buf = "";
+    } else {
+      buf += ch;
+    }
+  }
+  parts.push(buf);
+
   return parts.map((part) => {
     const trimmed = part.trim();
     const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
@@ -46,6 +61,7 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
     return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: "CA" as const, share: "", shareRow: "", represented: true };
   }).filter((c) => c.firstName || c.lastName);
 };
+
 
 const serializeCreators = (creators: CreatorEntry[]): string => {
   return creators.map((c) => {
@@ -309,7 +325,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             {creatorsList.map((creator, idx) => {
               if (creator.role === "E") return null;
               return (
-                <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                <div key={idx} className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                   <Select value={creator.role} onValueChange={(v) => updateCreatorField(idx, { role: v as CreatorEntry["role"] })}>
                     <SelectTrigger className="h-7 w-16 text-xs shrink-0"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -361,7 +377,7 @@ const WorkForm = ({ work, onSuccess }: WorkFormProps) => {
             {creatorsList.map((creator, idx) => {
               if (creator.role !== "E") return null;
               return (
-                <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                <div key={idx} className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                   <span className="text-xs text-muted-foreground w-8 shrink-0">E</span>
                   <Input value={creator.firstName} onChange={(e) => updateCreatorField(idx, { firstName: e.target.value })} placeholder="Förlagsnamn" className="h-7 min-w-0 flex-[3] text-xs" />
                   <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground shrink-0">
