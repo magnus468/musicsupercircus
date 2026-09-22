@@ -67,12 +67,16 @@ export const useSettlements = (
     queryFn: async () => {
       const from = page * pageSize;
       const to = from + pageSize - 1;
+      const isSearching = !!search.trim();
 
       let query = supabase
         .from("settlements")
-        .select("*", { count: "exact" })
+        // Exakt räkning över hela tabellen tar för lång tid vid fritextsökning —
+        // använd uppskattad räkning då (exakt för små resultat).
+        .select("*", { count: isSearching ? "estimated" : "exact" })
         .order("amount", { ascending: false })
         .range(from, to);
+
 
       if (distributionKey) {
         const selected = distributionKey.split(",").map(decodeSettlementPeriodKey);

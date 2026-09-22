@@ -320,16 +320,34 @@ export type Database = {
           cache_key: string
           payload: Json
           updated_at: string
+          version: number | null
         }
         Insert: {
           cache_key: string
           payload: Json
           updated_at?: string
+          version?: number | null
         }
         Update: {
           cache_key?: string
           payload?: Json
           updated_at?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
+      settlement_stats_version: {
+        Row: {
+          id: boolean
+          version: number
+        }
+        Insert: {
+          id?: boolean
+          version?: number
+        }
+        Update: {
+          id?: boolean
+          version?: number
         }
         Relationships: []
       }
