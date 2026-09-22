@@ -28,8 +28,23 @@ const fullName = (c: CreatorEntry) => `${c.firstName} ${c.lastName}`.trim();
 // Parse "Name (CA, 50%, row:40%, repr)" format back to CreatorEntry
 const parseCreatorsString = (str: string): CreatorEntry[] => {
   if (!str) return [];
-  // Split on "), " to correctly handle names with spaces/commas
-  const parts = str.split(/\),\s*/).map((p, i, arr) => i < arr.length - 1 ? p + ")" : p);
+  // Split on commas that are outside parentheses, so "Norden, Name (E, 50%, repr)"
+  // becomes ["Norden", "Name (E, 50%, repr)"] instead of one merged entry.
+  const parts: string[] = [];
+  let buf = "";
+  let depth = 0;
+  for (const ch of str) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+    if (ch === "," && depth === 0) {
+      parts.push(buf);
+      buf = "";
+    } else {
+      buf += ch;
+    }
+  }
+  parts.push(buf);
+
   return parts.map((part) => {
     const trimmed = part.trim();
     const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
@@ -46,6 +61,7 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
     return { firstName: nameParts[0] || "", lastName: nameParts.slice(1).join(" "), role: "CA" as const, share: "", shareRow: "", represented: true };
   }).filter((c) => c.firstName || c.lastName);
 };
+
 
 const serializeCreators = (creators: CreatorEntry[]): string => {
   return creators.map((c) => {
