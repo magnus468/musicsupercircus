@@ -45,7 +45,21 @@ const parseCreatorsString = (str: string): CreatorEntry[] => {
   }
   parts.push(buf);
 
-  return parts.map((part) => {
+  // Förlagsnamn kan innehålla komma ("Adam Nordén, Music Super Circus ... (E, ...)").
+  // Ett fragment utan parentes som följs av en förlagspost (E) hör ihop med den.
+  const merged: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    const current = parts[i].trim();
+    const next = parts[i + 1]?.trim();
+    if (current && !current.includes("(") && next && /\(\s*E\s*[,)]/.test(next)) {
+      merged.push(`${current}, ${next}`);
+      i++;
+    } else {
+      merged.push(parts[i]);
+    }
+  }
+
+  return merged.map((part) => {
     const trimmed = part.trim();
     const match = trimmed.match(/^(.+?)\s*\((\w+)(?:,\s*(\d+(?:\.\d+)?)%)?(?:,\s*row:(\d+(?:\.\d+)?)%)?(?:,\s*(repr))?\)$/);
     if (match) {

@@ -74,8 +74,8 @@ export const useSettlements = (
       let query = supabase
         .from("settlements")
         // Exakt räkning över hela tabellen tar för lång tid vid fritextsökning —
-        // använd uppskattad räkning då (exakt för små resultat).
-        .select("*", { count: "estimated" })
+        // använd uppskattad räkning då, exakt annars.
+        .select("*", { count: isSearching ? "estimated" : "exact" })
         .order("amount", { ascending: false })
         .range(from, to);
 
