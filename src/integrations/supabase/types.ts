@@ -297,6 +297,83 @@ export type Database = {
         }
         Relationships: []
       }
+      recordings: {
+        Row: {
+          album: string | null
+          artist: string | null
+          audio_url: string | null
+          catalog_number: string | null
+          composer: string | null
+          cover_url: string | null
+          created_at: string
+          expenses: string | null
+          id: string
+          ifpi_registered: boolean
+          isrc: string | null
+          label: string | null
+          project: string | null
+          split_artist: number | null
+          split_label: number | null
+          split_msc: number | null
+          sr_uploaded: boolean
+          track: string
+          updated_at: string
+          work_id: string | null
+        }
+        Insert: {
+          album?: string | null
+          artist?: string | null
+          audio_url?: string | null
+          catalog_number?: string | null
+          composer?: string | null
+          cover_url?: string | null
+          created_at?: string
+          expenses?: string | null
+          id?: string
+          ifpi_registered?: boolean
+          isrc?: string | null
+          label?: string | null
+          project?: string | null
+          split_artist?: number | null
+          split_label?: number | null
+          split_msc?: number | null
+          sr_uploaded?: boolean
+          track: string
+          updated_at?: string
+          work_id?: string | null
+        }
+        Update: {
+          album?: string | null
+          artist?: string | null
+          audio_url?: string | null
+          catalog_number?: string | null
+          composer?: string | null
+          cover_url?: string | null
+          created_at?: string
+          expenses?: string | null
+          id?: string
+          ifpi_registered?: boolean
+          isrc?: string | null
+          label?: string | null
+          project?: string | null
+          split_artist?: number | null
+          split_label?: number | null
+          split_msc?: number | null
+          sr_uploaded?: boolean
+          track?: string
+          updated_at?: string
+          work_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordings_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settlement_statement_map: {
         Row: {
           distribution_key: string
