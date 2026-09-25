@@ -137,7 +137,11 @@ const RecordingsList = () => {
                       <div className="flex items-center gap-3">
                         <Cover url={cover} />
                         <div className="min-w-0">
-                          <div className="font-medium truncate">{r.track}</div>
+                          {w ? (
+                            <Link to={`/works/${w.id}`} className="block font-medium truncate text-primary hover:underline">{r.track}</Link>
+                          ) : (
+                            <div className="font-medium truncate">{r.track}</div>
+                          )}
                           <div className="text-xs text-muted-foreground truncate">{r.catalog_number} · {r.composer}</div>
                         </div>
                         <InlineAudioButton url={audio} />
