@@ -626,6 +626,7 @@ export type Database = {
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
       get_unmatched_settlement_works: { Args: never; Returns: Json }
+      get_unregistered_soundtrack_titles: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -634,6 +635,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      norm_title: { Args: { t: string }; Returns: string }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

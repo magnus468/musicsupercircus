@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Pencil, Trash2, AlertTriangle, Music } from "lucide-react";
 import WorkForm from "@/components/WorkForm";
 import { toast } from "sonner";
+import UnregisteredSoundtrackTitles from "@/components/review/UnregisteredSoundtrackTitles";
 
 type IssueType = "no_publisher" | "bad_split" | "no_repr" | "no_project" | "no_agreement";
 
@@ -179,6 +180,7 @@ const ReviewWorks = () => {
 
   return (
     <div className="space-y-6">
+      <UnregisteredSoundtrackTitles />
       {/* Issues section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm">
