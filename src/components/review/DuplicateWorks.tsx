@@ -1,6 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { useWorks, useDeleteWork } from "@/hooks/useWorks";
+import { useWorks } from "@/hooks/useWorks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Trash2 } from "lucide-react";
@@ -10,21 +12,33 @@ const key = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
 
 const DuplicateWorks = () => {
   const { data: works = [], isLoading } = useWorks();
-  const del = useDeleteWork();
+  const qc = useQueryClient();
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
 
   const groups = useMemo(() => {
     const m = new Map<string, typeof works>();
-    works.forEach((w) => {
+    works.filter((w) => !hidden.has(w.id)).forEach((w) => {
       const k = `${key(w.title)}||${key(w.project)}`;
       m.set(k, [...(m.get(k) ?? []), w]);
     });
     return [...m.values()].filter((g) => g.length > 1).sort((a, b) => a[0].title.localeCompare(b[0].title, "sv"));
-  }, [works]);
+  }, [works, hidden]);
 
-  const remove = async (id: string, title: string) => {
-    if (!confirm(`Ta bort "${title}"? Detta kan inte ångras.`)) return;
-    try { await del.mutateAsync(id); toast.success("Verket togs bort"); }
-    catch { toast.error("Kunde inte ta bort verket"); }
+  const remove = async (id: string) => {
+    setHidden((h) => new Set(h).add(id));
+    const r = await Promise.all([
+      supabase.from("agreement_works").delete().eq("work_id", id),
+      supabase.from("recordings").update({ work_id: null }).eq("work_id", id),
+      supabase.from("stim_works").update({ work_id: null, match_status: "unmatched" }).eq("work_id", id),
+    ]);
+    const { error } = r.find((x) => x.error) ?? (await supabase.from("works").delete().eq("id", id));
+    if (error) {
+      setHidden((h) => { const n = new Set(h); n.delete(id); return n; });
+      return toast.error("Kunde inte ta bort verket");
+    }
+    qc.setQueriesData({ queryKey: ["works"] }, (old: unknown) =>
+      Array.isArray(old) ? old.filter((w: { id: string }) => w.id !== id) : old);
+    toast.success("Verket togs bort");
   };
 
   return (
@@ -52,7 +66,7 @@ const DuplicateWorks = () => {
                     <Link to={`/works/${w.id}`} className="text-primary underline underline-offset-2">Öppna</Link>
                     <span className="flex-1 text-muted-foreground">{w.creators || "(ingen upphovsperson)"}</span>
                     {w.stim_work_key && <span className="font-mono text-muted-foreground">{w.stim_work_key}</span>}
-                    <Button size="sm" variant="ghost" className="h-7" onClick={() => remove(w.id, w.title)}>
+                    <Button size="sm" variant="ghost" className="h-7" onClick={() => remove(w.id)} title="Ta bort denna version">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
