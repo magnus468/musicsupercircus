@@ -16,6 +16,7 @@ import WorkForm from "@/components/WorkForm";
 import { toast } from "sonner";
 import UnregisteredSoundtrackTitles from "@/components/review/UnregisteredSoundtrackTitles";
 import StimReconciliation from "@/components/review/StimReconciliation";
+import DuplicateWorks from "@/components/review/DuplicateWorks";
 
 type IssueType = "no_publisher" | "bad_split" | "no_repr" | "no_project" | "no_agreement";
 
@@ -182,6 +183,7 @@ const ReviewWorks = () => {
   return (
     <div className="space-y-6">
       <StimReconciliation />
+      <DuplicateWorks />
       <UnregisteredSoundtrackTitles />
       {/* Issues section */}
       <div className="space-y-4">
