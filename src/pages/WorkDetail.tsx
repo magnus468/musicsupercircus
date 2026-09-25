@@ -129,7 +129,7 @@ const WorkDetail = () => {
     setPdfViewerUrl(null);
   };
 
-  if (isLoading) return <p className="text-muted-foreground">Laddar...</p>;
+  if (!work && (isLoading || singleLoading)) return <p className="text-muted-foreground">Laddar...</p>;
   if (!work) return <p className="text-muted-foreground">Verket hittades inte.</p>;
 
   const creatorEntries = (work.creators.match(/(?:^|,\s*)([^,(]+?)(?:\s*\(([^)]*)\))?(?=,|$)/g) || []).map((c) => {
