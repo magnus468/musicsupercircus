@@ -533,6 +533,62 @@ export type Database = {
         }
         Relationships: []
       }
+      stim_works: {
+        Row: {
+          conflict: boolean
+          created_at: string
+          creators: string | null
+          ice_work_key: string
+          id: string
+          ipi_numbers: string[] | null
+          match_status: string
+          publisher: string
+          roles: string | null
+          status: string | null
+          title: string
+          work_id: string | null
+          work_type: string | null
+        }
+        Insert: {
+          conflict?: boolean
+          created_at?: string
+          creators?: string | null
+          ice_work_key: string
+          id?: string
+          ipi_numbers?: string[] | null
+          match_status?: string
+          publisher?: string
+          roles?: string | null
+          status?: string | null
+          title: string
+          work_id?: string | null
+          work_type?: string | null
+        }
+        Update: {
+          conflict?: boolean
+          created_at?: string
+          creators?: string | null
+          ice_work_key?: string
+          id?: string
+          ipi_numbers?: string[] | null
+          match_status?: string
+          publisher?: string
+          roles?: string | null
+          status?: string | null
+          title?: string
+          work_id?: string | null
+          work_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stim_works_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -567,7 +623,9 @@ export type Database = {
           row_publisher_share: number
           share_percentage: number | null
           stim_comment: string | null
+          stim_conflict: boolean | null
           stim_status: Database["public"]["Enums"]["stim_status"]
+          stim_work_key: string | null
           title: string
           updated_at: string
         }
@@ -583,7 +641,9 @@ export type Database = {
           row_publisher_share?: number
           share_percentage?: number | null
           stim_comment?: string | null
+          stim_conflict?: boolean | null
           stim_status?: Database["public"]["Enums"]["stim_status"]
+          stim_work_key?: string | null
           title: string
           updated_at?: string
         }
@@ -599,7 +659,9 @@ export type Database = {
           row_publisher_share?: number
           share_percentage?: number | null
           stim_comment?: string | null
+          stim_conflict?: boolean | null
           stim_status?: Database["public"]["Enums"]["stim_status"]
+          stim_work_key?: string | null
           title?: string
           updated_at?: string
         }

@@ -57,6 +57,13 @@
       "when": 1790352033058,
       "tag": "0007_get_unregistered_soundtrack_titles",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790356609744,
+      "tag": "0008_stim_works_registry",
+      "breakpoints": true
     }
   ]
 }
