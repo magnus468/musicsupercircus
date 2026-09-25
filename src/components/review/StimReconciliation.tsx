@@ -51,7 +51,9 @@ const StimReconciliation = () => {
   const unmatched = rows.filter((r) => r.match_status === "unmatched" && match(r.title, r.creators));
   const uncertain = rows.filter((r) => r.match_status === "uncertain" && match(r.title, r.creators));
   const linked = new Set(rows.filter((r) => r.work_id).map((r) => r.work_id));
-  const missingAtStim = works.filter((w) => !linked.has(w.id) && match(w.title, w.creators));
+  const isMscp = (w: (typeof works)[number]) =>
+    w.publishing_type === "MSCP" || /music super circus publishing|\bmscp\b/i.test(w.creators ?? "");
+  const missingAtStim = works.filter((w) => !linked.has(w.id) && !isMscp(w) && match(w.title, w.creators));
   const matchedCount = rows.filter((r) => r.match_status === "matched").length;
 
   const link = async (r: StimRow, workId: string | null) => {
