@@ -55,7 +55,16 @@ const WorkDetail = () => {
   const { data: linkedAgreementIds } = useAgreementWorks(id);
   const { data: allAgreementWorks } = useAllAgreementWorks();
 
-  const work = works?.find((w) => w.id === id);
+  const { data: singleWork, isLoading: singleLoading } = useQuery({
+    queryKey: ["work", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("works").select("*").eq("id", id!).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const work = works?.find((w) => w.id === id) ?? singleWork ?? undefined;
   const { data: workSettlements, isLoading: settlementsLoading } = useWorkSettlements(work?.title);
 
   const audioRef = (work as any)?.audio_url as string | undefined;

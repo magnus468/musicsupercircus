@@ -14,22 +14,31 @@ export const useWorks = (search?: string) => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     queryFn: async () => {
-      let query = supabase.from("works").select("*").order("created_at", { ascending: false }).limit(5000);
-      if (search && search.trim()) {
-        const term = search.trim();
-        const s = `%${term}%`;
-        // Also search with accent variants (é↔e, ö↔o, etc.)
-        const normalized = term.replace(/[éèê]/gi, 'e').replace(/[öô]/gi, 'o').replace(/[åâä]/gi, 'a').replace(/[ü]/gi, 'u');
-        const accented = term !== normalized ? `%${normalized}%` : null;
-        const filters = [`title.ilike.${s}`, `creators.ilike.${s}`, `project.ilike.${s}`];
-        if (accented) {
-          filters.push(`title.ilike.${accented}`, `creators.ilike.${accented}`, `project.ilike.${accented}`);
+      const build = () => {
+        let query = supabase.from("works").select("*").order("created_at", { ascending: false }).order("id");
+        if (search && search.trim()) {
+          const term = search.trim();
+          const s = `%${term}%`;
+          // Also search with accent variants (é↔e, ö↔o, etc.)
+          const normalized = term.replace(/[éèê]/gi, 'e').replace(/[öô]/gi, 'o').replace(/[åâä]/gi, 'a').replace(/[ü]/gi, 'u');
+          const accented = term !== normalized ? `%${normalized}%` : null;
+          const filters = [`title.ilike.${s}`, `creators.ilike.${s}`, `project.ilike.${s}`];
+          if (accented) {
+            filters.push(`title.ilike.${accented}`, `creators.ilike.${accented}`, `project.ilike.${accented}`);
+          }
+          query = query.or(filters.join(','));
         }
-        query = query.or(filters.join(','));
+        return query;
+      };
+      // The database returns max 1000 rows per request — fetch in pages
+      const all: Work[] = [];
+      for (let from = 0; from < 10000; from += 1000) {
+        const { data, error } = await build().range(from, from + 999);
+        if (error) throw error;
+        all.push(...(data as Work[]));
+        if (data.length < 1000) break;
       }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Work[];
+      return all;
     },
   });
 };
