@@ -10,13 +10,15 @@ type Controller = {
 
 let controllerPromise: Promise<Controller> | null = null;
 let currentUri: string | null = null;
+let hostEl: HTMLDivElement | null = null;
 const listeners = new Set<(uri: string | null, paused: boolean) => void>();
 
 function getController(): Promise<Controller> {
   if (controllerPromise) return controllerPromise;
   controllerPromise = new Promise((resolve) => {
     const host = document.createElement("div");
-    host.style.cssText = "position:fixed;width:1px;height:1px;left:-9999px;bottom:0;opacity:0;pointer-events:none;";
+    host.style.cssText = "position:fixed;right:16px;bottom:16px;width:340px;z-index:50;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.25);display:none;";
+    hostEl = host;
     const el = document.createElement("div");
     host.appendChild(el);
     document.body.appendChild(host);
@@ -44,6 +46,7 @@ export async function toggleSpotifyTrack(trackId: string, isPlaying: boolean) {
     return;
   }
   currentUri = uri;
+  if (hostEl) hostEl.style.display = "block";
   listeners.forEach((l) => l(uri, false));
   c.loadUri(uri);
   // play once loaded
