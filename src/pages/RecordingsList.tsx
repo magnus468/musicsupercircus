@@ -116,12 +116,40 @@ const RecordingsList = () => {
   }, [works, workSearch]);
 
   const linked = recordings.filter((r) => r.work_id).length;
+  const onSpotify = recordings.filter((r) => r.spotify_track_id).length;
+
+  const runSpotifySync = async () => {
+    setSyncing(true);
+    let updated = 0;
+    let notFound = 0;
+    try {
+      for (let i = 0; i < 20; i++) {
+        const { data, error } = await supabase.functions.invoke("spotify-sync", { body: { limit: 200 } });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        updated += data?.updated ?? 0;
+        notFound += data?.notFound ?? 0;
+        toast.info(`Hämtar från Spotify… ${updated} hittade, ${data?.remaining ?? 0} kvar`);
+        if (!data?.scanned || !data?.remaining) break;
+      }
+      await qc.invalidateQueries({ queryKey: ["recordings"] });
+      toast.success(`Klart: ${updated} inspelningar hittades på Spotify, ${notFound} saknades.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Hämtningen misslyckades");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Input placeholder="Sök låt, ISRC, projekt, artist…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
-        <span className="text-sm text-muted-foreground">{filtered.length} inspelningar · {linked} kopplade till verk</span>
+        <span className="text-sm text-muted-foreground">{filtered.length} inspelningar · {linked} kopplade till verk · {onSpotify} på Spotify</span>
+        <Button variant="outline" size="sm" onClick={runSpotifySync} disabled={syncing} className="ml-auto">
+          <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Hämtar från Spotify…" : "Hämta från Spotify"}
+        </Button>
       </div>
       <div className="rounded-lg border bg-card overflow-hidden">
         <div className="overflow-x-auto">
