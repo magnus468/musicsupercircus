@@ -54,9 +54,15 @@ const RecordingsList = () => {
     queryKey: ["works-lite"],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("works").select("id,title,project,audio_url").limit(5000);
-      if (error) throw error;
-      return data as WorkLite[];
+      // Databasen returnerar max 1000 rader per begäran — hämta i sidor
+      const all: WorkLite[] = [];
+      for (let from = 0; from < 20000; from += 1000) {
+        const { data, error } = await supabase.from("works").select("id,title,project,audio_url").order("id").range(from, from + 999);
+        if (error) throw error;
+        all.push(...(data as WorkLite[]));
+        if (data.length < 1000) break;
+      }
+      return all;
     },
   });
   const { data: projects = [] } = useQuery({
