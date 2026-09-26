@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toggleSpotifyTrack, subscribeSpotify, preloadSpotify } from "@/lib/spotifyPlayer";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,10 @@ const RecordingsList = () => {
   const [spotifyPlay, setSpotifyPlay] = useState<Recording | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [inlineSpotify, setInlineSpotify] = useState<string | null>(null);
+  useEffect(() => {
+    preloadSpotify();
+    return subscribeSpotify((uri, paused) => setInlineSpotify(uri && !paused ? uri.replace("spotify:track:", "") : null));
+  }, []);
 
   const { data: recordings = [], isLoading } = useQuery({
     queryKey: ["recordings"],
@@ -174,7 +179,7 @@ const RecordingsList = () => {
                   <tr className="border-t hover:bg-muted/30">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <CoverPlayButton coverUrl={cover} audioUrl={audio} fallbackActive={inlineSpotify === r.id} onFallback={r.spotify_track_id ? () => setInlineSpotify(inlineSpotify === r.id ? null : r.id) : undefined} />
+                        <CoverPlayButton coverUrl={cover} audioUrl={audio} fallbackActive={inlineSpotify === r.spotify_track_id} onFallback={r.spotify_track_id ? () => toggleSpotifyTrack(r.spotify_track_id!, inlineSpotify === r.spotify_track_id) : undefined} />
                         <div className="min-w-0">
                           {w ? (
                             <Link to={`/works/${w.id}`} className="block font-medium truncate text-primary hover:underline">{r.track}</Link>
@@ -193,7 +198,7 @@ const RecordingsList = () => {
                     <td className="p-3">
                       {r.spotify_track_id ? (
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Spela upp" onClick={() => setInlineSpotify(inlineSpotify === r.id ? null : r.id)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Spela upp" onClick={() => toggleSpotifyTrack(r.spotify_track_id!, inlineSpotify === r.spotify_track_id)}>
                             <Play className="h-3.5 w-3.5" />
                           </Button>
                           <a href={r.spotify_url ?? "#"} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">Öppna</a>
@@ -208,11 +213,6 @@ const RecordingsList = () => {
                     </td>
                     <td className="p-3"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button></td>
                   </tr>
-                  {inlineSpotify === r.id && r.spotify_track_id && (
-                    <tr><td colSpan={9} className="px-3 pb-3">
-                      <iframe title="Spotify" src={`https://open.spotify.com/embed/track/${r.spotify_track_id}?autoplay=1`} width="100%" height="80" frameBorder="0" allow="autoplay; encrypted-media" className="rounded-xl" />
-                    </td></tr>
-                  )}
                   </Fragment>
                 );
               })}
