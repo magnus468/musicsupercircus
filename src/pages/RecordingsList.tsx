@@ -130,13 +130,14 @@ const RecordingsList = () => {
     let updated = 0;
     let notFound = 0;
     try {
-      for (let i = 0; i < 20; i++) {
-        const { data, error } = await supabase.functions.invoke("spotify-sync", { body: { limit: 200 } });
+      for (let i = 0; i < 80; i++) {
+        const { data, error } = await supabase.functions.invoke("spotify-sync", { body: { limit: 40 } });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
         updated += data?.updated ?? 0;
         notFound += data?.notFound ?? 0;
         toast.info(`Hämtar från Spotify… ${updated} hittade, ${data?.remaining ?? 0} kvar`);
+        if (data?.rateLimited) { toast.warning("Spotify begränsar just nu antalet sökningar. Försök igen om en stund."); break; }
         if (!data?.scanned || !data?.remaining) break;
       }
       await qc.invalidateQueries({ queryKey: ["recordings"] });
