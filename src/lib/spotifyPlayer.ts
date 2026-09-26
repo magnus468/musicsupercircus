@@ -4,6 +4,7 @@ type Controller = {
   play: () => void;
   pause: () => void;
   togglePlay: () => void;
+  seek: (s: number) => void;
   addListener: (ev: string, cb: (e: any) => void) => void;
 };
 
@@ -46,7 +47,7 @@ export async function toggleSpotifyTrack(trackId: string, isPlaying: boolean) {
   listeners.forEach((l) => l(uri, false));
   c.loadUri(uri);
   // play once loaded
-  setTimeout(() => c.play(), 600);
+  setTimeout(() => { c.seek(0); c.play(); }, 600);
 }
 
 export function subscribeSpotify(cb: (uri: string | null, paused: boolean) => void) {
