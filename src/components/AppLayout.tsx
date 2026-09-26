@@ -1,7 +1,7 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText, FolderOpen, AlertTriangle, Receipt, Disc3 } from "lucide-react";
+import { LayoutDashboard, List, Plus, LogOut, Menu, X, Users, FileText, FolderOpen, AlertTriangle, Receipt, Disc3, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import mscLogoBlack from "@/assets/msc-logo-black.jpg";
@@ -22,6 +22,13 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 600);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -87,6 +94,15 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </header>
         <div className="p-4 lg:p-8 animate-fade-in">{children}</div>
       </main>
+      {showTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Till toppen"
+          className="fixed bottom-5 left-5 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 lg:left-auto lg:right-6 lg:bottom-24"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 };
