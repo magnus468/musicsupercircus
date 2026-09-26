@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Disc3, Link2, Pencil, RefreshCw, Play } from "lucide-react";
-import InlineAudioButton from "@/components/works/InlineAudioButton";
+import CoverPlayButton from "@/components/works/CoverPlayButton";
+import { Fragment } from "react";
 import { resolveAudioUrl } from "@/lib/audioLink";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -37,6 +38,7 @@ const RecordingsList = () => {
   const [workSearch, setWorkSearch] = useState("");
   const [spotifyPlay, setSpotifyPlay] = useState<Recording | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [inlineSpotify, setInlineSpotify] = useState<string | null>(null);
 
   const { data: recordings = [], isLoading } = useQuery({
     queryKey: ["recordings"],
@@ -168,10 +170,11 @@ const RecordingsList = () => {
                 const cover = r.cover_url || r.spotify_cover_url || coverMap.get((r.project ?? "").trim().toLowerCase());
                 const audio = r.audio_url || w?.audio_url;
                 return (
-                  <tr key={r.id} className="border-t hover:bg-muted/30">
+                  <Fragment key={r.id}>
+                  <tr className="border-t hover:bg-muted/30">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <Cover url={cover} />
+                        <CoverPlayButton coverUrl={cover} audioUrl={audio} fallbackActive={inlineSpotify === r.id} onFallback={r.spotify_track_id ? () => setInlineSpotify(inlineSpotify === r.id ? null : r.id) : undefined} />
                         <div className="min-w-0">
                           {w ? (
                             <Link to={`/works/${w.id}`} className="block font-medium truncate text-primary hover:underline">{r.track}</Link>
@@ -180,7 +183,6 @@ const RecordingsList = () => {
                           )}
                           <div className="text-xs text-muted-foreground truncate">{r.catalog_number} · {r.composer}</div>
                         </div>
-                        <InlineAudioButton url={audio} />
                       </div>
                     </td>
                     <td className="p-3 font-mono text-xs">{r.isrc || "–"}</td>
@@ -191,7 +193,7 @@ const RecordingsList = () => {
                     <td className="p-3">
                       {r.spotify_track_id ? (
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Spela upp" onClick={() => setSpotifyPlay(r)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Spela upp" onClick={() => setInlineSpotify(inlineSpotify === r.id ? null : r.id)}>
                             <Play className="h-3.5 w-3.5" />
                           </Button>
                           <a href={r.spotify_url ?? "#"} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">Öppna</a>
@@ -206,6 +208,12 @@ const RecordingsList = () => {
                     </td>
                     <td className="p-3"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button></td>
                   </tr>
+                  {inlineSpotify === r.id && r.spotify_track_id && (
+                    <tr><td colSpan={9} className="px-3 pb-3">
+                      <iframe title="Spotify" src={`https://open.spotify.com/embed/track/${r.spotify_track_id}?autoplay=1`} width="100%" height="80" frameBorder="0" allow="autoplay; encrypted-media" className="rounded-xl" />
+                    </td></tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>
