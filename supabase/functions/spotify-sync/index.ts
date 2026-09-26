@@ -31,6 +31,7 @@ async function searchIsrc(token: string, isrc: string): Promise<Track | null> {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   if (res.status === 429) {
     const wait = Number(res.headers.get("retry-after") ?? "2");
+    if (wait > 10) throw new Error("RATE_LIMIT");
     await new Promise((r) => setTimeout(r, (wait + 1) * 1000));
     return searchIsrc(token, isrc);
   }
@@ -78,11 +79,20 @@ Deno.serve(async (req) => {
     const token = await getToken();
     let updated = 0;
     let notFound = 0;
+    let rateLimited = false;
+    const started = Date.now();
 
     for (const r of rows) {
+      if (Date.now() - started > 90_000) break;
       const isrc = (r.isrc ?? "").replace(/[\s-]/g, "").toUpperCase();
       if (!isrc) continue;
-      const track = await searchIsrc(token, isrc);
+      let track: Track | null;
+      try {
+        track = await searchIsrc(token, isrc);
+      } catch (e) {
+        if (e instanceof Error && e.message === "RATE_LIMIT") { rateLimited = true; break; }
+        throw e;
+      }
       if (!track) {
         notFound++;
         await supabase.from("recordings").update({ spotify_synced_at: new Date().toISOString() }).eq("id", r.id);
@@ -111,7 +121,7 @@ Deno.serve(async (req) => {
       .neq("isrc", "")
       .is("spotify_track_id", null);
 
-    return json({ scanned: rows.length, updated, notFound, remaining: remaining ?? 0 });
+    return json({ scanned: rows.length, updated, notFound, remaining: remaining ?? 0, rateLimited });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Okänt fel" }, 500);
   }
