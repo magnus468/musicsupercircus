@@ -241,6 +241,27 @@ const RecordingsList = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!spotifyPlay} onOpenChange={(o) => !o && setSpotifyPlay(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>{spotifyPlay?.track}</DialogTitle></DialogHeader>
+          {spotifyPlay?.spotify_track_id && (
+            <iframe
+              title="Spotify"
+              src={`https://open.spotify.com/embed/track/${spotifyPlay.spotify_track_id}`}
+              width="100%"
+              height="152"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              className="rounded-xl"
+            />
+          )}
+          {spotifyPlay?.spotify_release_date && (
+            <p className="text-sm text-muted-foreground">Släppt {spotifyPlay.spotify_release_date}</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
