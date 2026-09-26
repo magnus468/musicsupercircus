@@ -315,6 +315,13 @@ export type Database = {
           split_artist: number | null
           split_label: number | null
           split_msc: number | null
+          spotify_album: string | null
+          spotify_cover_url: string | null
+          spotify_popularity: number | null
+          spotify_release_date: string | null
+          spotify_synced_at: string | null
+          spotify_track_id: string | null
+          spotify_url: string | null
           sr_uploaded: boolean
           track: string
           updated_at: string
@@ -337,6 +344,13 @@ export type Database = {
           split_artist?: number | null
           split_label?: number | null
           split_msc?: number | null
+          spotify_album?: string | null
+          spotify_cover_url?: string | null
+          spotify_popularity?: number | null
+          spotify_release_date?: string | null
+          spotify_synced_at?: string | null
+          spotify_track_id?: string | null
+          spotify_url?: string | null
           sr_uploaded?: boolean
           track: string
           updated_at?: string
@@ -359,6 +373,13 @@ export type Database = {
           split_artist?: number | null
           split_label?: number | null
           split_msc?: number | null
+          spotify_album?: string | null
+          spotify_cover_url?: string | null
+          spotify_popularity?: number | null
+          spotify_release_date?: string | null
+          spotify_synced_at?: string | null
+          spotify_track_id?: string | null
+          spotify_url?: string | null
           sr_uploaded?: boolean
           track?: string
           updated_at?: string
