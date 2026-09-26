@@ -158,14 +158,14 @@ const RecordingsList = () => {
               <tr>
                 <th className="p-3">Låt</th><th className="p-3">ISRC</th><th className="p-3">Projekt / Album</th>
                 <th className="p-3">Artist</th><th className="p-3">Split MSC</th><th className="p-3">Bolag</th>
-                <th className="p-3">Verk</th><th className="p-3"></th>
+                <th className="p-3">Spotify</th><th className="p-3">Verk</th><th className="p-3"></th>
               </tr>
             </thead>
             <tbody>
-              {isLoading && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Laddar…</td></tr>}
+              {isLoading && <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">Laddar…</td></tr>}
               {filtered.map((r) => {
                 const w = r.work_id ? workMap.get(r.work_id) : undefined;
-                const cover = r.cover_url || coverMap.get((r.project ?? "").trim().toLowerCase());
+                const cover = r.cover_url || r.spotify_cover_url || coverMap.get((r.project ?? "").trim().toLowerCase());
                 const audio = r.audio_url || w?.audio_url;
                 return (
                   <tr key={r.id} className="border-t hover:bg-muted/30">
@@ -184,10 +184,22 @@ const RecordingsList = () => {
                       </div>
                     </td>
                     <td className="p-3 font-mono text-xs">{r.isrc || "–"}</td>
-                    <td className="p-3"><div>{r.project}</div><div className="text-xs text-muted-foreground">{r.album}</div></td>
+                    <td className="p-3"><div>{r.project}</div><div className="text-xs text-muted-foreground">{r.spotify_album || r.album}</div></td>
                     <td className="p-3">{r.artist || "–"}</td>
                     <td className="p-3">{pct(r.split_msc)}</td>
                     <td className="p-3">{r.label || "–"}</td>
+                    <td className="p-3">
+                      {r.spotify_track_id ? (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Spela upp" onClick={() => setSpotifyPlay(r)}>
+                            <Play className="h-3.5 w-3.5" />
+                          </Button>
+                          <a href={r.spotify_url ?? "#"} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">Öppna</a>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">–</span>
+                      )}
+                    </td>
                     <td className="p-3">
                       {w ? <Link to={`/works/${w.id}`} className="inline-flex items-center gap-1 text-primary hover:underline"><Link2 className="h-3 w-3" />Verk</Link>
                         : <Badge variant="outline">Ej kopplad</Badge>}
