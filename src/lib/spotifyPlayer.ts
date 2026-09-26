@@ -46,8 +46,6 @@ export async function toggleSpotifyTrack(trackId: string, isPlaying: boolean) {
   listeners.forEach((l) => l(uri, false));
   c.loadUri(uri);
   // play once loaded
-  const onReady = () => c.play();
-  c.addListener("ready", onReady);
   setTimeout(() => c.play(), 600);
 }
 
