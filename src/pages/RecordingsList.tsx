@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Disc3, Link2, Pencil } from "lucide-react";
+import { Disc3, Link2, Pencil, RefreshCw, Play } from "lucide-react";
 import InlineAudioButton from "@/components/works/InlineAudioButton";
 import { resolveAudioUrl } from "@/lib/audioLink";
 import { toast } from "sonner";
@@ -35,6 +35,8 @@ const RecordingsList = () => {
   const [edit, setEdit] = useState<Recording | null>(null);
   const [form, setForm] = useState({ isrc: "", audio_url: "", cover_url: "", work_id: "" });
   const [workSearch, setWorkSearch] = useState("");
+  const [spotifyPlay, setSpotifyPlay] = useState<Recording | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   const { data: recordings = [], isLoading } = useQuery({
     queryKey: ["recordings"],
