@@ -50,7 +50,7 @@ function parseSplitEntry(part: string, defaultRole: "CA" | "E"): string | null {
     return `${name} (${role})`;
   }
   const split = inner.match(
-    /(?:^|[_\s])(CA|C|A|E|AR|SA)?[_\s]*(?:Norden[_\s]*)?(\d+(?:[.,]\d+)?)\s*%[_\s]*ROW[_\s:]*(\d+(?:[.,]\d+)?)\s*%/i,
+    /(?:^|[_\s])(CA|C|A|E|AR|SA)?[_\s]*(?:Norden[_\s:]*)?(\d+(?:[.,]\d+)?)[.,]?\s*%[_\s,]*ROW[_\s:]*(\d+(?:[.,]\d+)?)[.,]?\s*%/i,
   );
   if (!name || !split) return null;
   const role = (split[1] || defaultRole).toUpperCase();
@@ -58,10 +58,20 @@ function parseSplitEntry(part: string, defaultRole: "CA" | "E"): string | null {
 }
 
 // Bygger creators-strängen när arket innehåller split-notation, annars null
-function buildCreators(rawCreators: string, rawPublishers: string | null): {
+// Lagar vanliga skrivfel: saknad "(" före rollkod, saknat skiljetecken efter ")"
+function repairSplitText(s: string): string {
+  return s
+    .replace(/([^\s(])\s+((?:CA|C|A|E|AR|SA)_(?:Norden|NOT))/gi, "$1 ($2")
+    .replace(/\)\s+(?=[A-ZÅÄÖÉa-zåäöé])/g, "), ")
+    .replace(/\s{2,}/g, " ");
+}
+
+function buildCreators(rawCreatorsIn: string, rawPublishersIn: string | null): {
   creators: string;
   publishers: string[];
 } | null {
+  const rawCreators = repairSplitText(rawCreatorsIn);
+  const rawPublishers = rawPublishersIn ? repairSplitText(rawPublishersIn) : null;
   const hasSplit = /ROW[_\s:]*\d/i.test(`${rawCreators} ${rawPublishers ?? ""}`);
   if (!hasSplit) return null;
 
