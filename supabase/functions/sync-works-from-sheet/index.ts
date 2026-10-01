@@ -27,7 +27,8 @@ function splitTop(s: string): string[] {
   for (const ch of s) {
     if (ch === "(") depth++;
     if (ch === ")") depth = Math.max(0, depth - 1);
-    if ((ch === "/" || ch === "&") && depth === 0) { out.push(cur); cur = ""; continue; }
+    // "/", "&", ";" och "," utanför parentes skiljer personer åt
+    if ((ch === "/" || ch === "&" || ch === ";" || ch === ",") && depth === 0) { out.push(cur); cur = ""; continue; }
     cur += ch;
   }
   out.push(cur);
