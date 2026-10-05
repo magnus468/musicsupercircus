@@ -167,6 +167,7 @@ const RecordingsList = () => {
             <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" className="h-8 w-8 rounded-l-none" title="Lista" onClick={() => setView("list")}><List className="h-4 w-4" /></Button>
           </div>
           <Button variant="outline" size="sm" asChild><Link to="/recordings/statements">Avräkningar</Link></Button>
+          <Button variant="outline" size="sm" asChild><Link to="/recordings/royalties">Royaltyavräkningar</Link></Button>
           <Button variant="outline" size="sm" onClick={runSpotifySync} disabled={syncing}>
             <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
             {syncing ? "Hämtar från Spotify…" : "Hämta från Spotify"}

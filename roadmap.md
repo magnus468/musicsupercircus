@@ -6,3 +6,5 @@
 - [x] Hämta saknade albumomslag från Dropbox (avbrutet av användaren)
 - [x] Avräkningar för inspelningsrättigheter (DistroKid, TuneCore, Bandcamp), separat från STIM/WCM
 - [x] Fördelning per mottagare + utbetalningsunderlag för inspelningsavräkningar
+- [x] Recoup av albumkostnader innan utbetalning
+- [x] Halvårsvisa royaltyavräkningar (26.1/26.2) med PDF per mottagare
