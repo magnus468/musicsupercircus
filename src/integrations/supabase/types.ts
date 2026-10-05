@@ -568,6 +568,112 @@ export type Database = {
           },
         ]
       }
+      royalty_payees: {
+        Row: {
+          client_id: string | null
+          minimum_payout: number
+          recipient: string
+          updated_at: string
+          vat_rate: number
+        }
+        Insert: {
+          client_id?: string | null
+          minimum_payout?: number
+          recipient: string
+          updated_at?: string
+          vat_rate?: number
+        }
+        Update: {
+          client_id?: string | null
+          minimum_payout?: number
+          recipient?: string
+          updated_at?: string
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "royalty_payees_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      royalty_statements: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          expenses_sek: number
+          fees: Json
+          id: string
+          income_downloads_sek: number
+          income_streams_sek: number
+          minimum_payout: number
+          opening_balance: number
+          outstanding_balance: number
+          payable_excl_vat: number
+          payable_incl_vat: number
+          period_end: string
+          period_label: string
+          period_start: string
+          recipient: string
+          statement_date: string
+          vat_rate: number
+          vat_sek: number
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          expenses_sek?: number
+          fees?: Json
+          id?: string
+          income_downloads_sek?: number
+          income_streams_sek?: number
+          minimum_payout?: number
+          opening_balance?: number
+          outstanding_balance?: number
+          payable_excl_vat?: number
+          payable_incl_vat?: number
+          period_end: string
+          period_label: string
+          period_start: string
+          recipient: string
+          statement_date?: string
+          vat_rate?: number
+          vat_sek?: number
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          expenses_sek?: number
+          fees?: Json
+          id?: string
+          income_downloads_sek?: number
+          income_streams_sek?: number
+          minimum_payout?: number
+          opening_balance?: number
+          outstanding_balance?: number
+          payable_excl_vat?: number
+          payable_incl_vat?: number
+          period_end?: string
+          period_label?: string
+          period_start?: string
+          recipient?: string
+          statement_date?: string
+          vat_rate?: number
+          vat_sek?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "royalty_statements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settlement_statement_map: {
         Row: {
           distribution_key: string
@@ -898,6 +1004,10 @@ export type Database = {
         Returns: Json
       }
       get_recording_income: { Args: never; Returns: Json }
+      get_royalty_period: {
+        Args: { p_end: string; p_start: string }
+        Returns: Json
+      }
       get_settlement_stats:
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
