@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, FileText, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { buildRoyaltyPdf, type Fee, type Party } from "@/lib/royaltyPdf";
+import { type Fee, type Party } from "@/lib/royaltyPdf";
+import RoyaltyStatementView from "@/components/recordings/RoyaltyStatementView";
 
 const sek = (v: number) => v.toLocaleString("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 2 });
 // Svensk decimal: komma = decimal, mellanslag = tusental
@@ -92,27 +93,16 @@ const RoyaltyStatements = () => {
     }).sort((a, b) => b.income - a.income);
   }, [period, saved, payees, label]);
 
-  // PDF:en sparas i lagringen och öppnas via en tillfällig länk som tvingar nedladdning.
-  // (Förhandsvisningen blockerar nedladdningar direkt från sidan.)
-  const download = async (s: Saved) => {
-    const w = window.open("", "_blank");
-    try {
-      const c = clients.find((x) => x.id === s.client_id);
-      const name = `${s.period_label.replace(".", "H")}_${(c ? clientName(c) : s.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`;
-      const doc = buildRoyaltyPdf({ ...s, fees: s.fees ?? [] }, party(c, s.recipient));
-      const path = `${s.period_label}/${s.id}.pdf`;
-      const { error: upErr } = await supabase.storage.from("royalty-statements")
-        .upload(path, doc.output("blob"), { upsert: true, contentType: "application/pdf" });
-      if (upErr) throw upErr;
-      const { data, error } = await supabase.storage.from("royalty-statements").createSignedUrl(path, 600, { download: name });
-      if (error) throw error;
-      if (w) w.location.href = data.signedUrl;
-      else window.location.href = data.signedUrl;
-    } catch (e) {
-      w?.close();
-      toast.error(e instanceof Error ? e.message : "Kunde inte skapa PDF");
-    }
-  };
+  const [viewing, setViewing] = useState<Saved | null>(null);
+  const viewData = useMemo(() => {
+    if (!viewing) return null;
+    const c = clients.find((x) => x.id === viewing.client_id);
+    return {
+      statement: { ...viewing, fees: viewing.fees ?? [] },
+      payee: party(c, viewing.recipient),
+      fileName: `${viewing.period_label.replace(".", "H")}_${(c ? clientName(c) : viewing.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`,
+    };
+  }, [viewing, clients]);
 
   const remove = async (s: Saved) => {
     if (!confirm(`Ta bort avräkningen ${s.period_label} för ${s.recipient}?`)) return;
@@ -169,7 +159,7 @@ const RoyaltyStatements = () => {
                     {r.st ? (
                       <>
                         <Badge variant="outline" className="mr-2">Skapad</Badge>
-                        <Button variant="ghost" size="icon" title="Ladda ner PDF" onClick={() => download(r.st!)}><Download className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => setViewing(r.st!)}><Eye className="mr-1 h-4 w-4" />Visa</Button>
                         <Button variant="ghost" size="icon" title="Ta bort" onClick={() => remove(r.st!)}><Trash2 className="h-4 w-4" /></Button>
                       </>
                     ) : (
@@ -199,10 +189,11 @@ const RoyaltyStatements = () => {
             setEditing(null);
             qc.invalidateQueries({ queryKey: ["royalty-statements"] });
             qc.invalidateQueries({ queryKey: ["royalty-payees"] });
-            download(s);
+            setViewing(s);
           }}
         />
       )}
+      {viewData && <RoyaltyStatementView {...viewData} onClose={() => setViewing(null)} />}
     </div>
   );
 };
