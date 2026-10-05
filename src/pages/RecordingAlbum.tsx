@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import AlbumCover from "@/components/recordings/AlbumCover";
 import { groupAlbums, type Recording } from "@/lib/recordingAlbums";
+import AlbumExpenses from "@/components/recordings/AlbumExpenses";
 
 const fmt = (v: number | null) => `${(Math.round((v ?? 0) * 10000) / 100).toFixed(2)}%`;
 
@@ -151,6 +152,19 @@ const RecordingAlbum = () => {
           </table>
         </div>
       </div>
+      <AlbumExpenses
+        albumKey={albumKey}
+        sheetNote={album.tracks.map((t) => t.expenses).find((e) => e && !/^inga expenses$/i.test(e.trim())) ?? null}
+        recipients={[...new Set(album.tracks.flatMap((t) => {
+          const own = customSplits.filter((c) => c.recording_id === t.id);
+          if (own.length) return own.map((c) => c.recipient);
+          return [
+            t.split_artist ? (t.artist?.trim() || "Artist") : null,
+            t.split_msc ? "Music Super Circus" : null,
+            t.split_label ? (t.label?.trim() || "Bolag") : null,
+          ].filter(Boolean) as string[];
+        }))]}
+      />
       {editing && (
         <SplitEditorDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} trackTitle={editing.title}
           recordingId={editing.id} albumRecordingIds={trackIds} initial={editing.rows}
