@@ -297,6 +297,41 @@ export type Database = {
         }
         Relationships: []
       }
+      recording_splits: {
+        Row: {
+          created_at: string
+          id: string
+          recipient: string
+          recording_id: string
+          share: number
+          sort: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient: string
+          recording_id: string
+          share?: number
+          sort?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient?: string
+          recording_id?: string
+          share?: number
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recording_splits_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recording_statement_lines: {
         Row: {
           amount: number
@@ -798,7 +833,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      recording_effective_splits: {
+        Row: {
+          frac: number | null
+          recipient: string | null
+          recording_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       compute_settlement_stats: {
@@ -817,6 +859,7 @@ export type Database = {
       get_settlement_stats:
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
+      get_statement_payouts: { Args: { p_statement_id: string }; Returns: Json }
       get_unmatched_settlement_works: { Args: never; Returns: Json }
       get_unregistered_soundtrack_titles: { Args: never; Returns: Json }
       has_role: {

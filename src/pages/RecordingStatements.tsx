@@ -48,6 +48,26 @@ const RecordingStatements = () => {
     },
   });
 
+  const { data: payouts } = useQuery({
+    queryKey: ["recording-payouts", selected?.id],
+    enabled: !!selected,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_statement_payouts", { p_statement_id: selected!.id });
+      if (error) throw error;
+      return data as { total: number; distributed: number; recipients: { recipient: string; total: number; tracks: number }[] };
+    },
+  });
+
+  const exportPayouts = () => {
+    if (!payouts || !selected) return;
+    const rows = [["Mottagare", "Antal spår", "Belopp (USD)"], ...payouts.recipients.map((r) => [r.recipient, String(r.tracks), r.total.toFixed(2).replace(".", ",")])];
+    const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(";")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = `Utbetalning ${selected.period_label}.csv`;
+    a.click();
+  };
+
   const summary = useMemo(() => {
     const m = new Map<string, { title: string; isrc: string | null; linked: boolean; amount: number; quantity: number }>();
     for (const l of lines) {
@@ -137,6 +157,29 @@ const RecordingStatements = () => {
             <div className="text-2xl font-semibold tabular-nums">{usd(Number(selected.total_amount))}</div>
             {unlinked.length > 0 && <div className="text-xs text-destructive">{unlinked.length} låtar saknar koppling (ISRC finns inte i Inspelningsrättigheter)</div>}
           </div>
+        </div>
+        <div className="overflow-hidden rounded-lg border bg-card">
+          <div className="flex items-center justify-between border-b p-3">
+            <div>
+              <h2 className="font-medium">Utbetalning per mottagare</h2>
+              {payouts && payouts.total - payouts.distributed > 0.005 && (
+                <p className="text-xs text-destructive">{usd(payouts.total - payouts.distributed)} kunde inte fördelas (låtar utan koppling eller utan fördelning)</p>
+              )}
+            </div>
+            <Button variant="outline" size="sm" onClick={exportPayouts} disabled={!payouts?.recipients.length}>Exportera underlag</Button>
+          </div>
+          <table className="w-full text-sm">
+            <tbody>
+              {!payouts && <tr><td className="p-4 text-center text-muted-foreground">Räknar…</td></tr>}
+              {payouts?.recipients.map((r) => (
+                <tr key={r.recipient} className="border-t first:border-t-0">
+                  <td className="p-3 font-medium">{r.recipient}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{r.tracks} spår</td>
+                  <td className="p-3 text-right tabular-nums">{usd(r.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         <div className="overflow-hidden rounded-lg border bg-card">
           <table className="w-full text-sm">
