@@ -297,6 +297,33 @@ export type Database = {
         }
         Relationships: []
       }
+      recording_expenses: {
+        Row: {
+          album_key: string
+          amount_sek: number
+          bearers: string[] | null
+          created_at: string
+          description: string
+          id: string
+        }
+        Insert: {
+          album_key: string
+          amount_sek: number
+          bearers?: string[] | null
+          created_at?: string
+          description: string
+          id?: string
+        }
+        Update: {
+          album_key?: string
+          amount_sek?: number
+          bearers?: string[] | null
+          created_at?: string
+          description?: string
+          id?: string
+        }
+        Relationships: []
+      }
       recording_splits: {
         Row: {
           created_at: string
@@ -413,6 +440,7 @@ export type Database = {
           row_count: number
           source: string
           total_amount: number
+          usd_sek_rate: number | null
         }
         Insert: {
           created_at?: string
@@ -425,6 +453,7 @@ export type Database = {
           row_count?: number
           source: string
           total_amount?: number
+          usd_sek_rate?: number | null
         }
         Update: {
           created_at?: string
@@ -437,6 +466,7 @@ export type Database = {
           row_count?: number
           source?: string
           total_amount?: number
+          usd_sek_rate?: number | null
         }
         Relationships: []
       }
@@ -843,10 +873,22 @@ export type Database = {
       }
     }
     Functions: {
+      _recording_ledger: {
+        Args: never
+        Returns: {
+          album_key: string
+          deduction: number
+          gross: number
+          rate: number
+          recipient: string
+          statement_id: string
+        }[]
+      }
       compute_settlement_stats: {
         Args: { p_distribution_key?: string }
         Returns: Json
       }
+      get_album_recoup: { Args: { p_album_key: string }; Returns: Json }
       get_country_works: {
         Args: {
           p_country: string
@@ -871,6 +913,10 @@ export type Database = {
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       norm_title: { Args: { t: string }; Returns: string }
+      recording_album_key: {
+        Args: { a: string; p: string; s: string }
+        Returns: string
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
