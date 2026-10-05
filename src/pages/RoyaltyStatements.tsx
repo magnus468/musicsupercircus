@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Fee, type Party } from "@/lib/royaltyPdf";
 import RoyaltyStatementView from "@/components/recordings/RoyaltyStatementView";
-import RoyaltyStatementView from "@/components/recordings/RoyaltyStatementView";
 
 const sek = (v: number) => v.toLocaleString("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 2 });
 // Svensk decimal: komma = decimal, mellanslag = tusental
