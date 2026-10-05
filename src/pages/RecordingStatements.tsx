@@ -88,6 +88,35 @@ const RecordingStatements = () => {
     a.click();
   };
 
+  const [groupBy, setGroupBy] = useState<"track" | "album">("track");
+  const { data: recAlbums } = useQuery({
+    queryKey: ["recording-album-names"],
+    enabled: !!selected && groupBy === "album",
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const m = new Map<string, string>();
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await supabase.from("recordings").select("id,album,spotify_album,project").range(from, from + 999);
+        if (error) throw error;
+        for (const r of data) m.set(r.id, (r.album || r.spotify_album || r.project || "Okänt album").trim());
+        if (data.length < 1000) break;
+      }
+      return m;
+    },
+  });
+  const albumSummary = useMemo(() => {
+    const m = new Map<string, { key: string; name: string; linked: boolean; tracks: Set<string>; amount: number; quantity: number }>();
+    for (const l of lines) {
+      const name = l.recording_id ? recAlbums?.get(l.recording_id) ?? "…" : l.release_title || l.title || "Okänt";
+      const key = l.recording_id ? name.toLowerCase() : `x:${name.toLowerCase()}`;
+      const cur = m.get(key) ?? { key: l.recording_id ? name.toLowerCase() : name, name, linked: !!l.recording_id, tracks: new Set<string>(), amount: 0, quantity: 0 };
+      cur.amount += Number(l.amount); cur.quantity += l.quantity;
+      cur.tracks.add(l.recording_id || l.isrc || l.title || "?");
+      m.set(key, cur);
+    }
+    return [...m.values()].sort((a, b) => b.amount - a.amount);
+  }, [lines, recAlbums]);
+
   const summary = useMemo(() => {
     const m = new Map<string, { title: string; isrc: string | null; linked: boolean; amount: number; quantity: number }>();
     for (const l of lines) {
@@ -235,18 +264,38 @@ const RecordingStatements = () => {
           </table>
         </div>
         <div className="overflow-hidden rounded-lg border bg-card">
+          <div className="flex items-center justify-between border-b p-3">
+            <h2 className="font-medium">Intäkter {groupBy === "track" ? "per låt" : "per album"}</h2>
+            <div className="flex rounded-md border">
+              <Button variant={groupBy === "track" ? "secondary" : "ghost"} size="sm" className="rounded-r-none" onClick={() => setGroupBy("track")}>Per låt</Button>
+              <Button variant={groupBy === "album" ? "secondary" : "ghost"} size="sm" className="rounded-l-none" onClick={() => setGroupBy("album")}>Per album</Button>
+            </div>
+          </div>
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-              <tr><th className="p-3">Låt / release</th><th className="p-3">ISRC</th><th className="p-3 text-right">Antal</th><th className="p-3 text-right">Intäkt</th></tr>
+              {groupBy === "track"
+                ? <tr><th className="p-3">Låt / release</th><th className="p-3">ISRC</th><th className="p-3 text-right">Antal</th><th className="p-3 text-right">Intäkt</th></tr>
+                : <tr><th className="p-3">Album</th><th className="p-3">Spår</th><th className="p-3 text-right">Antal</th><th className="p-3 text-right">Intäkt</th></tr>}
             </thead>
             <tbody>
               {linesLoading && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Laddar…</td></tr>}
-              {summary.map((s, i) => (
+              {groupBy === "track" && summary.map((s, i) => (
                 <tr key={i} className="border-t">
                   <td className="p-3">{s.title} {!s.linked && <Badge variant="outline" className="ml-2 border-destructive text-destructive">Ej kopplad</Badge>}</td>
                   <td className="p-3 font-mono text-xs">{s.isrc || "–"}</td>
                   <td className="p-3 text-right tabular-nums">{s.quantity.toLocaleString("sv-SE")}</td>
                   <td className="p-3 text-right tabular-nums">{usd(s.amount)}</td>
+                </tr>
+              ))}
+              {groupBy === "album" && albumSummary.map((a) => (
+                <tr key={a.key} className="border-t">
+                  <td className="p-3">
+                    {a.linked ? <Link to={`/recordings/album/${encodeURIComponent(a.key)}`} className="text-primary hover:underline">{a.name}</Link> : a.name}
+                    {!a.linked && <Badge variant="outline" className="ml-2 border-destructive text-destructive">Ej kopplad</Badge>}
+                  </td>
+                  <td className="p-3 text-xs text-muted-foreground">{a.tracks.size}</td>
+                  <td className="p-3 text-right tabular-nums">{a.quantity.toLocaleString("sv-SE")}</td>
+                  <td className="p-3 text-right tabular-nums">{usd(a.amount)}</td>
                 </tr>
               ))}
             </tbody>
