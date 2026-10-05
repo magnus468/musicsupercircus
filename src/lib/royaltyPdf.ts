@@ -30,10 +30,10 @@ export const buildRoyaltyPdf = (s: RoyaltyStatementData, payee: Party) => {
     p.lines.filter(Boolean).forEach((l, i) => doc.text(l, x, 114 + i * 13));
   };
   block(40, "Payer:", PAYER);
-  block(230, "Payee:", payee);
-  doc.setFontSize(9).setTextColor(110).text("Date:", 420, 85).text("Period:", 420, 125);
+  block(250, "Payee:", payee);
+  doc.setFontSize(9).setTextColor(110).text("Date:", 430, 85).text("Period:", 430, 125);
   doc.setTextColor(0).setFont("helvetica", "bold").setFontSize(10)
-    .text(s.statement_date, 420, 100).text(`${s.period_start} - ${s.period_end}`, 420, 140);
+    .text(s.statement_date, 430, 100).text(`${s.period_start} - ${s.period_end}`, 430, 140);
 
   const income = s.income_downloads_sek + s.income_streams_sek;
   autoTable(doc, {
