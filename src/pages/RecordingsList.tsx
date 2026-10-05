@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Disc3, Link2, Pencil, RefreshCw, Play } from "lucide-react";
+import { Disc3, Link2, Pencil, RefreshCw, Play, LayoutGrid, List } from "lucide-react";
+import AlbumCover from "@/components/recordings/AlbumCover";
+import { groupAlbums } from "@/lib/recordingAlbums";
 import CoverPlayButton from "@/components/works/CoverPlayButton";
 import { Fragment } from "react";
 import { resolveAudioUrl } from "@/lib/audioLink";
@@ -40,6 +42,8 @@ const RecordingsList = () => {
   const [spotifyPlay, setSpotifyPlay] = useState<Recording | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [inlineSpotify, setInlineSpotify] = useState<string | null>(null);
+  const [view, setViewState] = useState<"albums" | "list">(() => (sessionStorage.getItem("recordings-view") as "albums" | "list") || "albums");
+  const setView = (v: "albums" | "list") => { setViewState(v); sessionStorage.setItem("recordings-view", v); };
   useEffect(() => {
     preloadSpotify();
     return subscribeSpotify((uri, paused) => setInlineSpotify(uri && !paused ? uri.replace("spotify:track:", "") : null));
@@ -91,9 +95,10 @@ const RecordingsList = () => {
     const t = search.trim().toLowerCase();
     if (!t) return recordings;
     return recordings.filter((r) =>
-      [r.track, r.isrc, r.project, r.album, r.artist, r.composer, r.catalog_number, r.label].some((v) => v?.toLowerCase().includes(t)),
+      [r.track, r.isrc, r.project, r.album, r.spotify_album, r.artist, r.composer, r.catalog_number, r.label].some((v) => v?.toLowerCase().includes(t)),
     );
   }, [recordings, search]);
+  const albums = useMemo(() => groupAlbums(filtered, coverMap), [filtered, coverMap]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -152,14 +157,38 @@ const RecordingsList = () => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Input placeholder="Sök låt, ISRC, projekt, artist…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
-        <span className="text-sm text-muted-foreground">{filtered.length} inspelningar · {linked} kopplade till verk · {onSpotify} på Spotify</span>
-        <Button variant="outline" size="sm" onClick={runSpotifySync} disabled={syncing} className="ml-auto">
-          <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Hämtar från Spotify…" : "Hämta från Spotify"}
-        </Button>
+        <Input placeholder="Sök album, låt, ISRC, projekt, artist…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+        <span className="text-sm text-muted-foreground">
+          {view === "albums" ? `${albums.length} album · ` : ""}{filtered.length} inspelningar · {linked} kopplade till verk · {onSpotify} på Spotify
+        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="flex rounded-md border">
+            <Button variant={view === "albums" ? "secondary" : "ghost"} size="icon" className="h-8 w-8 rounded-r-none" title="Album" onClick={() => setView("albums")}><LayoutGrid className="h-4 w-4" /></Button>
+            <Button variant={view === "list" ? "secondary" : "ghost"} size="icon" className="h-8 w-8 rounded-l-none" title="Lista" onClick={() => setView("list")}><List className="h-4 w-4" /></Button>
+          </div>
+          <Button variant="outline" size="sm" onClick={runSpotifySync} disabled={syncing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Hämtar från Spotify…" : "Hämta från Spotify"}
+          </Button>
+        </div>
       </div>
-      <div className="rounded-lg border bg-card overflow-hidden">
+      {view === "albums" && (
+        isLoading ? <p className="text-muted-foreground">Laddar…</p> : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+            {albums.map((a) => (
+              <Link key={a.key} to={`/recordings/album/${encodeURIComponent(a.key)}`} className="group overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
+                <AlbumCover url={a.cover} className="w-full transition-transform group-hover:scale-[1.02]" />
+                <div className="p-2.5 text-center">
+                  <div className="truncate text-sm font-medium">{a.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">{a.artists.join(", ") || "–"}</div>
+                  <div className="text-[11px] text-muted-foreground">{a.tracks.length} spår</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )
+      )}
+      <div className={`rounded-lg border bg-card overflow-hidden ${view === "albums" ? "hidden" : ""}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
