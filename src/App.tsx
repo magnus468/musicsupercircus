@@ -19,6 +19,7 @@ import ReviewWorks from "@/pages/ReviewWorks";
 import SettlementsList from "@/pages/SettlementsList";
 import RecordingsList from "@/pages/RecordingsList";
 import RecordingAlbum from "@/pages/RecordingAlbum";
+import RecordingStatements from "@/pages/RecordingStatements";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/settlements" element={<ProtectedRoute><SettlementsList /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute><ReviewWorks /></ProtectedRoute>} />
             <Route path="/recordings" element={<ProtectedRoute><RecordingsList /></ProtectedRoute>} />
+            <Route path="/recordings/statements" element={<ProtectedRoute><RecordingStatements /></ProtectedRoute>} />
             <Route path="/recordings/album/:key" element={<ProtectedRoute><RecordingAlbum /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

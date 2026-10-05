@@ -71,6 +71,13 @@
       "when": 1790443610748,
       "tag": "0009_recordings_spotify_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791229629040,
+      "tag": "0010_recording_settlements",
+      "breakpoints": true
     }
   ]
 }
