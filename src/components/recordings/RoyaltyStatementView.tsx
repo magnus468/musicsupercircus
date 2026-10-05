@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, FileText, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -88,9 +89,8 @@ const RoyaltyStatementView = ({ statement: s, payee, fileName, onClose }: Props)
             <iframe src={viewUrl} title="Avräkning PDF" className="h-[70vh] w-full rounded border" />
           </>
         )}
-        {!showPdf && <></>}
 
-        <div className="space-y-6 rounded-lg border bg-card p-6 text-sm">
+        <div className={`space-y-6 rounded-lg border bg-card p-6 text-sm ${showPdf ? "hidden" : ""}`}>
           <h2 className="text-lg font-semibold">{PAYER.name}</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             <PartyBlock title="Payer" p={PAYER} />
