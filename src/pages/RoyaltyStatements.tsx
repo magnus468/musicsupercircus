@@ -92,27 +92,16 @@ const RoyaltyStatements = () => {
     }).sort((a, b) => b.income - a.income);
   }, [period, saved, payees, label]);
 
-  // PDF:en sparas i lagringen och öppnas via en tillfällig länk som tvingar nedladdning.
-  // (Förhandsvisningen blockerar nedladdningar direkt från sidan.)
-  const download = async (s: Saved) => {
-    const w = window.open("", "_blank");
-    try {
-      const c = clients.find((x) => x.id === s.client_id);
-      const name = `${s.period_label.replace(".", "H")}_${(c ? clientName(c) : s.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`;
-      const doc = buildRoyaltyPdf({ ...s, fees: s.fees ?? [] }, party(c, s.recipient));
-      const path = `${s.period_label}/${s.id}.pdf`;
-      const { error: upErr } = await supabase.storage.from("royalty-statements")
-        .upload(path, doc.output("blob"), { upsert: true, contentType: "application/pdf" });
-      if (upErr) throw upErr;
-      const { data, error } = await supabase.storage.from("royalty-statements").createSignedUrl(path, 600, { download: name });
-      if (error) throw error;
-      if (w) w.location.href = data.signedUrl;
-      else window.location.href = data.signedUrl;
-    } catch (e) {
-      w?.close();
-      toast.error(e instanceof Error ? e.message : "Kunde inte skapa PDF");
-    }
-  };
+  const [viewing, setViewing] = useState<Saved | null>(null);
+  const viewData = useMemo(() => {
+    if (!viewing) return null;
+    const c = clients.find((x) => x.id === viewing.client_id);
+    return {
+      statement: { ...viewing, fees: viewing.fees ?? [] },
+      payee: party(c, viewing.recipient),
+      fileName: `${viewing.period_label.replace(".", "H")}_${(c ? clientName(c) : viewing.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`,
+    };
+  }, [viewing, clients]);
 
   const remove = async (s: Saved) => {
     if (!confirm(`Ta bort avräkningen ${s.period_label} för ${s.recipient}?`)) return;
@@ -169,7 +158,7 @@ const RoyaltyStatements = () => {
                     {r.st ? (
                       <>
                         <Badge variant="outline" className="mr-2">Skapad</Badge>
-                        <Button variant="ghost" size="icon" title="Ladda ner PDF" onClick={() => download(r.st!)}><Download className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => setViewing(r.st!)}><Eye className="mr-1 h-4 w-4" />Visa</Button>
                         <Button variant="ghost" size="icon" title="Ta bort" onClick={() => remove(r.st!)}><Trash2 className="h-4 w-4" /></Button>
                       </>
                     ) : (
