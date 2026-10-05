@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, FileText, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { buildRoyaltyPdf, type Fee, type Party } from "@/lib/royaltyPdf";
+import { type Fee, type Party } from "@/lib/royaltyPdf";
+import RoyaltyStatementView from "@/components/recordings/RoyaltyStatementView";
 
 const sek = (v: number) => v.toLocaleString("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 2 });
 // Svensk decimal: komma = decimal, mellanslag = tusental
@@ -188,10 +189,11 @@ const RoyaltyStatements = () => {
             setEditing(null);
             qc.invalidateQueries({ queryKey: ["royalty-statements"] });
             qc.invalidateQueries({ queryKey: ["royalty-payees"] });
-            download(s);
+            setViewing(s);
           }}
         />
       )}
+      {viewData && <RoyaltyStatementView {...viewData} onClose={() => setViewing(null)} />}
     </div>
   );
 };
