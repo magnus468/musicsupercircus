@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Pencil } from "lucide-react";
+import SplitEditorDialog, { type SplitRow } from "@/components/recordings/SplitEditorDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ const fmt = (v: number | null) => `${(Math.round((v ?? 0) * 10000) / 100).toFixe
 
 const RecordingAlbum = () => {
   const { key = "" } = useParams();
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<{ id: string; title: string; rows: SplitRow[] } | null>(null);
   const albumKey = decodeURIComponent(key);
 
   const { data: recordings = [], isLoading } = useQuery({
@@ -52,6 +55,17 @@ const RecordingAlbum = () => {
     const covers = new Map(projects.map((p) => [p.name.trim().toLowerCase(), p.cover_url]));
     return groupAlbums(recordings, covers).find((a) => a.key === albumKey);
   }, [recordings, projects, albumKey]);
+
+  const trackIds = album?.tracks.map((t) => t.id) ?? [];
+  const { data: customSplits = [] } = useQuery({
+    queryKey: ["recording-splits", albumKey, trackIds.length],
+    enabled: trackIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("recording_splits").select("recording_id,recipient,share,sort").in("recording_id", trackIds).order("sort");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   if (isLoading) return <p className="text-muted-foreground">Laddar…</p>;
   if (!album)
@@ -100,11 +114,14 @@ const RecordingAlbum = () => {
             </thead>
             <tbody>
               {album.tracks.map((t, i) => {
-                const splits = [
-                  { pct: t.split_artist, name: t.artist ? `${t.artist} (artist)` : "Artist" },
-                  { pct: t.split_msc, name: "Music Super Circus" },
-                  { pct: t.split_label, name: t.label || "Bolag" },
-                ].filter((s) => s.pct != null && s.pct > 0);
+                const own = customSplits.filter((c) => c.recording_id === t.id);
+                const splits = own.length
+                  ? own.map((c) => ({ pct: Number(c.share) / 100, name: c.recipient }))
+                  : [
+                      { pct: t.split_artist, name: t.artist || "Artist" },
+                      { pct: t.split_msc, name: "Music Super Circus" },
+                      { pct: t.split_label, name: t.label || "Bolag" },
+                    ].filter((s) => s.pct != null && s.pct > 0);
                 return (
                   <tr key={t.id} className="border-t align-top">
                     <td className="p-3 text-muted-foreground">{String(i + 1).padStart(2, "0")}</td>
@@ -122,6 +139,9 @@ const RecordingAlbum = () => {
                           ))}
                         </ul>
                       ) : <span className="text-muted-foreground">–</span>}
+                      <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setEditing({ id: t.id, title: t.track, rows: splits.map((s) => ({ recipient: s.name, share: Math.round((s.pct ?? 0) * 10000) / 100 })) })}>
+                        <Pencil className="mr-1 h-3 w-3" />{own.length ? "Ändra" : "Ange mottagare"}
+                      </Button>
                     </td>
                     <td className="p-3 text-right tabular-nums">{trackIncome(t.id) ? usd(trackIncome(t.id)) : "–"}</td>
                   </tr>
@@ -131,6 +151,11 @@ const RecordingAlbum = () => {
           </table>
         </div>
       </div>
+      {editing && (
+        <SplitEditorDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} trackTitle={editing.title}
+          recordingId={editing.id} albumRecordingIds={trackIds} initial={editing.rows}
+          onSaved={() => qc.invalidateQueries({ queryKey: ["recording-splits"] })} />
+      )}
     </div>
   );
 };
