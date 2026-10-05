@@ -38,7 +38,7 @@ export const groupAlbums = (
     }
     a.cover ||= r.cover_url || r.spotify_cover_url || projectCovers.get((r.project ?? "").trim().toLowerCase()) || null;
     if (r.spotify_release_date && r.spotify_release_date > (a.releaseDate ?? "")) a.releaseDate = r.spotify_release_date;
-    const k = r.spotify_release_date || (r.created_at ?? "").slice(0, 10);
+    const k = r.catalog_number ?? "";
     if (k > a.sortKey) a.sortKey = k;
     a.label ||= r.label;
   }
@@ -46,6 +46,6 @@ export const groupAlbums = (
     a.tracks.sort((x, y) => (x.catalog_number ?? "").localeCompare(y.catalog_number ?? "", "sv", { numeric: true }) || (x.isrc ?? "").localeCompare(y.isrc ?? ""));
   }
   return [...map.values()].sort(
-    (a, b) => b.sortKey.localeCompare(a.sortKey) || a.name.localeCompare(b.name, "sv"),
+    (a, b) => b.sortKey.localeCompare(a.sortKey, "sv", { numeric: true }) || a.name.localeCompare(b.name, "sv"),
   );
 };
