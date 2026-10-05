@@ -16,7 +16,7 @@ export const PAYER: Party = {
 };
 
 const kr = (n: number) =>
-  `${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SEK`;
+  `${(Math.abs(n) < 0.005 ? 0 : n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SEK`;
 
 export const buildRoyaltyPdf = (s: RoyaltyStatementData, payee: Party) => {
   const doc = new jsPDF({ unit: "pt", format: "a4" });

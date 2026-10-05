@@ -92,14 +92,26 @@ const RoyaltyStatements = () => {
     }).sort((a, b) => b.income - a.income);
   }, [period, saved, payees, label]);
 
-  const download = (s: Saved) => {
-    const c = clients.find((x) => x.id === s.client_id);
-    const name = `${s.period_label.replace(".", "H")}_${(c ? clientName(c) : s.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`;
-    const doc = buildRoyaltyPdf({ ...s, fees: s.fees ?? [] }, party(c, s.recipient));
-    // Förhandsvisningen kan blockera direkta nedladdningar – öppna i ny flik, annars spara.
-    const url = URL.createObjectURL(new File([doc.output("blob")], name, { type: "application/pdf" }));
-    const w = window.open(url, "_blank");
-    if (!w) doc.save(name);
+  // PDF:en sparas i lagringen och öppnas via en tillfällig länk som tvingar nedladdning.
+  // (Förhandsvisningen blockerar nedladdningar direkt från sidan.)
+  const download = async (s: Saved) => {
+    const w = window.open("", "_blank");
+    try {
+      const c = clients.find((x) => x.id === s.client_id);
+      const name = `${s.period_label.replace(".", "H")}_${(c ? clientName(c) : s.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`;
+      const doc = buildRoyaltyPdf({ ...s, fees: s.fees ?? [] }, party(c, s.recipient));
+      const path = `${s.period_label}/${s.id}.pdf`;
+      const { error: upErr } = await supabase.storage.from("royalty-statements")
+        .upload(path, doc.output("blob"), { upsert: true, contentType: "application/pdf" });
+      if (upErr) throw upErr;
+      const { data, error } = await supabase.storage.from("royalty-statements").createSignedUrl(path, 600, { download: name });
+      if (error) throw error;
+      if (w) w.location.href = data.signedUrl;
+      else window.location.href = data.signedUrl;
+    } catch (e) {
+      w?.close();
+      toast.error(e instanceof Error ? e.message : "Kunde inte skapa PDF");
+    }
   };
 
   const remove = async (s: Saved) => {
