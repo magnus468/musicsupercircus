@@ -16,6 +16,7 @@ export type Album = {
   cover: string | null;
   releaseDate: string | null;
   tracks: Recording[];
+  sortKey: string;
 };
 
 export const groupAlbums = (
@@ -27,7 +28,7 @@ export const groupAlbums = (
     const key = albumKey(r);
     let a = map.get(key);
     if (!a) {
-      a = { key, name: albumName(r), project: r.project, artists: [], label: r.label, cover: null, releaseDate: null, tracks: [] };
+      a = { key, name: albumName(r), project: r.project, artists: [], label: r.label, cover: null, releaseDate: null, tracks: [], sortKey: "" };
       map.set(key, a);
     }
     a.tracks.push(r);
@@ -36,13 +37,15 @@ export const groupAlbums = (
       if (t && !a.artists.includes(t)) a.artists.push(t);
     }
     a.cover ||= r.cover_url || r.spotify_cover_url || projectCovers.get((r.project ?? "").trim().toLowerCase()) || null;
-    a.releaseDate ||= r.spotify_release_date;
+    if (r.spotify_release_date && r.spotify_release_date > (a.releaseDate ?? "")) a.releaseDate = r.spotify_release_date;
+    const k = r.spotify_release_date || (r.created_at ?? "").slice(0, 10);
+    if (k > a.sortKey) a.sortKey = k;
     a.label ||= r.label;
   }
   for (const a of map.values()) {
     a.tracks.sort((x, y) => (x.catalog_number ?? "").localeCompare(y.catalog_number ?? "", "sv", { numeric: true }) || (x.isrc ?? "").localeCompare(y.isrc ?? ""));
   }
   return [...map.values()].sort(
-    (a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "") || a.name.localeCompare(b.name, "sv"),
+    (a, b) => b.sortKey.localeCompare(a.sortKey) || a.name.localeCompare(b.name, "sv"),
   );
 };
