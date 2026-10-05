@@ -38,6 +38,16 @@ const RecordingAlbum = () => {
     },
   });
 
+  const { data: income } = useQuery({
+    queryKey: ["recording-income"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_recording_income");
+      if (error) throw error;
+      return data as { byRecording: Record<string, number>; byCatalog: Record<string, number> };
+    },
+  });
+
   const album = useMemo(() => {
     const covers = new Map(projects.map((p) => [p.name.trim().toLowerCase(), p.cover_url]));
     return groupAlbums(recordings, covers).find((a) => a.key === albumKey);
@@ -52,6 +62,12 @@ const RecordingAlbum = () => {
       </div>
     );
 
+  const usd = (v: number) => v.toLocaleString("sv-SE", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+  const trackIncome = (id: string) => Number(income?.byRecording?.[id] ?? 0);
+  const catalogs = [...new Set(album.tracks.map((t) => t.catalog_number).filter(Boolean))] as string[];
+  const albumSales = catalogs.reduce((a, c) => a + Number(income?.byCatalog?.[c] ?? 0), 0);
+  const totalIncome = album.tracks.reduce((a, t) => a + trackIncome(t.id), 0) + albumSales;
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild><Link to="/recordings"><ArrowLeft className="mr-2 h-4 w-4" />Alla album</Link></Button>
@@ -65,6 +81,12 @@ const RecordingAlbum = () => {
             {album.tracks.length} spår{album.label ? ` · ${album.label}` : ""}{album.releaseDate ? ` · Släppt ${album.releaseDate}` : ""}{album.project ? ` · Projekt: ${album.project}` : ""}
           </p>
         </div>
+        <div className="ml-auto text-right">
+          <div className="text-xs text-muted-foreground">Intäkter (avräkningar)</div>
+          <div className="text-xl font-semibold tabular-nums">{usd(totalIncome)}</div>
+          {albumSales > 0 && <div className="text-xs text-muted-foreground">varav albumförsäljning {usd(albumSales)}</div>}
+          <Link to="/recordings/statements" className="text-xs text-primary hover:underline">Visa avräkningar</Link>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border bg-card">
@@ -73,7 +95,7 @@ const RecordingAlbum = () => {
             <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
               <tr>
                 <th className="w-12 p-3">#</th><th className="p-3">Titel</th><th className="p-3">Artist</th>
-                <th className="p-3">ISRC</th><th className="p-3">Fördelning</th>
+                <th className="p-3">ISRC</th><th className="p-3">Fördelning</th><th className="p-3 text-right">Intäkt</th>
               </tr>
             </thead>
             <tbody>
@@ -101,6 +123,7 @@ const RecordingAlbum = () => {
                         </ul>
                       ) : <span className="text-muted-foreground">–</span>}
                     </td>
+                    <td className="p-3 text-right tabular-nums">{trackIncome(t.id) ? usd(trackIncome(t.id)) : "–"}</td>
                   </tr>
                 );
               })}

@@ -297,6 +297,114 @@ export type Database = {
         }
         Relationships: []
       }
+      recording_statement_lines: {
+        Row: {
+          amount: number
+          artist: string | null
+          catalog_number: string | null
+          country: string | null
+          id: string
+          isrc: string | null
+          quantity: number
+          recording_id: string | null
+          release_title: string | null
+          sale_month: string | null
+          sale_type: string | null
+          statement_id: string
+          store: string | null
+          title: string | null
+          upc: string | null
+        }
+        Insert: {
+          amount?: number
+          artist?: string | null
+          catalog_number?: string | null
+          country?: string | null
+          id?: string
+          isrc?: string | null
+          quantity?: number
+          recording_id?: string | null
+          release_title?: string | null
+          sale_month?: string | null
+          sale_type?: string | null
+          statement_id: string
+          store?: string | null
+          title?: string | null
+          upc?: string | null
+        }
+        Update: {
+          amount?: number
+          artist?: string | null
+          catalog_number?: string | null
+          country?: string | null
+          id?: string
+          isrc?: string | null
+          quantity?: number
+          recording_id?: string | null
+          release_title?: string | null
+          sale_month?: string | null
+          sale_type?: string | null
+          statement_id?: string
+          store?: string | null
+          title?: string | null
+          upc?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recording_statement_lines_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recording_statement_lines_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "recording_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recording_statements: {
+        Row: {
+          created_at: string
+          currency: string
+          file_name: string | null
+          id: string
+          period_end: string | null
+          period_label: string
+          period_start: string | null
+          row_count: number
+          source: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          file_name?: string | null
+          id?: string
+          period_end?: string | null
+          period_label: string
+          period_start?: string | null
+          row_count?: number
+          source: string
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          file_name?: string | null
+          id?: string
+          period_end?: string | null
+          period_label?: string
+          period_start?: string | null
+          row_count?: number
+          source?: string
+          total_amount?: number
+        }
+        Relationships: []
+      }
       recordings: {
         Row: {
           album: string | null
@@ -705,6 +813,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_recording_income: { Args: never; Returns: Json }
       get_settlement_stats:
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
