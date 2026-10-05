@@ -94,7 +94,12 @@ const RoyaltyStatements = () => {
 
   const download = (s: Saved) => {
     const c = clients.find((x) => x.id === s.client_id);
-    buildRoyaltyPdf({ ...s, fees: s.fees ?? [] }, party(c, s.recipient)).save(`${String(year).slice(2)}H${half}_${(c ? clientName(c) : s.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`);
+    const name = `${s.period_label.replace(".", "H")}_${(c ? clientName(c) : s.recipient).replace(/[^\wåäöÅÄÖ]+/g, "_")}.pdf`;
+    const doc = buildRoyaltyPdf({ ...s, fees: s.fees ?? [] }, party(c, s.recipient));
+    // Förhandsvisningen kan blockera direkta nedladdningar – öppna i ny flik, annars spara.
+    const url = URL.createObjectURL(new File([doc.output("blob")], name, { type: "application/pdf" }));
+    const w = window.open(url, "_blank");
+    if (!w) doc.save(name);
   };
 
   const remove = async (s: Saved) => {
