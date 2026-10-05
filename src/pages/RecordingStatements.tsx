@@ -72,7 +72,7 @@ const RecordingStatements = () => {
     const m = new Map<string, { title: string; isrc: string | null; linked: boolean; amount: number; quantity: number }>();
     for (const l of lines) {
       const k = l.isrc || l.catalog_number || l.title || l.release_title || "?";
-      const cur = m.get(k) ?? { title: l.title || l.release_title || "–", isrc: l.isrc, linked: !!l.recording_id || (!l.isrc && !!l.catalog_number), amount: 0, quantity: 0 };
+      const cur = m.get(k) ?? { title: l.title || l.release_title || "–", isrc: l.isrc, linked: !!l.recording_id, amount: 0, quantity: 0 };
       cur.amount += Number(l.amount); cur.quantity += l.quantity;
       m.set(k, cur);
     }
@@ -90,9 +90,10 @@ const RecordingStatements = () => {
         if (!confirm(`"${label}" finns redan uppladdad. Vill du lägga in den igen?`)) { setBusy(null); return; }
       }
       setBusy("Kopplar till inspelningar…");
-      const recs: { id: string; isrc: string | null }[] = [];
+      type Rec = { id: string; isrc: string | null; catalog_number: string | null; album: string | null; spotify_album: string | null; project: string | null; track: string };
+      const recs: Rec[] = [];
       for (let from = 0; ; from += 1000) {
-        const { data, error } = await supabase.from("recordings").select("id,isrc").range(from, from + 999);
+        const { data, error } = await supabase.from("recordings").select("id,isrc,catalog_number,album,spotify_album,project,track").range(from, from + 999);
         if (error) throw error;
         recs.push(...data);
         if (data.length < 1000) break;
@@ -106,7 +107,25 @@ const RecordingStatements = () => {
         total_amount: Math.round(total * 1e6) / 1e6, row_count: parsed.rawRows,
       }).select().single();
       if (stErr) throw stErr;
-      const rows = parsed.lines.map((l) => ({ ...l, statement_id: st.id, recording_id: l.isrc ? byIsrc.get(l.isrc) ?? null : null }));
+      // Albumförsäljning (utan ISRC) fördelas lika på albumets spår via katalognummer.
+      // Om flera album delar katalognummer används det album vars namn stämmer.
+      const norm = (t: string | null) => (t ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’'"]/g, "").replace(/\s+/g, " ").trim();
+      const albumOf = (r: Rec) => norm(r.album || r.spotify_album || r.project);
+      const byCatalog = new Map<string, Rec[]>();
+      for (const r of recs) if (r.catalog_number) byCatalog.set(r.catalog_number, [...(byCatalog.get(r.catalog_number) ?? []), r]);
+      const rows = parsed.lines.flatMap((l) => {
+        if (!l.isrc && l.catalog_number) {
+          let tracks = byCatalog.get(l.catalog_number) ?? [];
+          if (new Set(tracks.map(albumOf)).size > 1) tracks = tracks.filter((r) => albumOf(r) === norm(l.release_title));
+          if (tracks.length) {
+            return tracks.map((r) => ({
+              ...l, statement_id: st.id, recording_id: r.id, isrc: r.isrc?.replace(/[\s-]/g, "").toUpperCase() ?? null,
+              title: r.track, sale_type: "Album (fördelat per spår)", amount: l.amount / tracks.length,
+            }));
+          }
+        }
+        return [{ ...l, statement_id: st.id, recording_id: l.isrc ? byIsrc.get(l.isrc) ?? null : null }];
+      });
       for (let i = 0; i < rows.length; i += 1000) {
         setBusy(`Sparar rader… ${Math.min(i + 1000, rows.length)} / ${rows.length}`);
         const { error } = await supabase.from("recording_statement_lines").insert(rows.slice(i, i + 1000));
@@ -115,7 +134,7 @@ const RecordingStatements = () => {
           throw error;
         }
       }
-      const linked = rows.filter((r) => r.recording_id || (!r.isrc && r.catalog_number)).length;
+      const linked = rows.filter((r) => r.recording_id).length;
       toast.success(`${label}: ${usd(total)} importerat. ${linked} av ${rows.length} rader kopplade.`);
       qc.invalidateQueries({ queryKey: ["recording-statements"] });
       qc.invalidateQueries({ queryKey: ["recording-income"] });
