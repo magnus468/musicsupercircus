@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, FileText, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,9 +33,11 @@ const PartyBlock = ({ title, p }: { title: string; p: Party }) => (
 
 const RoyaltyStatementView = ({ statement: s, payee, fileName, onClose }: Props) => {
   const [url, setUrl] = useState<string | null>(null);
+  const [viewUrl, setViewUrl] = useState<string | null>(null);
+  const [showPdf, setShowPdf] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // PDF:en läggs i lagringen och hämtas via en vanlig länk (förhandsvisningen blockerar nedladdning direkt från sidan).
+  // PDF:en läggs i lagringen och hämtas via länk (förhandsvisningen kan blockera nedladdning direkt från sidan).
   useEffect(() => {
     (async () => {
       try {
@@ -42,14 +45,23 @@ const RoyaltyStatementView = ({ statement: s, payee, fileName, onClose }: Props)
         const blob = buildRoyaltyPdf(s, payee).output("blob");
         const { error: upErr } = await supabase.storage.from("royalty-statements").upload(path, blob, { upsert: true, contentType: "application/pdf" });
         if (upErr) throw upErr;
-        const { data, error } = await supabase.storage.from("royalty-statements").createSignedUrl(path, 3600, { download: fileName });
-        if (error) throw error;
-        setUrl(data.signedUrl);
+        const bucket = supabase.storage.from("royalty-statements");
+        const [dl, view] = await Promise.all([bucket.createSignedUrl(path, 3600, { download: fileName }), bucket.createSignedUrl(path, 3600)]);
+        if (dl.error) throw dl.error;
+        if (view.error) throw view.error;
+        setUrl(dl.data.signedUrl);
+        setViewUrl(view.data.signedUrl);
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Kunde inte skapa PDF");
       }
     })();
   }, [s, payee, fileName]);
+
+  const copyLink = async () => {
+    if (!url) return;
+    try { await navigator.clipboard.writeText(url); toast.success("Länken är kopierad – klistra in den i webbläsaren (giltig 1 timme)"); }
+    catch { window.prompt("Kopiera länken:", url); }
+  };
 
   const income = s.income_downloads_sek + s.income_streams_sek;
 
@@ -57,18 +69,28 @@ const RoyaltyStatementView = ({ statement: s, payee, fileName, onClose }: Props)
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between gap-3 pr-6">
-            <span>Avräkning {s.period_label} – {payee.name}</span>
-            {url ? (
-              <Button size="sm" asChild><a href={url} target="_blank" rel="noreferrer" download={fileName}><Download className="mr-1 h-4 w-4" />Ladda ner PDF</a></Button>
-            ) : (
-              <Button size="sm" disabled>{err ? "PDF misslyckades" : "Förbereder PDF…"}</Button>
-            )}
-          </DialogTitle>
+          <DialogTitle className="pr-6">Avräkning {s.period_label} – {payee.name}</DialogTitle>
         </DialogHeader>
+        <div className="flex flex-wrap gap-2">
+          {url ? (
+            <>
+              <Button size="sm" asChild><a href={url} target="_blank" rel="noreferrer" download={fileName}><Download className="mr-1 h-4 w-4" />Ladda ner PDF</a></Button>
+              <Button size="sm" variant="outline" onClick={() => setShowPdf((v) => !v)}><FileText className="mr-1 h-4 w-4" />{showPdf ? "Visa översikt" : "Visa som PDF"}</Button>
+              <Button size="sm" variant="outline" onClick={copyLink}><LinkIcon className="mr-1 h-4 w-4" />Kopiera nedladdningslänk</Button>
+            </>
+          ) : (
+            <Button size="sm" disabled>{err ? "PDF misslyckades" : "Förbereder PDF…"}</Button>
+          )}
+        </div>
         {err && <p className="text-sm text-destructive">{err}</p>}
+        {showPdf && viewUrl && (
+          <>
+            <p className="text-xs text-muted-foreground">Använd nedladdningsknappen i PDF-visaren nedan för att spara filen.</p>
+            <iframe src={viewUrl} title="Avräkning PDF" className="h-[70vh] w-full rounded border" />
+          </>
+        )}
 
-        <div className="space-y-6 rounded-lg border bg-card p-6 text-sm">
+        <div className={`space-y-6 rounded-lg border bg-card p-6 text-sm ${showPdf ? "hidden" : ""}`}>
           <h2 className="text-lg font-semibold">{PAYER.name}</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             <PartyBlock title="Payer" p={PAYER} />
