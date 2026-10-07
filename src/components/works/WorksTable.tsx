@@ -1,4 +1,6 @@
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
+
+const CHUNK = 60;
 import { Link } from "react-router-dom";
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from "lucide-react";
 
@@ -85,6 +87,16 @@ const WorksTable = memo(({
   onDelete,
   onOpenWork,
 }: WorksTableProps) => {
+  // Rendera raderna i omgångar så sidan (t.ex. sökfältet) förblir responsiv
+  const total = works?.length ?? 0;
+  const [visible, setVisible] = useState(CHUNK);
+  useEffect(() => { setVisible(CHUNK); }, [works]);
+  useEffect(() => {
+    if (visible >= total) return;
+    const t = window.setTimeout(() => setVisible((v) => v + CHUNK), 16);
+    return () => window.clearTimeout(t);
+  }, [visible, total]);
+  const shown = works?.slice(0, visible);
   return (
     <div className="rounded-lg border bg-card overflow-x-auto">
       <Table>
@@ -112,7 +124,7 @@ const WorksTable = memo(({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {works?.map((work) => (
+          {shown?.map((work) => (
             <TableRow key={work.id} id={`${WORK_ROW_ID_PREFIX}${work.id}`} data-work-id={work.id}>
               <TableCell className="font-medium max-w-[220px]">
                 <div className="flex items-center gap-1 min-w-0">
