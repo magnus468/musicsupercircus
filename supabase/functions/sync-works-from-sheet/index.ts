@@ -61,7 +61,11 @@ function parseSplitEntry(part: string, defaultRole: "CA" | "E"): string | null {
 // Lagar vanliga skrivfel: saknad "(" före rollkod, saknat skiljetecken efter ")"
 function repairSplitText(s: string): string {
   return s
-    .replace(/([^\s(])\s+((?:CA|C|A|E|AR|SA)_(?:Norden|NOT))/gi, "$1 ($2")
+    // Saknad "(" före koden: lägg till både "(" och ")" runt hela koden (en ev. befintlig ")" återanvänds)
+    .replace(
+      /([^\s(])\s+((?:CA|C|A|E|AR|SA)_(?:Norden[_\s:]*\d+(?:[.,]\d+)?[.,]?\s*%[_\s,]*ROW[_\s:]*\d+(?:[.,]\d+)?[.,]?\s*%|NOT[_\s]*CONTROLLED))\s*\)?/gi,
+      "$1 ($2)",
+    )
     .replace(/\)\s+(?=[A-ZÅÄÖÉa-zåäöé])/g, "), ")
     .replace(/\s{2,}/g, " ");
 }

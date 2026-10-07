@@ -70,7 +70,8 @@ Deno.serve(async (req) => {
       .neq("isrc", "")
       .limit(limit);
     if (recordingId) q = supabase.from("recordings").select("id,isrc,spotify_track_id").eq("id", recordingId);
-    else if (onlyMissing) q = q.is("spotify_track_id", null);
+    // Hoppa över spår som redan sökts utan träff (spotify_synced_at satt) så samma spår inte söks om och om igen
+    else if (onlyMissing) q = q.is("spotify_track_id", null).is("spotify_synced_at", null);
 
     const { data: rows, error } = await q;
     if (error) return json({ error: error.message }, 500);
@@ -119,7 +120,8 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .not("isrc", "is", null)
       .neq("isrc", "")
-      .is("spotify_track_id", null);
+      .is("spotify_track_id", null)
+      .is("spotify_synced_at", null);
 
     return json({ scanned: rows.length, updated, notFound, remaining: remaining ?? 0, rateLimited });
   } catch (e) {
