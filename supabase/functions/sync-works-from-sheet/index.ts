@@ -110,7 +110,15 @@ function fixRoundingTotals(entries: string[]): string[] {
     });
     if (vals.length < 2) continue;
     const diff = vals.reduce((a, b) => a + b, 0) - 10000;
-    if (diff === 0 || Math.abs(diff) > 30) continue;
+    if (Math.abs(diff) > 30) continue;
+    if (diff === 0) {
+      // Bara överflödiga decimaler (t.ex. 23,331): avrunda till två decimaler
+      vals.forEach((v, j) => {
+        const s = v % 100 === 0 ? String(v / 100) : (v / 100).toFixed(2);
+        out[idx[j]] = out[idx[j]].replace(rx, `$1${s}$3`);
+      });
+      continue;
+    }
     const cands = vals
       .map((v, k) => k)
       .filter((k) => vals.filter((v) => v === vals[k]).length > 1 && !/music super circus/i.test(out[idx[k]]));
