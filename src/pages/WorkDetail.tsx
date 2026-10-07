@@ -17,6 +17,7 @@ import WorkForm from "@/components/WorkForm";
 import CoPublisherAgreementDialog from "@/components/CoPublisherAgreementDialog";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import WorkRevenueCharts from "@/components/works/WorkRevenueCharts";
+import WorkRegistrationsCard from "@/components/works/WorkRegistrationsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -386,6 +387,8 @@ const WorkDetail = () => {
         onOpenChange={(open) => !open && setSelectedAgreement(null)}
         onViewPdf={handleViewPdf}
       />
+
+      <WorkRegistrationsCard workId={work.id} />
 
       {/* PDF viewer dialog */}
       <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => !open && closePdfViewer()}>

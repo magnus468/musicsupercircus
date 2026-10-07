@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import UnregisteredSoundtrackTitles from "@/components/review/UnregisteredSoundtrackTitles";
 import StimReconciliation from "@/components/review/StimReconciliation";
 import DuplicateWorks from "@/components/review/DuplicateWorks";
+import RegistrationReview from "@/components/review/RegistrationReview";
 
 type IssueType = "no_publisher" | "bad_split" | "no_repr" | "no_project" | "no_agreement";
 
@@ -182,6 +183,7 @@ const ReviewWorks = () => {
 
   return (
     <div className="space-y-6">
+      <RegistrationReview />
       <StimReconciliation />
       <DuplicateWorks />
       <UnregisteredSoundtrackTitles />
