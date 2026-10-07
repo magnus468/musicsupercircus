@@ -121,7 +121,7 @@ const WorksList = () => {
         return;
       }
 
-      if (attempts >= 10) {
+      if (attempts >= 600) {
         sessionStorage.removeItem(LAST_OPENED_WORK_KEY);
         return;
       }
