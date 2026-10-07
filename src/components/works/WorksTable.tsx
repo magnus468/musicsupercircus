@@ -1,6 +1,6 @@
-import { memo, useEffect, useState } from "react";
+import { memo, startTransition, useEffect, useState } from "react";
 
-const CHUNK = 60;
+const CHUNK = 25;
 import { Link } from "react-router-dom";
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from "lucide-react";
 
@@ -93,7 +93,13 @@ const WorksTable = memo(({
   useEffect(() => { setVisible(CHUNK); }, [works]);
   useEffect(() => {
     if (visible >= total) return;
-    const t = window.setTimeout(() => setVisible((v) => v + CHUNK), 16);
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    const grow = () => startTransition(() => setVisible((v) => v + CHUNK));
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(grow, { timeout: 500 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(grow, 30);
     return () => window.clearTimeout(t);
   }, [visible, total]);
   const shown = works?.slice(0, visible);
