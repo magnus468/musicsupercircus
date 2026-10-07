@@ -8,7 +8,6 @@ import AppLayout from "@/components/AppLayout";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import WorksList from "@/pages/WorksList";
-import NewWork from "@/pages/NewWork";
 import WorkDetail from "@/pages/WorkDetail";
 import ClientsList from "@/pages/ClientsList";
 import ClientDetail from "@/pages/ClientDetail";
@@ -50,7 +49,6 @@ const App = () => (
             <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/works" element={<ProtectedRoute><WorksList /></ProtectedRoute>} />
-            <Route path="/works/new" element={<ProtectedRoute><NewWork /></ProtectedRoute>} />
             <Route path="/works/:id" element={<ProtectedRoute><WorkDetail /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><ProjectsList /></ProtectedRoute>} />
             <Route path="/projects/:name" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
