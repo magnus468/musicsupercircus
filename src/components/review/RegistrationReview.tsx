@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import MatchWorkDialog from "@/components/settlements/MatchWorkDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Tab = "mismatch" | "uncertain" | "unmatched" | "missing";
 const PAGE = 100;
@@ -25,6 +25,7 @@ const RegistrationReview = () => {
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(PAGE);
   const [linking, setLinking] = useState<WorkRegistration | null>(null);
+  const [pick, setPick] = useState("");
 
   const workById = useMemo(() => new Map(works.map((w) => [w.id, w])), [works]);
   const registeredIds = useMemo(() => new Set(regs.map((r) => r.work_id).filter(Boolean)), [regs]);
@@ -49,6 +50,7 @@ const RegistrationReview = () => {
     if (error) return toast.error("Kunde inte koppla kvittot");
     toast.success("Kvittot är kopplat till verket");
     setLinking(null);
+    setPick("");
     invalidate();
   };
 
@@ -132,14 +134,24 @@ const RegistrationReview = () => {
           </div>
         )}
       </CardContent>
-      {linking && (
-        <MatchWorkDialog
-          open={!!linking}
-          onOpenChange={(o) => !o && setLinking(null)}
-          settlementTitle={linking.title}
-          onMatch={link}
-        />
-      )}
+      <Dialog open={!!linking} onOpenChange={(o) => { if (!o) { setLinking(null); setPick(""); } }}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader><DialogTitle>Koppla "{linking?.title}" till verk</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">{linking && names(linking)}</p>
+          <Input autoFocus placeholder="Sök verk..." value={pick} onChange={(e) => setPick(e.target.value)} />
+          <div className="max-h-80 overflow-y-auto divide-y">
+            {works
+              .filter((w) => pick.trim().length > 0 && `${w.title} ${w.project}`.toLowerCase().includes(pick.trim().toLowerCase()))
+              .slice(0, 50)
+              .map((w) => (
+                <button key={w.id} className="block w-full px-2 py-2 text-left text-sm hover:bg-muted" onClick={() => link(w.id)}>
+                  <div className="font-medium">{w.title}</div>
+                  <div className="text-xs text-muted-foreground truncate">{w.project} · {w.creators}</div>
+                </button>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
