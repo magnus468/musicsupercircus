@@ -910,6 +910,74 @@ export type Database = {
         }
         Relationships: []
       }
+      work_registrations: {
+        Row: {
+          alt_title: string | null
+          artist: string | null
+          created_at: string
+          creators: Json
+          duration: string | null
+          file_name: string | null
+          folder: string | null
+          id: string
+          match_note: string | null
+          match_status: string
+          mismatch_note: string | null
+          pdf_path: string | null
+          publishers: Json
+          share_mismatch: boolean
+          title: string
+          work_id: string | null
+          work_type: string | null
+        }
+        Insert: {
+          alt_title?: string | null
+          artist?: string | null
+          created_at?: string
+          creators?: Json
+          duration?: string | null
+          file_name?: string | null
+          folder?: string | null
+          id?: string
+          match_note?: string | null
+          match_status?: string
+          mismatch_note?: string | null
+          pdf_path?: string | null
+          publishers?: Json
+          share_mismatch?: boolean
+          title: string
+          work_id?: string | null
+          work_type?: string | null
+        }
+        Update: {
+          alt_title?: string | null
+          artist?: string | null
+          created_at?: string
+          creators?: Json
+          duration?: string | null
+          file_name?: string | null
+          folder?: string | null
+          id?: string
+          match_note?: string | null
+          match_status?: string
+          mismatch_note?: string | null
+          pdf_path?: string | null
+          publishers?: Json
+          share_mismatch?: boolean
+          title?: string
+          work_id?: string | null
+          work_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_registrations_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       works: {
         Row: {
           audio_url: string | null
