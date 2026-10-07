@@ -9,7 +9,6 @@ import mscLogoBlack from "@/assets/msc-logo-black.jpg";
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, color: "text-blue-400" },
   { to: "/works", label: "Verklista", icon: List, color: "text-emerald-400" },
-  { to: "/works/new", label: "Nytt verk", icon: Plus, color: "text-amber-400" },
   { to: "/projects", label: "Projekt", icon: FolderOpen, color: "text-cyan-400" },
   { to: "/recordings", label: "Inspelningsrättigheter", icon: Disc3, color: "text-pink-400" },
   { to: "/clients", label: "Klienter", icon: Users, color: "text-violet-400" },
