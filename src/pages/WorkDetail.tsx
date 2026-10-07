@@ -17,7 +17,7 @@ import WorkForm from "@/components/WorkForm";
 import CoPublisherAgreementDialog from "@/components/CoPublisherAgreementDialog";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import WorkRevenueCharts from "@/components/works/WorkRevenueCharts";
-import { useWorkRegistrations, openRegistrationPdf } from "@/hooks/useWorkRegistrations";
+import { useWorkRegistrations } from "@/hooks/useWorkRegistrations";
 import { lookupRegInfo } from "@/lib/regPartyMatch";
 import { FileText, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +50,7 @@ const WorkDetail = () => {
   const [editing, setEditing] = useState(false);
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
+  const [pdfTitle, setPdfTitle] = useState("Avtalsdokument");
   const { id } = useParams<{id: string;}>();
   const navigate = useNavigate();
   const { data: works, isLoading } = useWorks();
@@ -122,6 +123,7 @@ const WorkDetail = () => {
     if (!agreement.file_path) return;
     try {
       const url = await getAgreementSignedUrl(agreement.file_path);
+      setPdfTitle("Avtalsdokument");
       setPdfViewerUrl(url);
     } catch {
       toast.error("Kunde inte öppna avtalet");
@@ -282,7 +284,12 @@ const WorkDetail = () => {
             <CardTitle className="text-base">Upphovspersoner ({creatorEntries.length})</CardTitle>
             {regs.filter((r) => r.pdf_path).slice(0, 1).map((r) => (
               <Button key={r.id} size="sm" variant="outline" className="gap-2"
-                onClick={() => openRegistrationPdf(r.pdf_path!).catch(() => toast.error("Kunde inte öppna kvittot"))}>
+                onClick={async () => {
+                  const { data, error } = await supabase.storage.from("work-registrations").download(r.pdf_path!);
+                  if (error || !data) return toast.error("Kunde inte öppna kvittot");
+                  setPdfTitle("STIM-kvitto");
+                  setPdfViewerUrl(URL.createObjectURL(new Blob([data], { type: "application/pdf" })));
+                }}>
                 <FileText className="h-4 w-4" /> STIM-kvitto
               </Button>
             ))}
@@ -415,7 +422,7 @@ const WorkDetail = () => {
       <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => !open && closePdfViewer()}>
         <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Avtalsdokument</DialogTitle>
+            <DialogTitle>{pdfTitle}</DialogTitle>
           </DialogHeader>
           <div className="flex-1 min-h-0 overflow-hidden">
             {pdfViewerUrl && <AgreementPdfPreview fileUrl={pdfViewerUrl} />}
