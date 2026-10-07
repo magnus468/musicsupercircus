@@ -1,0 +1,1 @@
+- STIM registration receipts live in `work_registrations` (parsed data + private `work-registrations` bucket PDF), linked to works by title + creators, never title alone — keeps receipts auditable without overwriting catalog shares.
