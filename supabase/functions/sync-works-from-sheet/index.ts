@@ -298,7 +298,10 @@ Deno.serve(async (req) => {
       const parsed = buildCreators(rawCreators, rawPublishers);
       const creators = parsed?.creators ?? rawCreators;
       const internal = parsed?.publishers.find((p) => /^MSC[EP]$/i.test(p));
-      const publishingType = internal ? internal.toUpperCase() : null;
+      // Music Super Circus Extravaganza som förlag på verket => alltid MSCE.
+      const publishingType = /super\s*circus\s*extravaganza/i.test(creators)
+        ? "MSCE"
+        : internal ? internal.toUpperCase() : null;
       const coPublishers = parsed
         ? parsed.publishers.filter((p) => !/^MSC[EP]$/i.test(p))
         : null;
