@@ -17,7 +17,9 @@ import WorkForm from "@/components/WorkForm";
 import CoPublisherAgreementDialog from "@/components/CoPublisherAgreementDialog";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import WorkRevenueCharts from "@/components/works/WorkRevenueCharts";
-import WorkRegistrationsCard from "@/components/works/WorkRegistrationsCard";
+import { useWorkRegistrations, openRegistrationPdf } from "@/hooks/useWorkRegistrations";
+import { lookupRegInfo } from "@/lib/regPartyMatch";
+import { FileText, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -55,6 +57,7 @@ const WorkDetail = () => {
   const { data: agreements } = useAgreements();
   const { data: linkedAgreementIds } = useAgreementWorks(id);
   const { data: allAgreementWorks } = useAllAgreementWorks();
+  const { data: regs = [] } = useWorkRegistrations(id);
 
   const { data: singleWork, isLoading: singleLoading } = useQuery({
     queryKey: ["work", id],
@@ -275,15 +278,31 @@ const WorkDetail = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Upphovspersoner ({creatorEntries.length})</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Upphovspersoner ({creatorEntries.length})</CardTitle>
+            {regs.filter((r) => r.pdf_path).slice(0, 1).map((r) => (
+              <Button key={r.id} size="sm" variant="outline" className="gap-2"
+                onClick={() => openRegistrationPdf(r.pdf_path!).catch(() => toast.error("Kunde inte öppna kvittot"))}>
+                <FileText className="h-4 w-4" /> STIM-kvitto
+              </Button>
+            ))}
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          {regs.filter((r) => r.share_mismatch && r.mismatch_note).map((r) => (
+            <div key={r.id} className="flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>STIM avviker från katalogen: {r.mismatch_note}</span>
+            </div>
+          ))}
           <div className="rounded-lg border overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Namn</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Roll</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">IPI</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Avtalsnr</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Norden</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">ROW</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Representerar</th>
@@ -296,6 +315,7 @@ const WorkDetail = () => {
                   return aIsE - bIsE;
                 }).map((entry, i) => {
                   const clientId = clientMap.get(entry.name.toLowerCase());
+                  const info = lookupRegInfo(entry.name, regs, entry.role.toUpperCase() === "E");
                   return (
                     <tr key={i} className="border-b last:border-0">
                       <td className="px-4 py-2 font-medium">
@@ -306,6 +326,8 @@ const WorkDetail = () => {
                         entry.name}
                       </td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.role || "—"}</td>
+                      <td className="px-4 py-2 text-xs tabular-nums text-muted-foreground">{info.ipi ?? "—"}</td>
+                      <td className="px-4 py-2 text-xs tabular-nums text-muted-foreground">{entry.role.toUpperCase() === "E" ? info.agreement ?? "—" : ""}</td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.share ? `${entry.share}%` : "—"}</td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.shareRow ? `${entry.shareRow}%` : "—"}</td>
                       <td className="px-4 py-2">
@@ -388,7 +410,6 @@ const WorkDetail = () => {
         onViewPdf={handleViewPdf}
       />
 
-      <WorkRegistrationsCard workId={work.id} />
 
       {/* PDF viewer dialog */}
       <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => !open && closePdfViewer()}>
