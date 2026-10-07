@@ -90,8 +90,41 @@ function buildCreators(rawCreatorsIn: string, rawPublishersIn: string | null): {
     publishers.push(nameOnly);
     entries.push(parseSplitEntry(p, "E") ?? `${nameOnly} (E, repr)`);
   }
-  return { creators: entries.join(", "), publishers };
+  return { creators: fixRoundingTotals(entries).join(", "), publishers };
 }
+
+// Avrundningsfel (t.ex. 99,99 / 100,01) när flera parter har samma avrundade andel:
+// justera en av de dubblerade (ej Music Super Circus) så summan blir exakt 100.
+function fixRoundingTotals(entries: string[]): string[] {
+  const out = [...entries];
+  const patterns = [
+    /^([^(]*\(\s*[A-Za-z]{0,3}\s*,\s*)(\d+(?:\.\d+)?)(%)/,
+    /^([^(]*\([^)]*row:\s*)(\d+(?:\.\d+)?)(%)/i,
+  ];
+  for (const rx of patterns) {
+    const idx: number[] = [];
+    const vals: number[] = [];
+    out.forEach((e, i) => {
+      const m = e.match(rx);
+      if (m) { idx.push(i); vals.push(Math.round(parseFloat(m[2]) * 100)); }
+    });
+    if (vals.length < 2) continue;
+    const diff = vals.reduce((a, b) => a + b, 0) - 10000;
+    if (diff === 0 || Math.abs(diff) > 30) continue;
+    const cands = vals
+      .map((v, k) => k)
+      .filter((k) => vals.filter((v) => v === vals[k]).length > 1 && !/music super circus/i.test(out[idx[k]]));
+    if (!cands.length) continue;
+    const k = diff > 0 ? cands[cands.length - 1] : cands[0];
+    vals[k] -= diff;
+    vals.forEach((v, j) => {
+      const s = v % 100 === 0 ? String(v / 100) : (v / 100).toFixed(2);
+      out[idx[j]] = out[idx[j]].replace(rx, `$1${s}$3`);
+    });
+  }
+  return out;
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
