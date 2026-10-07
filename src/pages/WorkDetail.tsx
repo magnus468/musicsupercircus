@@ -388,13 +388,13 @@ const WorkDetail = () => {
         onViewPdf={handleViewPdf}
       />
 
+      <WorkRegistrationsCard workId={work.id} />
+
       {/* PDF viewer dialog */}
       <Dialog open={!!pdfViewerUrl} onOpenChange={(open) => !open && closePdfViewer()}>
         <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
-            <WorkRegistrationsCard workId={work.id} />
-
-      <DialogTitle>Avtalsdokument</DialogTitle>
+            <DialogTitle>Avtalsdokument</DialogTitle>
           </DialogHeader>
           <div className="flex-1 min-h-0 overflow-hidden">
             {pdfViewerUrl && <AgreementPdfPreview fileUrl={pdfViewerUrl} />}
