@@ -15,8 +15,8 @@ const PartyRows = ({ parties, publisher }: { parties: RegParty[]; publisher?: bo
         <TableCell className="font-medium">{p.name}</TableCell>
         <TableCell className="text-xs tabular-nums">{p.ipi ?? "–"}</TableCell>
         <TableCell className="text-xs tabular-nums">{publisher ? p.agreement ?? "–" : ""}</TableCell>
-        <TableCell className="text-right tabular-nums">{pct(p.perf)}</TableCell>
-        <TableCell className="text-right tabular-nums">{pct(p.mech)}</TableCell>
+        <TableCell className="text-right tabular-nums whitespace-nowrap">{pct(p.perf)}</TableCell>
+        <TableCell className="text-right tabular-nums whitespace-nowrap">{pct(p.mech)}</TableCell>
       </TableRow>
     ))}
   </>
