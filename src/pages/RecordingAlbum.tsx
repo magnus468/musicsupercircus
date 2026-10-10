@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import AlbumCover from "@/components/recordings/AlbumCover";
 import { groupAlbums, type Recording } from "@/lib/recordingAlbums";
 import AlbumExpenses from "@/components/recordings/AlbumExpenses";
+import ReleaseClients from "@/components/recordings/ReleaseClients";
 
 const fmt = (v: number | null) => `${(Math.round((v ?? 0) * 10000) / 100).toFixed(2)}%`;
 
@@ -152,6 +153,7 @@ const RecordingAlbum = () => {
           </table>
         </div>
       </div>
+      <ReleaseClients albumKey={albumKey} />
       <AlbumExpenses
         albumKey={albumKey}
         sheetNote={album.tracks.map((t) => t.expenses).find((e) => e && !/^inga expenses$/i.test(e.trim())) ?? null}
