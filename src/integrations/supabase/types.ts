@@ -568,6 +568,41 @@ export type Database = {
           },
         ]
       }
+      release_clients: {
+        Row: {
+          album_key: string
+          auto: boolean
+          client_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          album_key: string
+          auto?: boolean
+          client_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          album_key?: string
+          auto?: boolean
+          client_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       royalty_payees: {
         Row: {
           client_id: string | null
