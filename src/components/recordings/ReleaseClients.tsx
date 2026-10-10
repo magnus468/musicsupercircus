@@ -11,7 +11,6 @@ import { toast } from "sonner";
 
 const ROLES = [
   { id: "artist", label: "Artist" },
-  { id: "composer", label: "Kompositör" },
   { id: "producer", label: "Musikproducent" },
   { id: "customer", label: "Kund (produktionsbolag)" },
 ] as const;
@@ -64,7 +63,7 @@ const ReleaseClients = ({ albumKey }: { albumKey: string }) => {
         <h2 className="font-semibold">Royaltyberättigade klienter</h2>
         <p className="text-xs text-muted-foreground">Klienter som kan ha rätt till royalties på releasen enligt avtal. Automatiska kopplingar är gjorda på exakt namn.</p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3">
         {ROLES.map((r) => {
           const rows = links.filter((l) => l.role === r.id);
           return (
