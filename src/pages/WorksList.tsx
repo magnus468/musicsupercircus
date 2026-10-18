@@ -113,7 +113,7 @@ const WorksList = () => {
     }
 
     return result;
-  }, [works, typeFilter, stimFilter, sortKey, sortDir]);
+  }, [works, searchIndex, debouncedSearch, typeFilter, stimFilter, sortKey, sortDir]);
 
   useEffect(() => {
     if (isLoading || !filtered?.length || navigationType !== "POP") return;
