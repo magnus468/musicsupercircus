@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useWorks, useDeleteWork, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements } from "@/hooks/useAgreements";
@@ -187,6 +189,7 @@ const ReviewWorks = () => {
       <StimReconciliation />
       <DuplicateWorks />
       <UnregisteredSoundtrackTitles />
+      <PartyNumberConflicts works={works} />
       {/* Issues section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm">
@@ -381,6 +384,81 @@ const ReviewWorks = () => {
         />
       )}
     </div>
+  );
+};
+
+/** Lista över parter vars IPI- eller avtalsnummer skiljer sig mellan klientkort och STIM-kvitton */
+const PartyNumberConflicts = ({ works }: { works?: Work[] }) => {
+  const { data: conflicts } = useQuery({
+    queryKey: ["party-number-conflicts"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("work_party_numbers")
+        .select("work_id, party_name, is_publisher, conflict_note")
+        .eq("conflict", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const workTitle = useMemo(() => {
+    const map = new Map<string, string>();
+    works?.forEach((w) => map.set(w.id, w.title));
+    return map;
+  }, [works]);
+
+  const grouped = useMemo(() => {
+    if (!conflicts) return [];
+    const map = new Map<string, { party: string; note: string; works: { id: string; title: string }[] }>();
+    conflicts.forEach((c) => {
+      const key = `${c.party_name}|${c.conflict_note}`;
+      if (!map.has(key)) map.set(key, { party: c.party_name, note: c.conflict_note ?? "", works: [] });
+      map.get(key)!.works.push({ id: c.work_id, title: workTitle.get(c.work_id) ?? "Okänt verk" });
+    });
+    return [...map.values()].sort((a, b) => b.works.length - a.works.length);
+  }, [conflicts, workTitle]);
+
+  if (!conflicts) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+          <CardTitle className="text-base">Konflikter i IPI/avtalsnummer</CardTitle>
+          <Badge variant="secondary" className="text-xs">{grouped.length}</Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Parter där IPI- eller avtalsnummer skiljer sig mellan klientkort och STIM-kvitton.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {grouped.length === 0 ? (
+          <p className="text-sm text-muted-foreground">✅ Inga konflikter hittades!</p>
+        ) : (
+          grouped.map((g, i) => (
+            <div key={i} className="rounded-lg border p-3 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-sm">{g.party}</span>
+                <Badge variant="secondary" className="text-xs">{g.works.length} verk</Badge>
+              </div>
+              <p className="text-xs text-destructive">{g.note}</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {g.works.slice(0, 10).map((w) => (
+                  <Link key={w.id} to={`/works/${w.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                    {w.title}
+                  </Link>
+                ))}
+                {g.works.length > 10 && (
+                  <span className="text-muted-foreground">…och {g.works.length - 10} till</span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

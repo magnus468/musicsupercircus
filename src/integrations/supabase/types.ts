@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -944,6 +944,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      work_party_numbers: {
+        Row: {
+          agreement_number: string | null
+          conflict: boolean
+          conflict_note: string | null
+          created_at: string
+          id: string
+          ipi_number: string | null
+          is_publisher: boolean
+          party_name: string
+          source: string
+          updated_at: string
+          work_id: string
+        }
+        Insert: {
+          agreement_number?: string | null
+          conflict?: boolean
+          conflict_note?: string | null
+          created_at?: string
+          id?: string
+          ipi_number?: string | null
+          is_publisher?: boolean
+          party_name: string
+          source?: string
+          updated_at?: string
+          work_id: string
+        }
+        Update: {
+          agreement_number?: string | null
+          conflict?: boolean
+          conflict_note?: string | null
+          created_at?: string
+          id?: string
+          ipi_number?: string | null
+          is_publisher?: boolean
+          party_name?: string
+          source?: string
+          updated_at?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_party_numbers_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "works"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       work_registrations: {
         Row: {
