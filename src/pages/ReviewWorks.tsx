@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useWorks, useDeleteWork, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements } from "@/hooks/useAgreements";
@@ -187,6 +189,7 @@ const ReviewWorks = () => {
       <StimReconciliation />
       <DuplicateWorks />
       <UnregisteredSoundtrackTitles />
+      <PartyNumberConflicts works={works} />
       {/* Issues section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm">
