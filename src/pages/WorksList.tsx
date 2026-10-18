@@ -26,11 +26,12 @@ const WorksList = () => {
   const [editWork, setEditWork] = useState<Work | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    const timer = setTimeout(() => setDebouncedSearch(search), 150);
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { data: works, isLoading } = useWorks(debouncedSearch);
+  // Load the full list once and search locally — no network round trip per keystroke.
+  const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
   const deleteWork = useDeleteWork();
 
@@ -52,12 +53,22 @@ const WorksList = () => {
     setSortDir("asc");
   }, [sortKey]);
 
+  const searchIndex = useMemo(() => {
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const m = new Map<string, string>();
+    works?.forEach((w) => m.set(w.id, norm(`${w.title} ${w.creators} ${w.project ?? ""}`)));
+    return { m, norm };
+  }, [works]);
+
   const filtered = useMemo(() => {
+    const term = searchIndex.norm(debouncedSearch.trim());
     let result = works?.filter((w) => {
+      if (term && !searchIndex.m.get(w.id)?.includes(term)) return false;
       if (typeFilter !== "all" && w.publishing_type !== typeFilter) return false;
       if (stimFilter !== "all" && w.stim_status !== stimFilter) return false;
       return true;
     });
+
 
     if (result && sortKey) {
       result = [...result].sort((a, b) => {
