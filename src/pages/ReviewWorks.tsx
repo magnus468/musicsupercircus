@@ -20,24 +20,7 @@ import UnregisteredSoundtrackTitles from "@/components/review/UnregisteredSoundt
 import StimReconciliation from "@/components/review/StimReconciliation";
 import DuplicateWorks from "@/components/review/DuplicateWorks";
 import RegistrationReview from "@/components/review/RegistrationReview";
-
-type IssueType = "no_publisher" | "bad_split" | "no_repr" | "no_project" | "no_agreement";
-
-const ISSUE_LABELS: Record<IssueType, string> = {
-  no_publisher: "Saknar förlag",
-  bad_split: "Felaktig split",
-  no_repr: "Saknar repr",
-  no_project: "Saknar projekt",
-  no_agreement: "Inget avtal",
-};
-
-const ISSUE_COLORS: Record<IssueType, string> = {
-  no_publisher: "bg-destructive/15 text-destructive",
-  bad_split: "bg-warning/15 text-warning-foreground",
-  no_repr: "bg-orange-500/15 text-orange-600",
-  no_project: "bg-muted text-muted-foreground",
-  no_agreement: "bg-violet-500/15 text-violet-600",
-};
+import { detectIssues, ISSUE_COLORS, ISSUE_LABELS, type IssueType } from "@/lib/workIssues";
 
 const fmt = (n: number) =>
   n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
@@ -49,67 +32,6 @@ const parseCreatorParts = (creators: string) => {
       name: c.replace(/^,\s*/, "").replace(/\s*\(.*\)$/, "").trim(),
       parens: (c.match(/\(([^)]*)\)/) || [])[1] || "",
     }));
-};
-
-const detectIssues = (
-  work: Work,
-  agreementClientNames: Set<string>
-): IssueType[] => {
-  const issues: IssueType[] = [];
-  const parts = work.creators.split(/\),\s*/).map((p, i, arr) => (i < arr.length - 1 ? p + ")" : p));
-
-  const parsed = parts.map((part) => {
-    const match = part.trim().match(/^(.+?)\s*\((\w+)(?:,.*?)?\)$/);
-    return match ? { name: match[1].trim(), role: match[2], parens: (part.match(/\(([^)]*)\)/) || [])[1] || "" } : null;
-  }).filter(Boolean) as { name: string; role: string; parens: string }[];
-
-  if (!parsed.some((p) => p.role === "E")) {
-    issues.push("no_publisher");
-  }
-
-  const nonE = parsed.filter((p) => p.role !== "E");
-  const hasAnyShare = parsed.some((p) => p.parens.match(/\d+(\.\d+)?%/));
-  if (!hasAnyShare && parsed.length > 0) {
-    issues.push("bad_split");
-  }
-
-  if (nonE.some((p) => !p.parens.includes("repr"))) {
-    issues.push("no_repr");
-  }
-
-  if (!work.project?.trim()) {
-    issues.push("no_project");
-  }
-
-  if (work.co_publishers && work.co_publishers.length > 0) {
-    const externalPubs = work.co_publishers.filter(
-      (cp) => !cp.toLowerCase().includes("music super circus")
-    );
-    // Normalize: lowercase, strip common company suffixes & punctuation for fuzzy match
-    const normalize = (s: string) =>
-      s
-        .toLowerCase()
-        .replace(/\b(ab|aktiebolag|ltd|inc|llc|gmbh|oy|as|a\/s|bv|sa|srl|kb|hb)\b\.?/g, "")
-        .replace(/[.,&]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    const normalizedAgreementNames = Array.from(agreementClientNames).map(normalize);
-
-    const hasMatch = externalPubs.some((cp) => {
-      const n = normalize(cp);
-      if (!n) return false;
-      return normalizedAgreementNames.some(
-        (an) => an === n || an.includes(n) || n.includes(an)
-      );
-    });
-
-    if (externalPubs.length > 0 && !hasMatch) {
-      issues.push("no_agreement");
-    }
-  }
-
-  return issues;
 };
 
 const ReviewWorks = () => {
@@ -185,13 +107,13 @@ const ReviewWorks = () => {
 
   return (
     <div className="space-y-6">
-      <RegistrationReview />
-      <StimReconciliation />
-      <DuplicateWorks />
-      <UnregisteredSoundtrackTitles />
-      <PartyNumberConflicts works={works} />
+      <div id="registrations" className="scroll-mt-20"><RegistrationReview /></div>
+      <div id="stim" className="scroll-mt-20"><StimReconciliation /></div>
+      <div id="duplicates" className="scroll-mt-20"><DuplicateWorks /></div>
+      <div id="soundtracks" className="scroll-mt-20"><UnregisteredSoundtrackTitles /></div>
+      <div id="conflicts" className="scroll-mt-20"><PartyNumberConflicts works={works} /></div>
       {/* Issues section */}
-      <div className="space-y-4">
+      <div id="issues" className="space-y-4 scroll-mt-20">
         <div className="flex items-center gap-2 text-sm">
           <AlertTriangle className="h-4 w-4 text-warning-foreground" />
           <span className="text-muted-foreground">
@@ -286,7 +208,7 @@ const ReviewWorks = () => {
       </div>
 
       {/* Unmatched settlement works */}
-      <Card>
+      <Card id="unmatched" className="scroll-mt-20">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
