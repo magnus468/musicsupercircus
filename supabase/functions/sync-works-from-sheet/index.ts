@@ -430,6 +430,20 @@ Deno.serve(async (req) => {
         console.error("rapportmail misslyckades:", mailErr);
       }
     }
+    // Sprid IPI/avtalsnummer till verk i bakgrunden (klientkort + STIM-kvitton)
+    try {
+      const propagate = supabase.functions.invoke("propagate-party-numbers", { body: {} });
+      // @ts-expect-error EdgeRuntime finns i edge-miljön
+      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+        // @ts-expect-error EdgeRuntime finns i edge-miljön
+        EdgeRuntime.waitUntil(propagate);
+      } else {
+        await propagate;
+      }
+    } catch (propErr) {
+      console.error("propagate-party-numbers misslyckades:", propErr);
+    }
+
     return new Response(JSON.stringify(summary), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
