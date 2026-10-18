@@ -8,6 +8,7 @@ import { SettlementsDetailsTab } from "@/components/settlements/SettlementsDetai
 import { SettlementsPeriodFilter } from "@/components/settlements/SettlementsPeriodFilter";
 import { SettlementsUpload } from "@/components/settlements/SettlementsUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DashboardStats from "@/components/dashboard/DashboardStats";
 
 const SettlementsList = () => {
   const [distributionKey, setDistributionKey] = useState<string | null>(null);
@@ -114,6 +115,7 @@ const SettlementsList = () => {
           <TabsTrigger value="overview">Översikt</TabsTrigger>
           <TabsTrigger value="works">Per verk</TabsTrigger>
           <TabsTrigger value="details">Alla rader</TabsTrigger>
+          <TabsTrigger value="stats">Statistik</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -135,6 +137,10 @@ const SettlementsList = () => {
             pageSize={pageSize}
             onPageChange={setPage}
           />
+        </TabsContent>
+
+        <TabsContent value="stats" className="space-y-6">
+          <DashboardStats />
         </TabsContent>
       </Tabs>
     </div>
