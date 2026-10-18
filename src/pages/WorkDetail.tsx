@@ -60,6 +60,21 @@ const WorkDetail = () => {
   const { data: allAgreementWorks } = useAllAgreementWorks();
   const { data: regs = [] } = useWorkRegistrations(id);
 
+  // IPI/avtalsnummer spridda till verket (från klientkort + STIM-kvitton)
+  const { data: partyNumbers = [] } = useQuery({
+    queryKey: ["work-party-numbers", id],
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("work_party_numbers")
+        .select("*")
+        .eq("work_id", id!);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: singleWork, isLoading: singleLoading } = useQuery({
     queryKey: ["work", id],
     enabled: !!id,
@@ -323,18 +338,30 @@ const WorkDetail = () => {
                 }).map((entry, i) => {
                   const clientId = clientMap.get(entry.name.toLowerCase());
                   const info = lookupRegInfo(entry.name, regs, entry.role.toUpperCase() === "E");
+                  const stored = partyNumbers.find(
+                    (p) => p.party_name.trim().toLowerCase() === entry.name.trim().toLowerCase()
+                  );
+                  const ipi = info.ipi ?? stored?.ipi_number ?? null;
+                  const agreement = info.agreement ?? stored?.agreement_number ?? null;
                   return (
                     <tr key={i} className="border-b last:border-0">
                       <td className="px-4 py-2 font-medium">
-                        {clientId ?
-                        <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
-                            {entry.name}
-                          </Link> :
-                        entry.name}
+                        <span className="inline-flex items-center gap-1.5">
+                          {clientId ?
+                          <Link to={`/clients/${clientId}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                              {entry.name}
+                            </Link> :
+                          entry.name}
+                          {stored?.conflict && (
+                            <span title={stored.conflict_note ?? "Konflikt i IPI/avtalsnummer"}>
+                              <AlertTriangle className="h-3.5 w-3.5 text-warning-foreground" />
+                            </span>
+                          )}
+                        </span>
                       </td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.role || "—"}</td>
-                      <td className="px-4 py-2 text-xs tabular-nums text-muted-foreground">{info.ipi ?? "—"}</td>
-                      <td className="px-4 py-2 text-xs tabular-nums text-muted-foreground">{entry.role.toUpperCase() === "E" ? info.agreement ?? "—" : ""}</td>
+                      <td className="px-4 py-2 text-xs tabular-nums text-muted-foreground">{ipi ?? "—"}</td>
+                      <td className="px-4 py-2 text-xs tabular-nums text-muted-foreground">{entry.role.toUpperCase() === "E" ? agreement ?? "—" : ""}</td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.share ? `${entry.share}%` : "—"}</td>
                       <td className="px-4 py-2 text-muted-foreground">{entry.shareRow ? `${entry.shareRow}%` : "—"}</td>
                       <td className="px-4 py-2">
