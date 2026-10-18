@@ -20,14 +20,13 @@ const ALIASES: Record<string, string[]> = {
   mscp: ["super", "circus", "publishing"],
 };
 
-const nameMatches = (catalog: string, stim: string) => {
-  const s = new Set(tokens(stim));
+const nameMatches = (catalog: string, stimTokens: Set<string>) => {
   let c = tokens(catalog);
   const alias = ALIASES[catalog.trim().toLowerCase()];
   if (alias) c = alias;
   const sig = c.filter((t) => !STOP.has(t) || alias);
   if (!sig.length) return false;
-  return sig.every((t) => s.has(t));
+  return sig.every((t) => stimTokens.has(t));
 };
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
@@ -46,6 +45,7 @@ const parseParties = (creators: string): Party[] => {
 };
 
 type RegParty = { role: string; name: string; ipi: string | null; agreement?: string | null };
+type RegEntry = { name: string; tokenSet: Set<string>; ipis: Set<string>; agreements: Set<string> };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -80,39 +80,65 @@ Deno.serve(async (req) => {
       if (org) clientIpi.set(org, ipi);
     });
 
-    // STIM-kvitton: samlade IPI/avtalsnummer per kvittopart
-    const regParties: RegParty[] = [];
+    // STIM-kvitton: unika partnamn med samlade IPI/avtalsnummer
+    const regByName = new Map<string, RegEntry>();
+    const addReg = (p: RegParty) => {
+      const key = norm(p.name);
+      if (!key) return;
+      let e = regByName.get(key);
+      if (!e) {
+        e = { name: p.name, tokenSet: new Set(tokens(p.name)), ipis: new Set(), agreements: new Set() };
+        regByName.set(key, e);
+      }
+      if (p.ipi) e.ipis.add(p.ipi);
+      if (p.agreement) e.agreements.add(p.agreement);
+    };
     regs.forEach((r) => {
-      ((r.creators as RegParty[]) ?? []).forEach((p) => regParties.push(p));
-      ((r.publishers as RegParty[]) ?? []).forEach((p) => regParties.push(p));
+      ((r.creators as RegParty[]) ?? []).forEach(addReg);
+      ((r.publishers as RegParty[]) ?? []).forEach(addReg);
     });
-    // Indexera på första token för att slippa jämföra alla mot alla
-    const regByFirstToken = new Map<string, RegParty[]>();
-    regParties.forEach((p) => {
-      const t = tokens(p.name);
-      const keys = new Set([t[0], ...t.filter((x) => x.length > 3)]);
+
+    // Indexera unika kvittonamn på första token + längre token
+    const regIndex = new Map<string, RegEntry[]>();
+    regByName.forEach((e) => {
+      const keys = new Set<string>();
+      const t = [...e.tokenSet];
+      if (t[0]) keys.add(t[0]);
+      t.forEach((x) => { if (x.length > 3) keys.add(x); });
       keys.forEach((k) => {
-        if (!k) return;
-        const arr = regByFirstToken.get(k) ?? [];
-        arr.push(p);
-        regByFirstToken.set(k, arr);
+        const arr = regIndex.get(k) ?? [];
+        arr.push(e);
+        regIndex.set(k, arr);
       });
     });
 
-    const regInfoFor = (partyName: string, publisher: boolean) => {
-      const ipis = new Set<string>();
-      const agreements = new Set<string>();
-      const t = tokens(partyName);
-      const candidates = new Set<RegParty>();
-      [t[0], ...t.filter((x) => x.length > 3)].forEach((k) => {
-        (regByFirstToken.get(k ?? "") ?? []).forEach((p) => candidates.add(p));
-      });
-      candidates.forEach((p) => {
-        if (!nameMatches(partyName, p.name) && !nameMatches(p.name, partyName)) return;
-        if (p.ipi) ipis.add(p.ipi);
-        if (publisher && p.agreement) agreements.add(p.agreement);
-      });
-      return { ipis, agreements };
+    // Cache per partnamn — samma person/förlag återkommer på hundratals verk
+    const regInfoCache = new Map<string, { ipis: Set<string>; agreements: Set<string> }>();
+    const regInfoFor = (partyName: string) => {
+      const cacheKey = norm(partyName);
+      const cached = regInfoCache.get(cacheKey);
+      if (cached) return cached;
+
+      const result = { ipis: new Set<string>(), agreements: new Set<string>() };
+      const exact = regByName.get(cacheKey);
+      if (exact) {
+        exact.ipis.forEach((i) => result.ipis.add(i));
+        exact.agreements.forEach((a) => result.agreements.add(a));
+      } else {
+        const t = tokens(partyName);
+        const candidates = new Set<RegEntry>();
+        const idxKeys = new Set<string>();
+        if (t[0]) idxKeys.add(t[0]);
+        t.forEach((x) => { if (x.length > 3) idxKeys.add(x); });
+        idxKeys.forEach((k) => (regIndex.get(k) ?? []).forEach((e) => candidates.add(e)));
+        candidates.forEach((e) => {
+          if (!nameMatches(partyName, e.tokenSet) && !nameMatches(e.name, new Set(tokens(partyName)))) return;
+          e.ipis.forEach((i) => result.ipis.add(i));
+          e.agreements.forEach((a) => result.agreements.add(a));
+        });
+      }
+      regInfoCache.set(cacheKey, result);
+      return result;
     };
 
     const rows: Record<string, unknown>[] = [];
@@ -128,11 +154,11 @@ Deno.serve(async (req) => {
         const isPublisher = p.role.toUpperCase() === "E";
 
         const cIpi = clientIpi.get(key) ?? null;
-        const reg = regInfoFor(p.name, isPublisher);
+        const reg = regInfoFor(p.name);
         const regIpi = reg.ipis.size === 1 ? [...reg.ipis][0] : null;
         const regAgr = reg.agreements.size === 1 ? [...reg.agreements][0] : null;
 
-        let ipi: string | null = cIpi ?? regIpi;
+        const ipi: string | null = cIpi ?? regIpi;
         let conflict = false;
         const notes: string[] = [];
 
