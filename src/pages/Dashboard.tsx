@@ -1,224 +1,237 @@
-import { useMemo, useState } from "react";
-import { useWorksStats } from "@/hooks/useWorks";
-import { useSettlementStats } from "@/hooks/useSettlements";
-import { encodeSettlementPeriodKey, isStimPeriod, resolveStimPayoutLabels } from "@/components/settlements/settlementPeriodGrouping";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Music2, Users, FileCheck, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useWorks } from "@/hooks/useWorks";
+import { useAgreements } from "@/hooks/useAgreements";
+import { useUnmatchedSettlementWorks } from "@/hooks/useSettlements";
+import { useWorkRegistrations } from "@/hooks/useWorkRegistrations";
+import { detectIssues } from "@/lib/workIssues";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Music, AlertTriangle, Copy, Film, FileCheck, FileWarning, ListChecks, ArrowRight, CheckCircle2,
+} from "lucide-react";
 
 const fmtKr = (n: number) =>
-  n.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kr";
+  n.toLocaleString("sv-SE", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " kr";
 
-const MONTH_INDEX: Record<string, number> = {
-  januari: 1, februari: 2, mars: 3, april: 4, maj: 5, juni: 6,
-  juli: 7, augusti: 8, september: 9, oktober: 10, november: 11, december: 12,
-};
-
-/** Chronological sort value for a period label like "Juni 2026" or "Warner/Chappell H1 2026" */
-const periodSortDate = (label: string): number => {
-  const monthMatch = label.match(/(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)\s+(\d{4})/i);
-  if (monthMatch) {
-    return Number(monthMatch[2]) * 100 + (MONTH_INDEX[monthMatch[1].toLowerCase()] ?? 0);
-  }
-  const halfMatch = label.match(/H([12])\s*(\d{4})/i);
-  if (halfMatch) {
-    return Number(halfMatch[2]) * 100 + (halfMatch[1] === "2" ? 12 : 6);
-  }
-  return 0;
-};
-
-interface TopWorksCardProps {
+interface Task {
+  id: string;
   title: string;
-  works: [string, number][];
-  isLoading?: boolean;
+  description: string;
+  count: number | null; // null = loading
+  extra?: string;
+  to: string;
+  icon: React.ReactNode;
+  urgent?: boolean;
 }
 
-const INITIAL_SHOWN = 10;
-
-const TopWorksCard = ({ title, works, isLoading }: TopWorksCardProps) => {
-  const [expanded, setExpanded] = useState(false);
-  const displayed = expanded ? works : works.slice(0, INITIAL_SHOWN);
-  const canExpand = works.length > INITIAL_SHOWN;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {displayed.map(([name, amount], idx) => (
-            <div key={name} className="flex items-center justify-between gap-4 text-sm">
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                  {idx + 1}
-                </span>
-                <span className="truncate">{name}</span>
-              </span>
-              <span className="font-medium tabular-nums whitespace-nowrap">{fmtKr(amount)}</span>
-            </div>
-          ))}
-          {isLoading && <p className="text-sm text-muted-foreground">Laddar…</p>}
-          {!isLoading && works.length === 0 && (
-            <p className="text-sm text-muted-foreground">Ingen avräkningsdata ännu</p>
-          )}
-        </div>
-        {canExpand && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-4 w-full"
-            onClick={() => setExpanded((v) => !v)}
-          >
-            {expanded ? (
-              <>
-                Visa färre <ChevronUp className="ml-2 h-4 w-4" />
-              </>
-            ) : (
-              <>
-                Visa alla ({works.length}) <ChevronDown className="ml-2 h-4 w-4" />
-              </>
-            )}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
 const Dashboard = () => {
-  const { data: stats, isLoading } = useWorksStats();
-  const { data: allTimeSettlements } = useSettlementStats(null);
+  const { data: works } = useWorks();
+  const { data: agreements } = useAgreements();
+  const { data: unmatchedWorks } = useUnmatchedSettlementWorks();
+  const { data: regs } = useWorkRegistrations();
 
-  // Group by the displayed payout period and keep publisher-qualified keys so that
-  // the dashboard includes both publishers when their latest period is the same.
-  const latestPeriod = useMemo(() => {
-    const periods = allTimeSettlements?.periods;
-    if (!periods || periods.length === 0) return null;
-    const stimLabels = resolveStimPayoutLabels(periods);
-    const groups = new Map<string, { label: string; keys: string[]; sortDate: number }>();
-    for (const p of periods) {
-      const qualifiedKey = encodeSettlementPeriodKey(p.publisher, p.distributionKey);
-      const label = isStimPeriod(p.distributionKey)
-        ? stimLabels.get(qualifiedKey) ?? p.distribution
-        : p.distribution;
-      const groupKey = isStimPeriod(p.distributionKey) ? `stim-${label}` : qualifiedKey;
-      const existing = groups.get(groupKey);
-      if (existing) {
-        existing.keys.push(encodeSettlementPeriodKey(p.publisher, p.distributionKey));
-      } else {
-        groups.set(groupKey, {
-          label,
-          keys: [encodeSettlementPeriodKey(p.publisher, p.distributionKey)],
-          sortDate: periodSortDate(label),
-        });
-      }
-    }
-    return Array.from(groups.values()).sort((a, b) => b.sortDate - a.sortDate)[0] ?? null;
-  }, [allTimeSettlements]);
+  const { data: conflictCount } = useQuery({
+    queryKey: ["party-number-conflicts-count"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("work_party_numbers")
+        .select("id", { count: "exact", head: true })
+        .eq("conflict", true);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
 
-  const latestPeriodKey = latestPeriod ? latestPeriod.keys.join(",") : null;
-  const { data: latestSettlements } = useSettlementStats(latestPeriodKey);
-  const latestPeriodName = latestPeriod?.label ?? null;
+  const { data: soundtrackCount } = useQuery({
+    queryKey: ["unregistered-soundtrack-titles-count"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_unregistered_soundtrack_titles");
+      if (error) throw error;
+      const titles = (data as { titles?: unknown[] }[] | null) ?? [];
+      return titles.reduce((sum, g) => sum + (g.titles?.length ?? 0), 0);
+    },
+  });
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center py-20 text-muted-foreground">Laddar statistik…</div>;
-  }
+  const { data: stimCounts } = useQuery({
+    queryKey: ["stim-works-counts"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const [uncertain, unmatched] = await Promise.all([
+        supabase.from("stim_works").select("id", { count: "exact", head: true }).eq("match_status", "uncertain"),
+        supabase.from("stim_works").select("id", { count: "exact", head: true }).eq("match_status", "unmatched"),
+      ]);
+      if (uncertain.error) throw uncertain.error;
+      if (unmatched.error) throw unmatched.error;
+      return { uncertain: uncertain.count ?? 0, unmatched: unmatched.count ?? 0 };
+    },
+  });
 
-  if (!stats) return null;
+  const agreementClientNames = useMemo(() => {
+    const set = new Set<string>();
+    agreements?.forEach((a) => {
+      if (a.client_name) set.add(a.client_name.toLowerCase());
+    });
+    return set;
+  }, [agreements]);
 
+  const workIssueCount = useMemo(() => {
+    if (!works || !agreements) return null;
+    return works.filter((w) => detectIssues(w, agreementClientNames).length > 0).length;
+  }, [works, agreements, agreementClientNames]);
 
-  const creatorData = stats.topCreators.map(([name, count]) => ({ name: name.length > 20 ? name.slice(0, 18) + "…" : name, fullName: name, count }));
-  const barColors = ["hsl(220, 70%, 45%)", "hsl(220, 70%, 55%)", "hsl(220, 70%, 65%)", "hsl(220, 60%, 50%)", "hsl(36, 90%, 55%)"];
+  const duplicateCount = useMemo(() => {
+    if (!works) return null;
+    const key = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
+    const m = new Map<string, number>();
+    works.forEach((w) => {
+      const k = `${key(w.title)}||${key(w.project)}`;
+      m.set(k, (m.get(k) ?? 0) + 1);
+    });
+    return [...m.values()].filter((n) => n > 1).length;
+  }, [works]);
+
+  const shareMismatchCount = useMemo(() => {
+    if (!regs) return null;
+    return regs.filter((r) => r.work_id && r.share_mismatch).length;
+  }, [regs]);
+
+  const unmatchedTotal = useMemo(
+    () => (unmatchedWorks ?? []).reduce((sum, u) => sum + Number(u.total_amount), 0),
+    [unmatchedWorks]
+  );
+
+  // Priority order: money first, then data conflicts, then structural issues.
+  const tasks: Task[] = [
+    {
+      id: "unmatched",
+      title: "Omatchade avräkningsverk",
+      description: "Verk med intäkter i avräkningar som inte matchar något verk i verklistan.",
+      count: unmatchedWorks ? unmatchedWorks.length : null,
+      extra: unmatchedWorks && unmatchedWorks.length > 0 ? `${fmtKr(unmatchedTotal)} väntar på koppling` : undefined,
+      to: "/review#unmatched",
+      icon: <Music className="h-5 w-5" />,
+      urgent: true,
+    },
+    {
+      id: "mismatch",
+      title: "Avvikande andelar mot STIM",
+      description: "STIM-kvitton där andelarna skiljer sig från katalogen.",
+      count: shareMismatchCount,
+      to: "/review#registrations",
+      icon: <FileWarning className="h-5 w-5" />,
+      urgent: true,
+    },
+    {
+      id: "conflicts",
+      title: "Konflikter i IPI/avtalsnummer",
+      description: "Parter där nummer skiljer sig mellan klientkort och STIM-kvitton.",
+      count: conflictCount ?? null,
+      to: "/review#conflicts",
+      icon: <AlertTriangle className="h-5 w-5" />,
+    },
+    {
+      id: "issues",
+      title: "Verk med problem",
+      description: "Saknar förlag, felaktig split, saknar representation, projekt eller avtal.",
+      count: workIssueCount,
+      to: "/review#issues",
+      icon: <ListChecks className="h-5 w-5" />,
+    },
+    {
+      id: "duplicates",
+      title: "Möjliga dubbletter",
+      description: "Verk med samma titel och projekt men olika upphovspersoner.",
+      count: duplicateCount,
+      to: "/review#duplicates",
+      icon: <Copy className="h-5 w-5" />,
+    },
+    {
+      id: "soundtracks",
+      title: "Saknade soundtrackverk",
+      description: "Soundtracktitlar i projekt som saknar egen verksregistrering.",
+      count: soundtrackCount ?? null,
+      to: "/review#soundtracks",
+      icon: <Film className="h-5 w-5" />,
+    },
+    {
+      id: "stim",
+      title: "STIM-avstämning",
+      description: "STIM-verk som är osäkert kopplade eller saknas i katalogen.",
+      count: stimCounts ? stimCounts.uncertain + stimCounts.unmatched : null,
+      extra: stimCounts ? `${stimCounts.uncertain} osäkra · ${stimCounts.unmatched} saknas` : undefined,
+      to: "/review#stim",
+      icon: <FileCheck className="h-5 w-5" />,
+    },
+  ];
+
+  const open = tasks.filter((t) => t.count === null || t.count > 0);
+  const done = tasks.filter((t) => t.count === 0);
+  const totalOpen = tasks.reduce((sum, t) => sum + (t.count ?? 0), 0);
 
   return (
     <div className="space-y-6">
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-          <CardContent className="flex items-center gap-4 p-6 relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-              <Music2 className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Totalt antal verk</p>
-              <p className="text-2xl font-bold tabular-nums">{stats.total}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
-          <CardContent className="flex items-center gap-4 p-6 relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10 ring-1 ring-success/20">
-              <FileCheck className="h-6 w-6 text-success" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Anmälda till STIM</p>
-              <p className="text-2xl font-bold tabular-nums">{stats.byStimStatus.anmäld}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
-          <CardContent className="flex items-center gap-4 p-6 relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 ring-1 ring-accent/20">
-              <BookOpen className="h-6 w-6 text-accent" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Co-publishing</p>
-              <p className="text-2xl font-bold tabular-nums">{stats.byType.MSCE + stats.byType.MSCP}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden relative group hover:shadow-md transition-shadow duration-300">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent pointer-events-none" />
-          <CardContent className="flex items-center gap-4 p-6 relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 ring-1 ring-violet-200">
-              <Users className="h-6 w-6 text-violet-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Upphovspersoner</p>
-              <p className="text-2xl font-bold tabular-nums">{stats.topCreators.length}+</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Att göra</h1>
+          <p className="text-sm text-muted-foreground">
+            {tasks.some((t) => t.count === null)
+              ? "Laddar uppgifter…"
+              : totalOpen > 0
+                ? `${totalOpen.toLocaleString("sv-SE")} öppna punkter – mest brådskande först`
+                : "Allt är avklarat – snyggt! 🎉"}
+          </p>
+        </div>
+        <Link to="/review" className="text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80 whitespace-nowrap">
+          Öppna Granska verk
+        </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <TopWorksCard
-          title="Topp verk – alla tider"
-          works={allTimeSettlements?.topWorks ?? []}
-          isLoading={!allTimeSettlements}
-        />
-        <TopWorksCard
-          title={`Topp verk – senaste avräkningen${latestPeriodName ? ` (${latestPeriodName})` : ""}`}
-          works={latestSettlements?.topWorks ?? []}
-          isLoading={!latestSettlements}
-        />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {open.map((t) => (
+          <Link key={t.id} to={t.to} className="group">
+            <Card className={`h-full overflow-hidden transition-shadow duration-200 hover:shadow-md ${t.urgent && (t.count ?? 0) > 0 ? "ring-1 ring-destructive/30" : ""}`}>
+              <CardContent className="flex h-full flex-col gap-3 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${t.urgent && (t.count ?? 0) > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                    {t.icon}
+                  </div>
+                  <Badge variant={t.urgent && (t.count ?? 0) > 0 ? "destructive" : "secondary"} className="text-sm tabular-nums">
+                    {t.count === null ? "…" : t.count.toLocaleString("sv-SE")}
+                  </Badge>
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold">{t.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
+                  {t.extra && <p className="mt-1 text-xs font-medium text-muted-foreground">{t.extra}</p>}
+                </div>
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+                  Åtgärda <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
-      {/* Top creators chart */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">Top 15 upphovspersoner</CardTitle></CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={creatorData} layout="vertical" margin={{ left: 0, right: 20 }}>
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value: number, _name: string, props: any) => [value, props.payload.fullName]} />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                  {creatorData.map((_, i) => (
-                    <Cell key={i} fill={barColors[i % barColors.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+      {done.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">Klart just nu</p>
+          <div className="flex flex-wrap gap-2">
+            {done.map((t) => (
+              <Link key={t.id} to={t.to}>
+                <Badge variant="outline" className="gap-1.5 py-1.5 text-muted-foreground hover:bg-accent">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-success" /> {t.title}
+                </Badge>
+              </Link>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 };
