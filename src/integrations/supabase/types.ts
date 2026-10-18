@@ -219,6 +219,21 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_cron_secret: {
+        Row: {
+          id: boolean
+          secret: string
+        }
+        Insert: {
+          id?: boolean
+          secret?: string
+        }
+        Update: {
+          id?: boolean
+          secret?: string
+        }
+        Relationships: []
+      }
       project_agreements: {
         Row: {
           agreement_id: string
