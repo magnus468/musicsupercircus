@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requireCaller } from "../_shared/requireCaller.ts";
 
 const SHEET_ID = "1R_osRhl0opeVw920KLTJweE4oYB2qnwSggeaNTuvLmk";
 const GID = "939924499";
@@ -37,6 +38,8 @@ const norm = (v: string | undefined) => {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const denied = await requireCaller(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const res = await fetch(CSV_URL);

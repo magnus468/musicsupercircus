@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requireCaller } from "../_shared/requireCaller.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
 
 const SPREADSHEET_ID = "1o4s2tNFLARwqZC-GUipgOJGMo9xNwl84CrGkpfrWfBU";
@@ -30,6 +31,8 @@ const show = (v: unknown) =>
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const denied = await requireCaller(req, corsHeaders);
+  if (denied) return denied;
   try {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const sheetsKey = Deno.env.get("GOOGLE_SHEETS_API_KEY");
