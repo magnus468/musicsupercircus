@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requireCaller } from "../_shared/requireCaller.ts";
 
 // Sprider IPI-nummer (från klientkort och STIM-kvitton) och avtalsnummer (från STIM-kvitton)
 // till samtliga verk där parten förekommer. Konflikter flaggas, aldrig skrivs något över tyst.
@@ -49,6 +50,8 @@ type RegEntry = { name: string; tokenSet: Set<string>; ipis: Set<string>; agreem
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const denied = await requireCaller(req, corsHeaders);
+  if (denied) return denied;
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 

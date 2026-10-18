@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requireCaller } from "../_shared/requireCaller.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
 
 const SPREADSHEET_ID = "1EZhIQmpQ9-cGEsULqH9zRREwomTYwYkTf2XoBUz3PiI";
@@ -136,6 +137,8 @@ function fixRoundingTotals(entries: string[]): string[] {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const denied = await requireCaller(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");

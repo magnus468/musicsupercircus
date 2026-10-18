@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 /** Allows: nightly cron (x-cron-secret), internal service-role calls, or a signed-in staff user. Returns null if allowed, else a 401/403 Response. */
 export async function requireCaller(req: Request, cors: Record<string, string>): Promise<Response | null> {
