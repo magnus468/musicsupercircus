@@ -56,11 +56,6 @@ const Login = () => {
               {loading ? "Laddar..." : isSignUp ? "Skapa konto" : "Logga in"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="underline hover:text-foreground transition-colors">
-              {isSignUp ? "Har redan ett konto? Logga in" : "Inget konto? Skapa ett"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>
