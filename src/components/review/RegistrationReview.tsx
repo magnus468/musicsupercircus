@@ -5,12 +5,13 @@ import { useReviewDismissals } from "@/hooks/useReviewDismissals";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorks } from "@/hooks/useWorks";
-import { useWorkRegistrations, useInvalidateRegistrations, openRegistrationPdf, type WorkRegistration } from "@/hooks/useWorkRegistrations";
+import { useWorkRegistrations, useInvalidateRegistrations, type WorkRegistration } from "@/hooks/useWorkRegistrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import AgreementPdfPreview from "@/components/AgreementPdfPreview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Tab = "mismatch" | "uncertain" | "unmatched" | "missing";
@@ -28,6 +29,7 @@ const RegistrationReview = () => {
   const [limit, setLimit] = useState(PAGE);
   const [linking, setLinking] = useState<WorkRegistration | null>(null);
   const [pick, setPick] = useState("");
+  const [pdf, setPdf] = useState<{ url: string; title: string } | null>(null);
 
   const workById = useMemo(() => new Map(works.map((w) => [w.id, w])), [works]);
   const registeredIds = useMemo(() => new Set(regs.map((r) => r.work_id).filter(Boolean)), [regs]);
@@ -56,8 +58,12 @@ const RegistrationReview = () => {
     invalidate();
   };
 
-  const open = (r: WorkRegistration) =>
-    r.pdf_path && openRegistrationPdf(r.pdf_path).catch(() => toast.error("Kunde inte öppna kvittot"));
+  const open = async (r: WorkRegistration) => {
+    if (!r.pdf_path) return toast.error("Inget kvitto finns för detta verk");
+    const { data, error } = await supabase.storage.from("work-registrations").download(r.pdf_path);
+    if (error || !data) return toast.error("Kunde inte öppna kvittot");
+    setPdf({ title: r.title, url: URL.createObjectURL(new Blob([data], { type: "application/pdf" })) });
+  };
 
   const tabs: { id: Tab; label: string; n: number }[] = [
     { id: "mismatch", label: "Avvikande andelar", n: lists.mismatch.length },
@@ -154,6 +160,12 @@ const RegistrationReview = () => {
                 </button>
               ))}
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!pdf} onOpenChange={(o) => { if (!o) { if (pdf) URL.revokeObjectURL(pdf.url); setPdf(null); } }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>STIM-kvitto: {pdf?.title}</DialogTitle></DialogHeader>
+          {pdf && <AgreementPdfPreview fileUrl={pdf.url} />}
         </DialogContent>
       </Dialog>
     </Card>
