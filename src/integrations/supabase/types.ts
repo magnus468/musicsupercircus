@@ -618,6 +618,30 @@ export type Database = {
           },
         ]
       }
+      review_dismissals: {
+        Row: {
+          created_at: string
+          dismissed_by: string | null
+          id: string
+          item_key: string
+          section: string
+        }
+        Insert: {
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          item_key: string
+          section: string
+        }
+        Update: {
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          item_key?: string
+          section?: string
+        }
+        Relationships: []
+      }
       royalty_payees: {
         Row: {
           client_id: string | null
