@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Trash2, AlertTriangle, Music } from "lucide-react";
+import { Pencil, Trash2, AlertTriangle, Music, EyeOff } from "lucide-react";
+import { useReviewDismissals } from "@/hooks/useReviewDismissals";
 import WorkForm from "@/components/WorkForm";
 import { toast } from "sonner";
 import UnregisteredSoundtrackTitles from "@/components/review/UnregisteredSoundtrackTitles";
@@ -41,6 +42,7 @@ const ReviewWorks = () => {
   const { data: unmatchedWorks, isLoading: unmatchedLoading } = useUnmatchedSettlementWorks();
   const deleteWork = useDeleteWork();
   const matchWork = useMatchSettlementWork();
+  const { isDismissed, dismiss } = useReviewDismissals();
   const [editWork, setEditWork] = useState<Work | null>(null);
   const [matchTarget, setMatchTarget] = useState<{ title: string; amount: number } | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<IssueType>>(
@@ -66,20 +68,21 @@ const ReviewWorks = () => {
     if (!works) return [];
     return works
       .map((w) => ({ work: w, issues: detectIssues(w, agreementClientNames) }))
-      .filter((w) => w.issues.length > 0)
+      .filter((w) => w.issues.length > 0 && !isDismissed("issues", w.work.id))
       .filter((w) => w.issues.some((i) => activeFilters.has(i)));
-  }, [works, agreementClientNames, activeFilters]);
+  }, [works, agreementClientNames, activeFilters, isDismissed]);
 
   const issueCounts = useMemo(() => {
     if (!works) return {} as Record<IssueType, number>;
     const counts: Record<string, number> = {};
     works.forEach((w) => {
+      if (isDismissed("issues", w.id)) return;
       detectIssues(w, agreementClientNames).forEach((i) => {
         counts[i] = (counts[i] || 0) + 1;
       });
     });
     return counts as Record<IssueType, number>;
-  }, [works, agreementClientNames]);
+  }, [works, agreementClientNames, isDismissed]);
 
   const toggleFilter = useCallback((type: IssueType) => {
     setActiveFilters((prev) => {
@@ -145,7 +148,7 @@ const ReviewWorks = () => {
                 <TableHead>Projekt</TableHead>
                 <TableHead>Upphovspersoner</TableHead>
                 <TableHead>Problem</TableHead>
-                <TableHead className="w-20"></TableHead>
+                <TableHead className="w-28"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -187,6 +190,9 @@ const ReviewWorks = () => {
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditWork(work)}>
                         <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Ta bort från granskningslistan" onClick={() => dismiss("issues", work.id)}>
+                        <EyeOff className="h-3.5 w-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(work.id)}>
                         <Trash2 className="h-3.5 w-3.5" />
@@ -324,6 +330,7 @@ const PartyNumberConflicts = ({ works }: { works?: Work[] }) => {
     },
   });
 
+  const { isDismissed, dismiss } = useReviewDismissals();
   const workTitle = useMemo(() => {
     const map = new Map<string, string>();
     works?.forEach((w) => map.set(w.id, w.title));
@@ -332,14 +339,15 @@ const PartyNumberConflicts = ({ works }: { works?: Work[] }) => {
 
   const grouped = useMemo(() => {
     if (!conflicts) return [];
-    const map = new Map<string, { party: string; note: string; works: { id: string; title: string }[] }>();
+    const map = new Map<string, { party: string; note: string; works: { id: string; title: string; party: string }[] }>();
     conflicts.forEach((c) => {
+      if (isDismissed("conflicts", `${c.work_id}|${c.party_name}`)) return;
       const key = `${c.party_name}|${c.conflict_note}`;
       if (!map.has(key)) map.set(key, { party: c.party_name, note: c.conflict_note ?? "", works: [] });
-      map.get(key)!.works.push({ id: c.work_id, title: workTitle.get(c.work_id) ?? "Okänt verk" });
+      map.get(key)!.works.push({ id: c.work_id, title: workTitle.get(c.work_id) ?? "Okänt verk", party: c.party_name });
     });
     return [...map.values()].sort((a, b) => b.works.length - a.works.length);
-  }, [conflicts, workTitle]);
+  }, [conflicts, workTitle, isDismissed]);
 
   if (!conflicts) return null;
 
@@ -368,9 +376,14 @@ const PartyNumberConflicts = ({ works }: { works?: Work[] }) => {
               <p className="text-xs text-destructive">{g.note}</p>
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
                 {g.works.slice(0, 10).map((w) => (
-                  <Link key={w.id} to={`/works/${w.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
-                    {w.title}
-                  </Link>
+                  <span key={w.id} className="inline-flex items-center gap-0.5">
+                    <Link to={`/works/${w.id}`} className="text-primary underline underline-offset-2 hover:text-primary/80">
+                      {w.title}
+                    </Link>
+                    <button title="Ta bort från granskningslistan" className="text-muted-foreground hover:text-foreground" onClick={() => dismiss("conflicts", `${w.id}|${w.party}`)}>
+                      <EyeOff className="h-3 w-3" />
+                    </button>
+                  </span>
                 ))}
                 {g.works.length > 10 && (
                   <span className="text-muted-foreground">…och {g.works.length - 10} till</span>
