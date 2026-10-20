@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FileText, Link2 } from "lucide-react";
+import { FileText, Link2, EyeOff } from "lucide-react";
+import { useReviewDismissals } from "@/hooks/useReviewDismissals";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorks } from "@/hooks/useWorks";
@@ -21,6 +22,7 @@ const RegistrationReview = () => {
   const { data: regs = [], isLoading } = useWorkRegistrations();
   const { data: works = [] } = useWorks();
   const invalidate = useInvalidateRegistrations();
+  const { isDismissed, dismiss } = useReviewDismissals();
   const [tab, setTab] = useState<Tab>("mismatch");
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(PAGE);
@@ -31,11 +33,11 @@ const RegistrationReview = () => {
   const registeredIds = useMemo(() => new Set(regs.map((r) => r.work_id).filter(Boolean)), [regs]);
 
   const lists = useMemo(() => ({
-    mismatch: regs.filter((r) => r.work_id && r.share_mismatch),
-    uncertain: regs.filter((r) => r.match_status === "uncertain"),
-    unmatched: regs.filter((r) => r.match_status === "unmatched"),
-  }), [regs]);
-  const missing = useMemo(() => works.filter((w) => !registeredIds.has(w.id)), [works, registeredIds]);
+    mismatch: regs.filter((r) => r.work_id && r.share_mismatch && !isDismissed("reg_mismatch", r.id)),
+    uncertain: regs.filter((r) => r.match_status === "uncertain" && !isDismissed("reg_uncertain", r.id)),
+    unmatched: regs.filter((r) => r.match_status === "unmatched" && !isDismissed("reg_unmatched", r.id)),
+  }), [regs, isDismissed]);
+  const missing = useMemo(() => works.filter((w) => !registeredIds.has(w.id) && !isDismissed("reg_missing", w.id)), [works, registeredIds, isDismissed]);
 
   const ql = q.trim().toLowerCase();
   const rows = tab === "missing" ? [] : lists[tab].filter((r) => !ql || `${r.title} ${names(r)} ${r.folder}`.toLowerCase().includes(ql));
@@ -85,12 +87,13 @@ const RegistrationReview = () => {
           <p className="text-sm text-muted-foreground">Laddar...</p>
         ) : tab === "missing" ? (
           <Table>
-            <TableHeader><TableRow><TableHead>Verk</TableHead><TableHead>Projekt</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Verk</TableHead><TableHead>Projekt</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
             <TableBody>
               {missingRows.slice(0, limit).map((w) => (
                 <TableRow key={w.id}>
                   <TableCell><Link className="text-primary hover:underline" to={`/works/${w.id}`}>{w.title}</Link></TableCell>
                   <TableCell className="text-muted-foreground">{w.project}</TableCell>
+                  <TableCell className="text-right"><Button size="icon" variant="ghost" title="Ta bort från granskningslistan" onClick={() => dismiss("reg_missing", w.id)}><EyeOff className="h-4 w-4" /></Button></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -121,6 +124,7 @@ const RegistrationReview = () => {
                       {tab !== "mismatch" && (
                         <Button size="icon" variant="ghost" title="Koppla till verk" onClick={() => setLinking(r)}><Link2 className="h-4 w-4" /></Button>
                       )}
+                      <Button size="icon" variant="ghost" title="Ta bort från granskningslistan" onClick={() => dismiss(`reg_${tab}`, r.id)}><EyeOff className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
                 );

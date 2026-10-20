@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 import { useWorks } from "@/hooks/useWorks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, EyeOff } from "lucide-react";
+import { useReviewDismissals } from "@/hooks/useReviewDismissals";
 import { toast } from "sonner";
 
 const key = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
@@ -13,6 +14,7 @@ const key = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
 const DuplicateWorks = () => {
   const { data: works = [], isLoading } = useWorks();
   const qc = useQueryClient();
+  const { isDismissed, dismiss } = useReviewDismissals();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
 
   const groups = useMemo(() => {
@@ -21,8 +23,8 @@ const DuplicateWorks = () => {
       const k = `${key(w.title)}||${key(w.project)}`;
       m.set(k, [...(m.get(k) ?? []), w]);
     });
-    return [...m.values()].filter((g) => g.length > 1).sort((a, b) => a[0].title.localeCompare(b[0].title, "sv"));
-  }, [works, hidden]);
+    return [...m.entries()].filter(([k, g]) => g.length > 1 && !isDismissed("duplicates", k)).map(([k, g]) => Object.assign(g, { key: k })).sort((a, b) => a[0].title.localeCompare(b[0].title, "sv"));
+  }, [works, hidden, isDismissed]);
 
   const remove = async (id: string) => {
     setHidden((h) => new Set(h).add(id));
@@ -58,8 +60,11 @@ const DuplicateWorks = () => {
           <div className="max-h-[60vh] divide-y overflow-y-auto rounded border">
             {groups.map((g) => (
               <div key={g[0].id} className="py-2">
-                <div className="px-3 pb-1 text-sm font-medium">
-                  {g[0].title} <span className="font-normal text-muted-foreground">· {g[0].project || "—"}</span>
+                <div className="flex items-center gap-2 px-3 pb-1 text-sm font-medium">
+                  <span className="flex-1">{g[0].title} <span className="font-normal text-muted-foreground">· {g[0].project || "—"}</span></span>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => dismiss("duplicates", g.key)} title="Inte dubbletter – ta bort från listan">
+                    <EyeOff className="mr-1 h-3.5 w-3.5" /> Ej dubblett
+                  </Button>
                 </div>
                 {g.map((w) => (
                   <div key={w.id} className="flex flex-wrap items-center gap-3 bg-muted/40 px-6 py-1.5 text-xs">
