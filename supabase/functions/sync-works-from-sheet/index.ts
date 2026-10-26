@@ -411,6 +411,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    let reportOnly = false;
+    try { reportOnly = !!(await req.clone().json())?.reportOnly; } catch { /* tom body */ }
+    if (reportOnly) {
+      return new Response(JSON.stringify({ ok: true, locked: lockedDiffs }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     let inserted = 0;
     for (let i = 0; i < toInsert.length; i += 500) {
       const batch = toInsert.slice(i, i + 500);
@@ -429,7 +437,7 @@ Deno.serve(async (req) => {
       updated++;
     }
 
-    const summary = { ok: true, inserted, updated, skipped, totalRows: rows.length, at: new Date().toISOString() };
+    const summary = { ok: true, inserted, updated, skipped, lockedPending: lockedDiffs.length, totalRows: rows.length, at: new Date().toISOString() };
     console.log("sync-works-from-sheet:", summary);
 
     if (inserted > 0 || updated > 0) {
