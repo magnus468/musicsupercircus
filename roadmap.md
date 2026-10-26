@@ -5,5 +5,5 @@
   - 9 nya upphovspersoner hoppades över (summan hade överstigit 100 %): Betsson ID (Kocken), Box 21 (Person), Thunder S2 (Eklund), m fl — kräver beslut
   - ROW-regeln (SF/FLX/Embark 15/35, övriga 25/25, Utvandrarna+Saltkråkan 40/60) och befintliga ROW rördes inte
 - [ ] Flik 2 (41 sifferskillnader) och flik 3 (179 namnlarm): beslut saknas ännu i Excel
-- [ ] Flik 2 (41 sifferskillnader) och flik 3 (179 namnlarm): beslut saknas ännu i Excel
 - [ ] MSCP-kvitton med avtalsnr 14016020 (Kryptan + tre Emilie's Song): obesvarad fråga till Magnus
+- [ ] Verklistan i Google-arket: Magnus för in 214 rättningar (Verklistan_rattningar_v1.xlsx); låsta verk skyddas av synken tills dess

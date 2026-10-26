@@ -1114,6 +1114,7 @@ export type Database = {
           publishing_type: Database["public"]["Enums"]["publishing_type"]
           row_publisher_share: number
           share_percentage: number | null
+          sheet_locked: boolean
           stim_comment: string | null
           stim_conflict: boolean | null
           stim_status: Database["public"]["Enums"]["stim_status"]
@@ -1132,6 +1133,7 @@ export type Database = {
           publishing_type?: Database["public"]["Enums"]["publishing_type"]
           row_publisher_share?: number
           share_percentage?: number | null
+          sheet_locked?: boolean
           stim_comment?: string | null
           stim_conflict?: boolean | null
           stim_status?: Database["public"]["Enums"]["stim_status"]
@@ -1150,6 +1152,7 @@ export type Database = {
           publishing_type?: Database["public"]["Enums"]["publishing_type"]
           row_publisher_share?: number
           share_percentage?: number | null
+          sheet_locked?: boolean
           stim_comment?: string | null
           stim_conflict?: boolean | null
           stim_status?: Database["public"]["Enums"]["stim_status"]
