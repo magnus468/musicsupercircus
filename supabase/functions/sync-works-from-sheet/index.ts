@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
     for (let from = 0; ; from += 1000) {
       const { data, error: exErr } = await supabase
         .from("works")
-        .select("id, title, project, creators, stim_status, stim_comment, publishing_type, co_publishers")
+        .select("id, title, project, creators, stim_status, stim_comment, publishing_type, co_publishers, sheet_locked")
         .order("created_at", { ascending: true })
         .range(from, from + 999);
       if (exErr) throw exErr;
@@ -288,8 +288,11 @@ Deno.serve(async (req) => {
     // "uppdaterade verk" i rapporten varje dag utan att något faktiskt ändrats.
     const claimed = new Set<string>();
     const hasSplitInfo = (s: string | null | undefined) => /\brepr\b|row:/i.test(s ?? "");
+    const cmp = (s: string | null | undefined) =>
+      (s ?? "").toLowerCase().replace(/\s+/g, "").replace(/,(?=\d)/g, ".");
+    const lockedDiffs: Record<string, unknown>[] = [];
 
-    for (const row of rows) {
+    for (const [rowIdx, row] of rows.entries()) {
       const title = norm(row[2]);
       if (!title || key(title) === "korrigering") { skipped++; continue; }
       const project = norm(row[1]);
@@ -329,19 +332,37 @@ Deno.serve(async (req) => {
             to: after == null || after === "" ? "(tomt)" : String(after),
           });
         };
+        // Låst verk: andelar rättade i katalogen. Arket får inte skriva över
+        // upphovspersoner/förlag förrän arket stämmer med katalogen.
+        if (current.sheet_locked) {
+          if (cmp(creators) === cmp(current.creators)) {
+            patch.sheet_locked = false;
+            current.sheet_locked = false;
+          } else {
+            lockedDiffs.push({
+              sheetRow: rowIdx + 4,
+              title: current.title,
+              project: current.project ?? "",
+              sheetCreators: rawCreators,
+              sheetPublishers: rawPublishers ?? "",
+              catalogCreators: current.creators ?? "",
+            });
+          }
+        }
+        const locked = !!current.sheet_locked;
         if (project && project !== current.project) track("Projekt", "project", current.project, project);
         // Skriv aldrig över en detaljerad upphovspersonslista (med roller/andelar)
         // med en enklare variant utan split-information.
         const creatorsDowngrade = hasSplitInfo(current.creators) && !hasSplitInfo(creators);
-        if (creators && creators !== current.creators && !creatorsDowngrade) {
+        if (!locked && creators && creators !== current.creators && !creatorsDowngrade) {
           track("Upphovspersoner", "creators", current.creators, creators);
         }
         if (status !== current.stim_status) track("STIM-status", "stim_status", current.stim_status, status);
         if (comment && comment !== current.stim_comment) track("STIM-kommentar", "stim_comment", current.stim_comment, comment);
-        if (publishingType && publishingType !== current.publishing_type) {
+        if (!locked && publishingType && publishingType !== current.publishing_type) {
           track("Förlag", "publishing_type", current.publishing_type, publishingType);
         }
-        if (coPublishers && coPublishers.join(", ") !== (current.co_publishers ?? []).join(", ")) {
+        if (!locked && coPublishers && coPublishers.join(", ") !== (current.co_publishers ?? []).join(", ")) {
           patch.co_publishers = coPublishers;
           fields.push("Medförlag");
           diffs.push({
@@ -350,6 +371,10 @@ Deno.serve(async (req) => {
             to: coPublishers.join(", ") || "(tomt)",
           });
         }
+        if (fields.length === 0 && patch.sheet_locked === false) {
+          await supabase.from("works").update({ sheet_locked: false }).eq("id", current.id);
+        }
+
         if (fields.length > 0) {
           claimed.add(current.id);
           // Uppdatera minnesbilden så att senare rader jämför mot nytt värde
