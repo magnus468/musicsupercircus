@@ -18,19 +18,22 @@ const ALIASES: Record<string, string[]> = {
 
 export const normalizeCreatorName = (name: string) => {
   const normalized = tokens(name).join(" ");
-  return ["adam norden", "adam isaac erik norden"].includes(normalized) ? "adam norden" : normalized;
+  if (["adam norden", "adam isaac erik norden"].includes(normalized)) return "adam norden";
+  if (["karzan mahmood", "karzan mahmood faqe hussein"].includes(normalized)) return "karzan mahmood";
+  return normalized;
 };
 
-/** Recheck Adam's stale name-based comparisons, without hiding other parties' issues. */
-export const resolveAdamNameWarning = (registration: WorkRegistration, creators: string) => {
+/** Recheck confirmed creator aliases, without hiding other parties' issues. */
+export const resolveCreatorNameWarnings = (registration: WorkRegistration, creators: string) => {
   if (!registration.share_mismatch || !registration.mismatch_note) return registration;
-  const matches = [...creators.matchAll(/(?:^|\),\s*)([^()]+)\((?:CA|C|A),\s*(\d+(?:[.,]\d+)?)%/gi)]
-    .filter((match) => normalizeCreatorName(match[1]) === "adam norden");
-  if (matches.length !== 1) return registration;
-  const actual = Number(matches[0][2].replace(",", "."));
+  const parties = [...creators.matchAll(/(?:^|\),\s*)([^()]+)\((?:CA|C|A),\s*(\d+(?:[.,]\d+)?)%/gi)];
   const remaining = registration.mismatch_note.split("; ").filter((note) => {
-    const warning = note.match(/^(Adam (?:Isaac Erik )?Nord[eé]n)(?:: STIM (\d+(?:[.,]\d+)?)% \/ (?:katalog .*|andel saknas i katalogen)| (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen)$/i);
-    return !warning || Math.abs(actual - Number((warning[2] ?? warning[3]).replace(",", "."))) > 0.00001;
+    const warning = note.match(/^(Adam (?:Isaac Erik )?Nord[eé]n|Karzan Mahmood(?: Faqe Hussein)?)(?:: STIM (\d+(?:[.,]\d+)?)% \/ (?:katalog .*|andel saknas i katalogen)| (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen)$/i);
+    if (!warning) return true;
+    const matches = parties.filter((match) => normalizeCreatorName(match[1]) === normalizeCreatorName(warning[1]));
+    if (matches.length !== 1) return true;
+    const actual = Number(matches[0][2].replace(",", "."));
+    return Math.abs(actual - Number((warning[2] ?? warning[3]).replace(",", "."))) > 0.00001;
   });
   return { ...registration, share_mismatch: remaining.length > 0, mismatch_note: remaining.join("; ") || null };
 };
@@ -56,7 +59,7 @@ export const resolveBrfNameWarning = (registration: WorkRegistration, creators: 
 
 /** True if every significant token of the catalog name appears in the STIM name. */
 const nameMatches = (catalog: string, stim: string) => {
-  if (normalizeCreatorName(catalog) === "adam norden" || normalizeCreatorName(stim) === "adam norden") {
+  if (["adam norden", "karzan mahmood"].includes(normalizeCreatorName(catalog)) || ["adam norden", "karzan mahmood"].includes(normalizeCreatorName(stim))) {
     return normalizeCreatorName(catalog) === normalizeCreatorName(stim);
   }
   if (normalizePublisherName(catalog) === "brf music publishing" || normalizePublisherName(stim) === "brf music publishing") {
