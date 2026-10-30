@@ -16,6 +16,25 @@ const ALIASES: Record<string, string[]> = {
   mscp: ["super", "circus", "publishing"],
 };
 
+export const normalizeCreatorName = (name: string) => {
+  const normalized = tokens(name).join(" ");
+  return ["adam norden", "adam isaac erik norden"].includes(normalized) ? "adam norden" : normalized;
+};
+
+/** Recheck Adam's stale name-based comparisons, without hiding other parties' issues. */
+export const resolveAdamNameWarning = (registration: WorkRegistration, creators: string) => {
+  if (!registration.share_mismatch || !registration.mismatch_note) return registration;
+  const matches = [...creators.matchAll(/(?:^|\),\s*)([^()]+)\((?:CA|C|A),\s*(\d+(?:[.,]\d+)?)%/gi)]
+    .filter((match) => normalizeCreatorName(match[1]) === "adam norden");
+  if (matches.length !== 1) return registration;
+  const actual = Number(matches[0][2].replace(",", "."));
+  const remaining = registration.mismatch_note.split("; ").filter((note) => {
+    const warning = note.match(/^(Adam (?:Isaac Erik )?Nord[eé]n)(?:: STIM (\d+(?:[.,]\d+)?)% \/ (?:katalog .*|andel saknas i katalogen)| (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen)$/i);
+    return !warning || Math.abs(actual - Number((warning[2] ?? warning[3]).replace(",", "."))) > 0.00001;
+  });
+  return { ...registration, share_mismatch: remaining.length > 0, mismatch_note: remaining.join("; ") || null };
+};
+
 /** Exact publisher aliases, never a substring match against unrelated publishers. */
 export const normalizePublisherName = (name: string) => {
   const normalized = name.trim().toLowerCase().replace(/\s+/g, " ");
@@ -37,6 +56,9 @@ export const resolveBrfNameWarning = (registration: WorkRegistration, creators: 
 
 /** True if every significant token of the catalog name appears in the STIM name. */
 const nameMatches = (catalog: string, stim: string) => {
+  if (normalizeCreatorName(catalog) === "adam norden" || normalizeCreatorName(stim) === "adam norden") {
+    return normalizeCreatorName(catalog) === normalizeCreatorName(stim);
+  }
   if (normalizePublisherName(catalog) === "brf music publishing" || normalizePublisherName(stim) === "brf music publishing") {
     return normalizePublisherName(catalog) === normalizePublisherName(stim);
   }

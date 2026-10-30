@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WorkRegistration } from "@/hooks/useWorkRegistrations";
-import { normalizePublisherName, resolveBrfNameWarning } from "./regPartyMatch";
+import { normalizePublisherName, resolveBrfNameWarning, normalizeCreatorName, resolveAdamNameWarning, lookupRegInfo } from "./regPartyMatch";
 
 const registration = {
   share_mismatch: true,
@@ -22,5 +22,25 @@ describe("BRF publisher aliases", () => {
   });
   it("does not hide additional conflicts", () => {
     expect(resolveBrfNameWarning({ ...registration, mismatch_note: `${registration.mismatch_note}; annan andelsavvikelse` }, "BRF (E, 16.66%, repr)").share_mismatch).toBe(true);
+  });
+});
+
+describe("Adam Nordén aliases", () => {
+  it("recognizes Adam Isaac Erik Norden as Adam Nordén", () => {
+    expect(normalizeCreatorName("Adam Isaac Erik Norden")).toBe(normalizeCreatorName("Adam Nordén"));
+  });
+  it("resolves a stale comparison only when the actual share matches", () => {
+    const reg = { ...registration, mismatch_note: "Adam Isaac Erik Norden: STIM 66.67% / katalog 33.33%" };
+    expect(resolveAdamNameWarning(reg, "Adam Nordén (CA, 66.67%, repr)").share_mismatch).toBe(false);
+    expect(resolveAdamNameWarning(reg, "Adam Nordén (CA, 33.33%, repr)").share_mismatch).toBe(true);
+  });
+  it("retains unrelated warnings", () => {
+    const reg = { ...registration, mismatch_note: "Trad: STIM 0.0% / katalog 33.33%; Adam Isaac Erik Norden: STIM 66.67% / katalog 33.33%" };
+    expect(resolveAdamNameWarning(reg, "Adam Nordén (CA, 66.67%, repr)").mismatch_note).toBe("Trad: STIM 0.0% / katalog 33.33%");
+  });
+  it("looks up identifiers in both name directions", () => {
+    for (const [catalog, stim] of [["Adam Nordén", "Adam Isaac Erik Norden"], ["Adam Isaac Erik Norden", "Adam Nordén"]]) {
+      expect(lookupRegInfo(catalog, [{ ...registration, creators: [{ name: stim, role: "CA", ipi: "123", perf: 66.67, mech: null }] }], false).ipi).toBe("123");
+    }
   });
 });
