@@ -1,3 +1,4 @@
 - STIM registration receipts live in `work_registrations` (parsed data + private `work-registrations` bucket PDF), linked to works by title + creators, never title alone — keeps receipts auditable without overwriting catalog shares.
 - Release-to-client royalty links live in `release_clients` (album_key + client_id + role), separate from payout splits — prepares payouts without changing split math.
 - Works with `sheet_locked` keep catalog creators/publishers; sheet sync skips those fields until the sheet matches, then unlocks — protects manual share corrections from the read-only sheet. `{reportOnly:true}` lists pending sheet edits.
+- Registration reads resolve stale publisher-alias warnings centrally against linked catalog E shares; preserve unrelated or numerical conflicts so review counts and work details agree.

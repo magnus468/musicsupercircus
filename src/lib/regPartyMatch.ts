@@ -16,8 +16,30 @@ const ALIASES: Record<string, string[]> = {
   mscp: ["super", "circus", "publishing"],
 };
 
+/** Exact publisher aliases, never a substring match against unrelated publishers. */
+export const normalizePublisherName = (name: string) => {
+  const normalized = name.trim().toLowerCase().replace(/\s+/g, " ");
+  return /^(brf|brf music publishing)( ab)?$/.test(normalized)
+    ? "brf music publishing"
+    : normalized;
+};
+
+/** Resolve only the stale BRF-name warning after confirming the catalog's E share. */
+export const resolveBrfNameWarning = (registration: WorkRegistration, creators: string) => {
+  const warning = registration.mismatch_note?.match(/^brf(?: music publishing)? (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen$/i);
+  if (!registration.share_mismatch || !warning) return registration;
+  const expected = Number(warning[1].replace(",", "."));
+  const matches = [...creators.matchAll(/(?:^|\),\s*)([^()]+)\(E,\s*(\d+(?:[.,]\d+)?)%/gi)]
+    .filter((match) => normalizePublisherName(match[1]) === "brf music publishing");
+  if (matches.length !== 1 || Math.abs(Number(matches[0][2].replace(",", ".")) - expected) > 0.00001) return registration;
+  return { ...registration, share_mismatch: false, mismatch_note: null };
+};
+
 /** True if every significant token of the catalog name appears in the STIM name. */
 const nameMatches = (catalog: string, stim: string) => {
+  if (normalizePublisherName(catalog) === "brf music publishing" || normalizePublisherName(stim) === "brf music publishing") {
+    return normalizePublisherName(catalog) === normalizePublisherName(stim);
+  }
   const s = new Set(tokens(stim));
   let c = tokens(catalog);
   const alias = ALIASES[catalog.trim().toLowerCase()];
