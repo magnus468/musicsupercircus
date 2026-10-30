@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveBrfNameWarning } from "@/lib/regPartyMatch";
 
 export type RegParty = {
   role: string;
@@ -44,7 +45,15 @@ export const useWorkRegistrations = (workId?: string) =>
         all.push(...((data ?? []) as unknown as WorkRegistration[]));
         if (!data || data.length < 1000) break;
       }
-      return all;
+      const ids = [...new Set(all.filter((r) => r.work_id && r.share_mismatch && /^brf(?: music publishing)? /i.test(r.mismatch_note ?? "")).map((r) => r.work_id).filter((id): id is string => Boolean(id)))];
+      if (!ids.length) return all;
+      const catalog = new Map<string, string>();
+      for (let from = 0; from < ids.length; from += 100) {
+        const { data, error } = await supabase.from("works").select("id, creators").in("id", ids.slice(from, from + 100));
+        if (error) throw error;
+        data?.forEach((work) => catalog.set(work.id, work.creators ?? ""));
+      }
+      return all.map((r) => resolveBrfNameWarning(r, catalog.get(r.work_id ?? "") ?? ""));
     },
     staleTime: 5 * 60 * 1000,
   });
