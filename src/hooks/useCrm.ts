@@ -1,6 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { StickyNote, Phone, Mail, CalendarDays, ListChecks } from "lucide-react";
+
+export const typeMeta: Record<string, { label: string; icon: typeof StickyNote; className: string }> = {
+  note: { label: "Anteckning", icon: StickyNote, className: "bg-violet-100 text-violet-700" },
+  call: { label: "Samtal", icon: Phone, className: "bg-blue-100 text-blue-700" },
+  email: { label: "E-post", icon: Mail, className: "bg-emerald-100 text-emerald-700" },
+  meeting: { label: "Möte", icon: CalendarDays, className: "bg-amber-100 text-amber-700" },
+  task: { label: "Uppgift", icon: ListChecks, className: "bg-rose-100 text-rose-700" },
+};
 
 export type CrmActivity = Tables<"crm_activities">;
 export type CrmActivityInsert = TablesInsert<"crm_activities">;
