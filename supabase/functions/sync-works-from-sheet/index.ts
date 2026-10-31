@@ -349,7 +349,8 @@ Deno.serve(async (req) => {
             });
           }
         }
-        const locked = !!current.sheet_locked;
+        // Låset är avvecklat: Verklistan i arket gäller alltid.
+        const locked = false;
         if (project && project !== current.project) track("Projekt", "project", current.project, project);
         // Skriv aldrig över en detaljerad upphovspersonslista (med roller/andelar)
         // med en enklare variant utan split-information.
