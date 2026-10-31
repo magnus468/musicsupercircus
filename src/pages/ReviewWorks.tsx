@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { usePartyNumberConflicts } from "@/hooks/usePartyNumberConflicts";
+import { useReviewSectionScroll } from "@/hooks/useReviewSectionScroll";
 import { useWorks, useDeleteWork, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
 import { useAgreements } from "@/hooks/useAgreements";
@@ -36,6 +36,7 @@ const parseCreatorParts = (creators: string) => {
 };
 
 const ReviewWorks = () => {
+  const sectionRef = useReviewSectionScroll();
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
@@ -109,7 +110,7 @@ const ReviewWorks = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={sectionRef} className="space-y-6">
       <div id="registrations" className="scroll-mt-20"><RegistrationReview /></div>
       <div id="stim" className="scroll-mt-20"><StimReconciliation /></div>
       <div id="duplicates" className="scroll-mt-20"><DuplicateWorks /></div>
@@ -317,18 +318,7 @@ const ReviewWorks = () => {
 
 /** Lista över parter vars IPI- eller avtalsnummer skiljer sig mellan klientkort och STIM-kvitton */
 const PartyNumberConflicts = ({ works }: { works?: Work[] }) => {
-  const { data: conflicts } = useQuery({
-    queryKey: ["party-number-conflicts"],
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("work_party_numbers")
-        .select("work_id, party_name, is_publisher, conflict_note")
-        .eq("conflict", true);
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: conflicts } = usePartyNumberConflicts();
 
   const { isDismissed, dismiss } = useReviewDismissals();
   const workTitle = useMemo(() => {
@@ -344,7 +334,7 @@ const PartyNumberConflicts = ({ works }: { works?: Work[] }) => {
       if (isDismissed("conflicts", `${c.work_id}|${c.party_name}`)) return;
       const key = `${c.party_name}|${c.conflict_note}`;
       if (!map.has(key)) map.set(key, { party: c.party_name, note: c.conflict_note ?? "", works: [] });
-      map.get(key)!.works.push({ id: c.work_id, title: workTitle.get(c.work_id) ?? "Okänt verk", party: c.party_name });
+      map.get(key)?.works.push({ id: c.work_id, title: workTitle.get(c.work_id) ?? "Okänt verk", party: c.party_name });
     });
     return [...map.values()].sort((a, b) => b.works.length - a.works.length);
   }, [conflicts, workTitle, isDismissed]);

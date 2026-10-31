@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 /** Ärenden som manuellt tagits bort från Granska verk – visas aldrig igen. */
 export const useReviewDismissals = () => {
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["review_dismissals"],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
@@ -34,5 +34,5 @@ export const useReviewDismissals = () => {
     }
     toast.success("Borttagen från granskningslistan");
   };
-  return { isDismissed, dismiss };
+  return { isDismissed, dismiss, isLoading };
 };

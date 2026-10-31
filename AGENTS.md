@@ -2,3 +2,5 @@
 - Release-to-client royalty links live in `release_clients` (album_key + client_id + role), separate from payout splits — prepares payouts without changing split math.
 - The Google sheet always wins for creators/publishers on sync; the `sheet_locked` lock was retired at the user's request — sheet is the single source of truth.
 - Registration reads resolve stale party-alias warnings centrally against linked catalog shares; preserve unrelated or numerical conflicts so review counts and work details agree.
+- Dashboard review counts use the review list's dismissal keys and counting units; share a paginated party-conflict query so both views reflect the same records.
+- Review fragment navigation observes loading-related layout changes until user interaction, so task links land on the requested section without interrupting manual scrolling.

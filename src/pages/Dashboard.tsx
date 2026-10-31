@@ -7,6 +7,9 @@ import { useAgreements } from "@/hooks/useAgreements";
 import { useUnmatchedSettlementWorks } from "@/hooks/useSettlements";
 import { useWorkRegistrations } from "@/hooks/useWorkRegistrations";
 import { detectIssues } from "@/lib/workIssues";
+import { useReviewDismissals } from "@/hooks/useReviewDismissals";
+import { usePartyNumberConflicts } from "@/hooks/usePartyNumberConflicts";
+import { countVisibleReviewItems, countDuplicateGroups, countConflictGroups } from "@/lib/reviewCounts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,19 +35,9 @@ const Dashboard = () => {
   const { data: agreements } = useAgreements();
   const { data: unmatchedWorks } = useUnmatchedSettlementWorks();
   const { data: regs } = useWorkRegistrations();
-
-  const { data: conflictCount } = useQuery({
-    queryKey: ["party-number-conflicts-count"],
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("work_party_numbers")
-        .select("id", { count: "exact", head: true })
-        .eq("conflict", true);
-      if (error) throw error;
-      return count ?? 0;
-    },
-  });
+  const { isDismissed, isLoading: dismissalsLoading } = useReviewDismissals();
+  const { data: conflicts } = usePartyNumberConflicts();
+  const conflictCount = conflicts && !dismissalsLoading ? countConflictGroups(conflicts, isDismissed) : null;
 
   const { data: soundtrackCount } = useQuery({
     queryKey: ["unregistered-soundtrack-titles-count"],
@@ -80,25 +73,19 @@ const Dashboard = () => {
   }, [agreements]);
 
   const workIssueCount = useMemo(() => {
-    if (!works || !agreements) return null;
-    return works.filter((w) => detectIssues(w, agreementClientNames).length > 0).length;
-  }, [works, agreements, agreementClientNames]);
+    if (!works || !agreements || dismissalsLoading) return null;
+    return countVisibleReviewItems(works.filter((w) => detectIssues(w, agreementClientNames).length > 0), "issues", (w) => w.id, isDismissed);
+  }, [works, agreements, agreementClientNames, isDismissed, dismissalsLoading]);
 
   const duplicateCount = useMemo(() => {
-    if (!works) return null;
-    const key = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
-    const m = new Map<string, number>();
-    works.forEach((w) => {
-      const k = `${key(w.title)}||${key(w.project)}`;
-      m.set(k, (m.get(k) ?? 0) + 1);
-    });
-    return [...m.values()].filter((n) => n > 1).length;
-  }, [works]);
+    if (!works || dismissalsLoading) return null;
+    return countDuplicateGroups(works, isDismissed);
+  }, [works, isDismissed, dismissalsLoading]);
 
   const shareMismatchCount = useMemo(() => {
-    if (!regs) return null;
-    return regs.filter((r) => r.work_id && r.share_mismatch).length;
-  }, [regs]);
+    if (!regs || dismissalsLoading) return null;
+    return countVisibleReviewItems(regs.filter((r) => r.work_id && r.share_mismatch), "reg_mismatch", (r) => r.id, isDismissed);
+  }, [regs, isDismissed, dismissalsLoading]);
 
   const unmatchedTotal = useMemo(
     () => (unmatchedWorks ?? []).reduce((sum, u) => sum + Number(u.total_amount), 0),
