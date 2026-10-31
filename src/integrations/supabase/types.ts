@@ -219,6 +219,56 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_activities: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          body: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          follow_up_date: string | null
+          id: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type?: string
+          body?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_date?: string | null
+          id?: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          body?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_date?: string | null
+          id?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       internal_cron_secret: {
         Row: {
           id: boolean
