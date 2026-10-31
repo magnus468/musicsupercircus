@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useClientActivities, useCreateActivity, useUpdateActivity, useDeleteActivity, type CrmActivity } from "@/hooks/useCrm";
+import { useClientActivities, useCreateActivity, useUpdateActivity, useDeleteActivity, typeMeta, type CrmActivity } from "@/hooks/useCrm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, StickyNote, Phone, Mail, CalendarDays, ListChecks, Check, Trash2, AlarmClock } from "lucide-react";
+import { Plus, Check, Trash2, AlarmClock } from "lucide-react";
 import { toast } from "sonner";
-
-export const typeMeta: Record<string, { label: string; icon: typeof StickyNote; className: string }> = {
-  note: { label: "Anteckning", icon: StickyNote, className: "bg-violet-100 text-violet-700" },
-  call: { label: "Samtal", icon: Phone, className: "bg-blue-100 text-blue-700" },
-  email: { label: "E-post", icon: Mail, className: "bg-emerald-100 text-emerald-700" },
-  meeting: { label: "Möte", icon: CalendarDays, className: "bg-amber-100 text-amber-700" },
-  task: { label: "Uppgift", icon: ListChecks, className: "bg-rose-100 text-rose-700" },
-};
 
 const today = () => new Date().toISOString().split("T")[0];
 
