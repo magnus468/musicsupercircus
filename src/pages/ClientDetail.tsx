@@ -9,6 +9,7 @@ import {
   type Agreement,
 } from "@/hooks/useAgreements";
 import AgreementPdfPreview from "@/components/AgreementPdfPreview";
+import ClientCrmSection from "@/components/ClientCrmSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -202,6 +203,8 @@ const ClientDetail = () => {
           </dl>
         </CardContent>
       </Card>
+
+      <ClientCrmSection clientId={id!} />
 
       {loadingAgreements ? (
         <p className="text-muted-foreground text-sm">Laddar avtal...</p>
