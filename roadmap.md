@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Project monitoring: startsidans antal ska utesluta borttagna granskningsärenden.
-- [ ] Project monitoring: Åtgärda ska rulla till rätt avsnitt även efter laddning.
+- [x] Project monitoring: startsidans antal utesluter borttagna granskningsärenden; verifierat mot listorna och genom att dölja/återställa ett testärende.
+- [x] Project monitoring: Åtgärda rullar till rätt avsnitt även efter laddning; länkar och vanlig rullning verifierade.
 
 - [x] STIM-andelsuppdatering: 213 verk uppdaterade med Norden/ROW-andelar från godkända STIM-registreringar (2026-10-26). 84 verk redan korrekta. Blir du ledsen om jag dör: Tengblad 66,67/50, MSCP 16,67/25, NDQ 16,66/25. Kvittomarkeringar räknade om: 179 rensade, 43 äkta avvikelser kvar (bl a Utvandrarna 12,50 vs 16,67).
   - Overload Arena och Punching Out: AVVAKTA (STIM-registrering måste kompletteras först)
