@@ -11,6 +11,7 @@ import WorksList from "@/pages/WorksList";
 import WorkDetail from "@/pages/WorkDetail";
 import ClientsList from "@/pages/ClientsList";
 import ClientDetail from "@/pages/ClientDetail";
+import CrmList from "@/pages/CrmList";
 import AgreementsList from "@/pages/AgreementsList";
 import ProjectDetail from "@/pages/ProjectDetail";
 import ProjectsList from "@/pages/ProjectsList";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/projects/:name" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
             <Route path="/clients" element={<ProtectedRoute><ClientsList /></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
+            <Route path="/crm" element={<ProtectedRoute><CrmList /></ProtectedRoute>} />
             <Route path="/agreements" element={<ProtectedRoute><AgreementsList /></ProtectedRoute>} />
             <Route path="/settlements" element={<ProtectedRoute><SettlementsList /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute><ReviewWorks /></ProtectedRoute>} />

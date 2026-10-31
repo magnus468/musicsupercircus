@@ -162,6 +162,13 @@
       "when": 1793050150643,
       "tag": "0022_works_sheet_locked",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793486561800,
+      "tag": "0023_create_crm_activities",
+      "breakpoints": true
     }
   ]
 }
