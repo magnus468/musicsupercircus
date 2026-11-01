@@ -65,7 +65,23 @@ export const normalizePublisherName = (name: string) => {
     : normalized;
 };
 
-/** Resolve only the stale BRF-name warning after confirming the catalog's E share. */
+/** Recheck publisher names case-insensitively, preserving ambiguous matches and actual share differences. */
+export const resolvePublisherNameWarnings = (registration: WorkRegistration, creators: string) => {
+  if (!registration.share_mismatch || !registration.mismatch_note) return registration;
+  const parties = [...creators.matchAll(/(?:^|\),\s*)([^()]+)\(E,\s*(\d+(?:[.,]\d+)?)%/gi)];
+  const remaining = registration.mismatch_note.split("; ").filter((note) => {
+    const warning = note.match(/^(.+?) (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen$/i);
+    if (!warning) return true;
+    const name = normalizePublisherName(warning[1]);
+    const matches = parties.filter((party) => normalizePublisherName(party[1]) === name);
+    if (matches.length !== 1) return true;
+    if ((registration.publishers ?? []).filter((party) => normalizePublisherName(party.name) === name).length > 1) return true;
+    return Math.abs(Number(matches[0][2].replace(",", ".")) - Number(warning[2].replace(",", "."))) > 0.00001;
+  });
+  return { ...registration, share_mismatch: remaining.length > 0, mismatch_note: remaining.join("; ") || null };
+};
+
+/** Legacy single-warning BRF resolver. */
 export const resolveBrfNameWarning = (registration: WorkRegistration, creators: string) => {
   const warning = registration.mismatch_note?.match(/^brf(?: music publishing)? (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen$/i);
   if (!registration.share_mismatch || !warning) return registration;

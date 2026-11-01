@@ -1,11 +1,29 @@
 import { describe, expect, it } from "vitest";
 import type { WorkRegistration } from "@/hooks/useWorkRegistrations";
-import { normalizePublisherName, resolveBrfNameWarning, normalizeCreatorName, creatorNamesMatch, resolveCreatorNameWarnings, lookupRegInfo } from "./regPartyMatch";
+import { normalizePublisherName, resolveBrfNameWarning, resolvePublisherNameWarnings, normalizeCreatorName, creatorNamesMatch, resolveCreatorNameWarnings, lookupRegInfo } from "./regPartyMatch";
 
 const registration = {
   share_mismatch: true,
   mismatch_note: "Brf Music Publishing 16.66% finns inte på verket i katalogen",
 } as WorkRegistration;
+
+describe("Case-insensitive STIM party names", () => {
+  it.each(["Sf Studios", "SF Studios", "sf studios", "SF STUDIOS"])("ignores casing for %s with matching shares", (name) => {
+    const reg = { ...registration, mismatch_note: `${name} 16.66% finns inte på verket i katalogen` };
+    expect(resolvePublisherNameWarnings(reg, "SF Studios (E, 16.66%, repr)").share_mismatch).toBe(false);
+  });
+  it("applies to other publishers and creators too", () => {
+    expect(resolvePublisherNameWarnings({ ...registration, mismatch_note: "MISO FILMMUSIK SVERIGE 16.66% finns inte på verket i katalogen" }, "Miso Filmmusik Sverige (E, 16.66%, repr)").share_mismatch).toBe(false);
+    expect(resolveCreatorNameWarnings({ ...registration, mismatch_note: "GAUTE STORAAS: STIM 66.67% / andel saknas i katalogen" }, "Gaute Storaas (CA, 66.67%, repr)").share_mismatch).toBe(false);
+  });
+  it("preserves real share differences, missing parties, ambiguity and identifier conflicts", () => {
+    const reg = { ...registration, mismatch_note: "Sf Studios 16.66% finns inte på verket i katalogen" };
+    expect(resolvePublisherNameWarnings(reg, "SF Studios (E, 16.67%, repr)").share_mismatch).toBe(true);
+    expect(resolvePublisherNameWarnings(reg, "FLX (E, 16.66%, repr)").share_mismatch).toBe(true);
+    expect(resolvePublisherNameWarnings(reg, "SF Studios (E, 16.66%, repr), Sf Studios (E, 16.66%, repr)").share_mismatch).toBe(true);
+    expect(resolvePublisherNameWarnings({ ...reg, mismatch_note: `${reg.mismatch_note}; IPI-konflikt` }, "SF Studios (E, 16.66%, repr)").mismatch_note).toBe("IPI-konflikt");
+  });
+});
 
 describe("BRF publisher aliases", () => {
   it.each(["BRF", "Brf", "BRF Music Publishing"])("recognizes %s as the same publisher", (name) => {
