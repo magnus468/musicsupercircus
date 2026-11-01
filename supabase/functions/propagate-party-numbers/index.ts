@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireCaller } from "../_shared/requireCaller.ts";
+import { hasAgreementConflict } from "../_shared/partyAgreementConflict.ts";
 
 // Sprider IPI-nummer (från klientkort och STIM-kvitton) och avtalsnummer (från STIM-kvitton)
 // till samtliga verk där parten förekommer. Konflikter flaggas, aldrig skrivs något över tyst.
@@ -69,7 +70,7 @@ Deno.serve(async (req) => {
     const [works, clients, regs] = await Promise.all([
       fetchAll("works", "id, title, creators"),
       fetchAll("clients", "id, first_name, last_name, organization, ipi_number"),
-      fetchAll("work_registrations", "id, creators, publishers"),
+      fetchAll("work_registrations", "id, work_id, creators, publishers"),
     ]);
 
     // Klientkort: normaliserat namn -> IPI
@@ -146,6 +147,12 @@ Deno.serve(async (req) => {
 
     const rows: Record<string, unknown>[] = [];
     let conflictCount = 0;
+    const receiptPublishersByWork = new Map<string, RegParty[]>();
+    regs.forEach((r) => {
+      if (typeof r.work_id !== "string") return;
+      const publishers = (r.publishers as RegParty[]) ?? [];
+      receiptPublishersByWork.set(r.work_id, [...(receiptPublishersByWork.get(r.work_id) ?? []), ...publishers]);
+    });
 
     works.forEach((w) => {
       const parties = parseParties((w.creators as string) ?? "");
@@ -173,7 +180,8 @@ Deno.serve(async (req) => {
           conflict = true;
           notes.push(`Olika IPI i STIM-kvitton: ${[...reg.ipis].join(", ")}`);
         }
-        if (isPublisher && reg.agreements.size > 1) {
+        if (isPublisher && hasAgreementConflict(p.name, reg.agreements, parties,
+          receiptPublishersByWork.get(w.id as string) ?? [])) {
           conflict = true;
           notes.push(`Olika avtalsnummer i STIM-kvitton: ${[...reg.agreements].join(", ")}`);
         }
