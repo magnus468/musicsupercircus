@@ -4,3 +4,4 @@
 - Registration reads resolve stale case-insensitive party-name, alias and middle-name warnings centrally against linked catalog shares, using unique publisher and mutual unique creator matches; preserve ambiguous identities and unrelated or numerical conflicts so review counts and work details agree.
 - Dashboard review counts use the review list's dismissal keys and counting units; share a paginated party-conflict query so both views reflect the same records.
 - Review fragment navigation observes loading-related layout changes until user interaction, so task links land on the requested section without interrupting manual scrolling.
+- Party-number propagation evaluates agreement conflicts in the work's catalog and linked-receipt publisher context through a tested shared helper; keep receipt originals and IPI checks untouched so scoped exceptions cannot hide unrelated conflicts.

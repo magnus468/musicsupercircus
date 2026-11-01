@@ -1,6 +1,6 @@
 # Roadmap
 - [x] MSCP: identifierat källor i importerade STIM-kvitton: 13995144 på 182 kvitton, 14016020 på Kryptan och tre Emilie's Song-kvitton från Nordic Drama Queens.
-- [ ] MSCP: invänta besked om de två STIM-numren innan nummerkonflikten döljs; ingen ändring av varningen gjord.
+- [ ] MSCP: släck konflikten 13995144/14016020 utanför Nordic Drama Queens och anpassa synken; behåll originalkvitton, NDQ-granskning och övriga konflikter.
 
 - [x] STIM-mellannamn: entydiga namnvarianter kopplas och endast inaktuella namnvarningar släcks; 29 tester godkända och Nico Y verifierat inloggat med båda upphovspersonernas IPI utan namnvarning.
 
@@ -12,5 +12,5 @@
   - 9 nya upphovspersoner hoppades över (summan hade överstigit 100 %): Betsson ID (Kocken), Box 21 (Person), Thunder S2 (Eklund), m fl — kräver beslut
   - ROW-regeln (SF/FLX/Embark 15/35, övriga 25/25, Utvandrarna+Saltkråkan 40/60) och befintliga ROW rördes inte
 - [ ] Flik 2 (41 sifferskillnader) och flik 3 (179 namnlarm): beslut saknas ännu i Excel
-- [ ] MSCP-kvitton med avtalsnr 14016020 (Kryptan + tre Emilie's Song): obesvarad fråga till Magnus
+- [ ] MSCP med Nordic Drama Queens: granskning behålls i väntan på förklaring till avtalsnr 14016020.
 - [ ] Verklistan i Google-arket: Magnus för in återstående rättningar (Verklistan_rattningar_v1.xlsx); låset är borttaget och arket gäller alltid vid synk.
