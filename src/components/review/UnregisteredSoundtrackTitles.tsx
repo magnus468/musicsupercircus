@@ -3,14 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Disc3 } from "lucide-react";
+import { Disc3, X } from "lucide-react";
+import { useReviewDismissals } from "@/hooks/useReviewDismissals";
 
 type Row = { id: string; track: string; project: string; isrc: string | null; composer: string | null; income: number; income_rows: number };
 
 const fmt = (n: number) => new Intl.NumberFormat("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n) + " kr";
 
 const UnregisteredSoundtrackTitles = () => {
-  const { data = [], isLoading, error } = useQuery({
+  const { data: all = [], isLoading, error } = useQuery({
     queryKey: ["unregistered-soundtrack-titles"],
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
@@ -20,11 +21,13 @@ const UnregisteredSoundtrackTitles = () => {
     },
   });
 
+  const { isDismissed, dismiss } = useReviewDismissals();
+  const data = all.filter((r) => !isDismissed("soundtracks", r.id));
   const groups = useMemo(() => {
     const m = new Map<string, Row[]>();
     data.forEach((r) => m.set(r.project, [...(m.get(r.project) ?? []), r]));
     return [...m.entries()];
-  }, [data]);
+  }, [all, isDismissed]);
   const paid = data.filter((r) => r.income > 0).length;
 
   return (
@@ -53,6 +56,9 @@ const UnregisteredSoundtrackTitles = () => {
                   {r.income > 0
                     ? <Badge variant="secondary">Inkomst {fmt(r.income)}</Badge>
                     : <Badge variant="outline">Ingen inkomst</Badge>}
+                  <button title="Ta bort från granskningslistan (vi äger inte förlagsrätten)" className="text-muted-foreground hover:text-foreground" onClick={() => dismiss("soundtracks", r.id)}>
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
             </div>
