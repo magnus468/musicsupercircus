@@ -39,16 +39,17 @@ const Dashboard = () => {
   const { data: conflicts } = usePartyNumberConflicts();
   const conflictCount = conflicts && !dismissalsLoading ? countConflictGroups(conflicts, isDismissed) : null;
 
-  const { data: soundtrackCount } = useQuery({
-    queryKey: ["unregistered-soundtrack-titles-count"],
+  const { data: soundtrackIds } = useQuery({
+    queryKey: ["unregistered-soundtrack-titles-ids"],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_unregistered_soundtrack_titles");
       if (error) throw error;
-      const titles = (data as { titles?: unknown[] }[] | null) ?? [];
-      return titles.reduce((sum, g) => sum + (g.titles?.length ?? 0), 0);
+      return ((data as { id: string }[] | null) ?? []).map((r) => r.id);
     },
   });
+  const soundtrackCount = soundtrackIds && !dismissalsLoading
+    ? countVisibleReviewItems(soundtrackIds, "soundtracks", (id) => id, isDismissed) : null;
 
   const { data: stimCounts } = useQuery({
     queryKey: ["stim-works-counts"],
