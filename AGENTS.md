@@ -1,6 +1,6 @@
 - STIM registration receipts live in `work_registrations` (parsed data + private `work-registrations` bucket PDF), linked to works by title + creators, never title alone — keeps receipts auditable without overwriting catalog shares.
 - Release-to-client royalty links live in `release_clients` (album_key + client_id + role), separate from payout splits — prepares payouts without changing split math.
 - The Google sheet always wins for creators/publishers on sync; the `sheet_locked` lock was retired at the user's request — sheet is the single source of truth.
-- Registration reads resolve stale party-alias and middle-name warnings centrally against linked catalog shares, using mutual unique creator matches; preserve ambiguous identities and unrelated or numerical conflicts so review counts and work details agree.
+- Registration reads resolve stale case-insensitive party-name, alias and middle-name warnings centrally against linked catalog shares, using unique publisher and mutual unique creator matches; preserve ambiguous identities and unrelated or numerical conflicts so review counts and work details agree.
 - Dashboard review counts use the review list's dismissal keys and counting units; share a paginated party-conflict query so both views reflect the same records.
 - Review fragment navigation observes loading-related layout changes until user interaction, so task links land on the requested section without interrupting manual scrolling.

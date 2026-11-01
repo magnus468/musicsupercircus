@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveBrfNameWarning, resolveCreatorNameWarnings } from "@/lib/regPartyMatch";
+import { resolvePublisherNameWarnings, resolveCreatorNameWarnings } from "@/lib/regPartyMatch";
 
 export type RegParty = {
   role: string;
@@ -55,7 +55,7 @@ export const useWorkRegistrations = (workId?: string) =>
       }
       return all.map((r) => {
         const creators = catalog.get(r.work_id ?? "") ?? "";
-        return resolveCreatorNameWarnings(resolveBrfNameWarning(r, creators), creators);
+        return resolveCreatorNameWarnings(resolvePublisherNameWarnings(r, creators), creators);
       });
     },
     staleTime: 5 * 60 * 1000,
