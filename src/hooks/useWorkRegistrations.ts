@@ -45,7 +45,7 @@ export const useWorkRegistrations = (workId?: string) =>
         all.push(...((data ?? []) as unknown as WorkRegistration[]));
         if (!data || data.length < 1000) break;
       }
-      const ids = [...new Set(all.filter((r) => r.work_id && r.share_mismatch && /(?:^brf(?: music publishing)? |Adam (?:Isaac Erik )?Nord[eé]n|Karzan Mahmood)/i.test(r.mismatch_note ?? "")).map((r) => r.work_id).filter((id): id is string => Boolean(id)))];
+      const ids = [...new Set(all.filter((r) => r.work_id && r.share_mismatch && r.mismatch_note).map((r) => r.work_id).filter((id): id is string => Boolean(id)))];
       if (!ids.length) return all;
       const catalog = new Map<string, string>();
       for (let from = 0; from < ids.length; from += 100) {
