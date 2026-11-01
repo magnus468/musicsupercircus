@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] MSCP: redovisa exakt källa till STIM-avtalsnumren och invänta besked innan nummerkonflikten döljs.
 
 - [x] STIM-mellannamn: entydiga namnvarianter kopplas och endast inaktuella namnvarningar släcks; 29 tester godkända och Nico Y verifierat inloggat med båda upphovspersonernas IPI utan namnvarning.
 
