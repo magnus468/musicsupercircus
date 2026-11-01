@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] STIM-mellannamn: koppla entydiga namnvarianter och släck endast inaktuella namnvarningar; verifiera tester och verkligt verk.
+- [x] STIM-mellannamn: entydiga namnvarianter kopplas och endast inaktuella namnvarningar släcks; 29 tester godkända och Nico Y verifierat inloggat med båda upphovspersonernas IPI utan namnvarning.
 
 - [x] Project monitoring: startsidans antal utesluter borttagna granskningsärenden; verifierat mot listorna och genom att dölja/återställa ett testärende.
 - [x] Project monitoring: Åtgärda rullar till rätt avsnitt även efter laddning; länkar och vanlig rullning verifierade.
