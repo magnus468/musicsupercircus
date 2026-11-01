@@ -1,4 +1,6 @@
 # Roadmap
+- [x] MSCP: identifierat källor i importerade STIM-kvitton: 13995144 på 182 kvitton, 14016020 på Kryptan och tre Emilie's Song-kvitton från Nordic Drama Queens.
+- [ ] MSCP: invänta besked om de två STIM-numren innan nummerkonflikten döljs; ingen ändring av varningen gjord.
 
 - [x] STIM-mellannamn: entydiga namnvarianter kopplas och endast inaktuella namnvarningar släcks; 29 tester godkända och Nico Y verifierat inloggat med båda upphovspersonernas IPI utan namnvarning.
 
