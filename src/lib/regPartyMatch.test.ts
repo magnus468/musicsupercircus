@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WorkRegistration } from "@/hooks/useWorkRegistrations";
-import { normalizePublisherName, resolveBrfNameWarning, normalizeCreatorName, resolveCreatorNameWarnings, lookupRegInfo } from "./regPartyMatch";
+import { normalizePublisherName, resolveBrfNameWarning, normalizeCreatorName, creatorNamesMatch, resolveCreatorNameWarnings, lookupRegInfo } from "./regPartyMatch";
 
 const registration = {
   share_mismatch: true,
@@ -22,6 +22,45 @@ describe("BRF publisher aliases", () => {
   });
   it("does not hide additional conflicts", () => {
     expect(resolveBrfNameWarning({ ...registration, mismatch_note: `${registration.mismatch_note}; annan andelsavvikelse` }, "BRF (E, 16.66%, repr)").share_mismatch).toBe(true);
+  });
+});
+
+describe("STIM middle names", () => {
+  const receipt = (name: string, perf = 33.34, ipi = "285562339"): WorkRegistration => ({
+    ...registration,
+    creators: [{ name, role: "CA", ipi, perf, mech: perf }],
+    mismatch_note: `${name}: STIM ${perf}% / andel saknas i katalogen`,
+  });
+  it.each([
+    ["Tom van Heesch", "Tom Christoffer Van Heesch"],
+    ["Nicolas Elgstrand", "Nicolas Alexander Elgstrand"],
+    ["Magnus Palmborg", "Magnus Bengt Gunnar Palmborg"],
+    ["Gunnar Palmborg", "Magnus Bengt Gunnar Palmborg"],
+  ])("links %s to %s in either direction", (short, full) => {
+    expect(creatorNamesMatch(short, full)).toBe(true);
+    expect(creatorNamesMatch(full, short)).toBe(true);
+    expect(resolveCreatorNameWarnings(receipt(full), `${short} (CA, 33.34%, repr)`).share_mismatch).toBe(false);
+    expect(lookupRegInfo(short, [receipt(full)], false).ipi).toBe("285562339");
+  });
+  it("preserves genuine share differences and unrelated warnings", () => {
+    const reg = receipt("Tom Christoffer Van Heesch");
+    expect(resolveCreatorNameWarnings(reg, "Tom van Heesch (CA, 33.33%, repr)").share_mismatch).toBe(true);
+    expect(resolveCreatorNameWarnings({ ...reg, mismatch_note: `${reg.mismatch_note}; SF Studios 16.66% finns inte på verket i katalogen` }, "Tom van Heesch (CA, 33.34%, repr)").mismatch_note).toBe("SF Studios 16.66% finns inte på verket i katalogen");
+  });
+  it("does not match surname alone, different given names or different surnames", () => {
+    expect(creatorNamesMatch("Heesch", "Tom Christoffer Van Heesch")).toBe(false);
+    expect(creatorNamesMatch("Thomas van Heesch", "Tom Christoffer Van Heesch")).toBe(false);
+    expect(creatorNamesMatch("Tom Smith", "Tom Christoffer Van Heesch")).toBe(false);
+  });
+  it("keeps ambiguous catalog and receipt matches for review", () => {
+    const reg = receipt("Tom van Heesch");
+    expect(resolveCreatorNameWarnings(reg, "Tom Christoffer van Heesch (CA, 33.34%, repr), Tom Alexander van Heesch (CA, 33.34%, repr)").share_mismatch).toBe(true);
+    const ambiguous = { ...receipt("Tom Christoffer van Heesch"), creators: [...receipt("Tom Christoffer van Heesch").creators, ...receipt("Tom Alexander van Heesch", 33.34, "999").creators] };
+    expect(resolveCreatorNameWarnings(ambiguous, "Tom van Heesch (CA, 33.34%, repr)").share_mismatch).toBe(true);
+    expect(lookupRegInfo("Tom van Heesch", [ambiguous], false).ipi).toBeNull();
+  });
+  it("keeps conflicting IPI numbers across receipts", () => {
+    expect(lookupRegInfo("Tom van Heesch", [receipt("Tom Christoffer Van Heesch"), receipt("Tom van Heesch", 33.34, "999")], false).ipi).toBeNull();
   });
 });
 

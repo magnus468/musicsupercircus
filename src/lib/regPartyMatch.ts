@@ -23,15 +23,34 @@ export const normalizeCreatorName = (name: string) => {
   return normalized;
 };
 
-/** Recheck confirmed creator aliases, without hiding other parties' issues. */
+/** Full surname plus ordered given names; extra middle names may be omitted. */
+export const creatorNamesMatch = (left: string, right: string) => {
+  const a = normalizeCreatorName(left).split(" ");
+  const b = normalizeCreatorName(right).split(" ");
+  if (a.length < 2 || b.length < 2) return false;
+  if (a.join(" ") === b.join(" ")) return true;
+  if (a[a.length - 1] !== b[b.length - 1]) return false;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  let position = 0;
+  for (const token of long) {
+    if (token === short[position]) position++;
+  }
+  return position === short.length;
+};
+
+/** Recheck creator names against current shares, keeping ambiguous identities and other issues. */
 export const resolveCreatorNameWarnings = (registration: WorkRegistration, creators: string) => {
   if (!registration.share_mismatch || !registration.mismatch_note) return registration;
   const parties = [...creators.matchAll(/(?:^|\),\s*)([^()]+)\((?:CA|C|A),\s*(\d+(?:[.,]\d+)?)%/gi)];
   const remaining = registration.mismatch_note.split("; ").filter((note) => {
-    const warning = note.match(/^(Adam (?:Isaac Erik )?Nord[eé]n|Karzan Mahmood(?: Faqe Hussein)?)(?:: STIM (\d+(?:[.,]\d+)?)% \/ (?:katalog .*|andel saknas i katalogen)| (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen)$/i);
+    const warning = note.match(/^(.+?)(?:: STIM (\d+(?:[.,]\d+)?)% \/ (?:katalog \d+(?:[.,]\d+)?%|andel saknas i katalogen)| (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen)$/i);
     if (!warning) return true;
-    const matches = parties.filter((match) => normalizeCreatorName(match[1]) === normalizeCreatorName(warning[1]));
+    const receiptParties = registration.creators ?? [];
+    if (receiptParties.length && !receiptParties.some((party) => normalizeCreatorName(party.name) === normalizeCreatorName(warning[1]))) return true;
+    const matches = parties.filter((match) => creatorNamesMatch(match[1], warning[1]));
     if (matches.length !== 1) return true;
+    // A shortened name must not collapse two different people on the same receipt.
+    if (receiptParties.filter((party) => creatorNamesMatch(matches[0][1], party.name)).length > 1) return true;
     const actual = Number(matches[0][2].replace(",", "."));
     return Math.abs(actual - Number((warning[2] ?? warning[3]).replace(",", "."))) > 0.00001;
   });
@@ -81,7 +100,8 @@ export const lookupRegInfo = (name: string, regs: WorkRegistration[], publisher:
   regs.forEach((r) => {
     const parties: RegParty[] = publisher ? r.publishers : r.creators;
     parties.forEach((p) => {
-      if (!nameMatches(name, p.name)) return;
+      if (publisher ? !nameMatches(name, p.name) : !creatorNamesMatch(name, p.name)) return;
+      if (!publisher && parties.filter((party) => creatorNamesMatch(name, party.name)).length !== 1) return;
       if (p.ipi) ipis.add(p.ipi);
       if (publisher && p.agreement) agreements.add(p.agreement);
     });

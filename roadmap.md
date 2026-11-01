@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] STIM-mellannamn: koppla entydiga namnvarianter och släck endast inaktuella namnvarningar; verifiera tester och verkligt verk.
+
 - [x] Project monitoring: startsidans antal utesluter borttagna granskningsärenden; verifierat mot listorna och genom att dölja/återställa ett testärende.
 - [x] Project monitoring: Åtgärda rullar till rätt avsnitt även efter laddning; länkar och vanlig rullning verifierade.
 
@@ -9,4 +11,4 @@
   - ROW-regeln (SF/FLX/Embark 15/35, övriga 25/25, Utvandrarna+Saltkråkan 40/60) och befintliga ROW rördes inte
 - [ ] Flik 2 (41 sifferskillnader) och flik 3 (179 namnlarm): beslut saknas ännu i Excel
 - [ ] MSCP-kvitton med avtalsnr 14016020 (Kryptan + tre Emilie's Song): obesvarad fråga till Magnus
-- [ ] Verklistan i Google-arket: Magnus för in 214 rättningar (Verklistan_rattningar_v1.xlsx); låsta verk skyddas av synken tills dess
+- [ ] Verklistan i Google-arket: Magnus för in återstående rättningar (Verklistan_rattningar_v1.xlsx); låset är borttaget och arket gäller alltid vid synk.
