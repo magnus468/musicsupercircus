@@ -59,7 +59,7 @@ export const resolveCreatorNameWarnings = (registration: WorkRegistration, creat
 
 /** Exact publisher aliases, never a substring match against unrelated publishers. */
 export const normalizePublisherName = (name: string) => {
-  const normalized = name.trim().toLowerCase().replace(/\s+/g, " ");
+  const normalized = name.trim().toLowerCase().replace(/\s+/g, " ").replace(/ ab$/, "");
   return /^(brf|brf music publishing)( ab)?$/.test(normalized)
     ? "brf music publishing"
     : normalized;
@@ -70,13 +70,31 @@ export const resolvePublisherNameWarnings = (registration: WorkRegistration, cre
   if (!registration.share_mismatch || !registration.mismatch_note) return registration;
   const parties = [...creators.matchAll(/(?:^|\),\s*)([^()]+)\(E,\s*(\d+(?:[.,]\d+)?)%/gi)];
   const remaining = registration.mismatch_note.split("; ").filter((note) => {
-    const warning = note.match(/^(.+?) (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen$/i);
+    const warning = note.match(/^(.+?)(?:: STIM (\d+(?:[.,]\d+)?)% \/ (?:katalog \d+(?:[.,]\d+)?%|andel saknas i katalogen)| (\d+(?:[.,]\d+)?)% finns inte på verket i katalogen)$/i);
     if (!warning) return true;
     const name = normalizePublisherName(warning[1]);
-    const matches = parties.filter((party) => normalizePublisherName(party[1]) === name);
+    const receiptParties = registration.publishers ?? [];
+    // Older warnings sometimes appended the receipt's IPI to the publisher name.
+    const receipts = receiptParties.filter((party) =>
+      normalizePublisherName(party.name) === name ||
+      (party.ipi && normalizePublisherName(`${party.name.replace(/ ab$/i, "")} ${party.ipi}`) === name));
+    if (receiptParties.length && receipts.length !== 1) return true;
+    const receipt = receipts[0];
+    let identity = normalizePublisherName(receipt?.name ?? warning[1]);
+    // A generic MSC name is not sufficient: use the receipt's own identifier.
+    if (identity === "music super circus") {
+      if (receipt?.ipi === "624193850" || receipt?.agreement === "3753498") identity = "music super circus extravaganza";
+      else if (receipt?.ipi === "1284061462" || ["13995144", "14016020"].includes(receipt?.agreement ?? "")) identity = "music super circus publishing";
+      else return true;
+      if ((receipt?.ipi === "624193850" && ["13995144", "14016020"].includes(receipt?.agreement ?? "")) ||
+        (receipt?.ipi === "1284061462" && receipt?.agreement === "3753498")) return true;
+    }
+    const matches = parties.filter((party) => normalizePublisherName(party[1]) === identity);
     if (matches.length !== 1) return true;
-    if ((registration.publishers ?? []).filter((party) => normalizePublisherName(party.name) === name).length > 1) return true;
-    return Math.abs(Number(matches[0][2].replace(",", ".")) - Number(warning[2].replace(",", "."))) > 0.00001;
+    const expected = Number((warning[2] ?? warning[3]).replace(",", "."));
+    if (receipt && (Math.abs(Number(receipt.perf) - expected) > 0.00001 ||
+      (receipt.mech != null && Math.abs(Number(receipt.mech) - expected) > 0.00001))) return true;
+    return Math.abs(Number(matches[0][2].replace(",", ".")) - expected) > 0.00001;
   });
   return { ...registration, share_mismatch: remaining.length > 0, mismatch_note: remaining.join("; ") || null };
 };

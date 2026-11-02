@@ -43,6 +43,44 @@ describe("BRF publisher aliases", () => {
   });
 });
 
+describe("Current publisher shares against old receipt warnings", () => {
+  const receipt = (name = "Music Super Circus Extravaganza", perf = 20): WorkRegistration => ({
+    ...registration,
+    publishers: [{ name, perf, mech: perf, role: "E", ipi: "624193850", agreement: "3753498" }],
+    mismatch_note: `${name}: STIM ${perf}% / katalog 16.67%`,
+  });
+  it("clears a stale numeric warning only after the catalog now agrees", () => {
+    expect(resolvePublisherNameWarnings(receipt(), "Music Super Circus Extravaganza AB (E, 20%, row:30%, repr)").share_mismatch).toBe(false);
+    expect(resolvePublisherNameWarnings(receipt(), "Music Super Circus Extravaganza AB (E, 16.67%, repr)").share_mismatch).toBe(true);
+  });
+  it("identifies a generic MSC name using the receipt identifier, keeping the publishers separate", () => {
+    expect(resolvePublisherNameWarnings(receipt("MUSIC SUPER CIRCUS"), "Music Super Circus Extravaganza AB (E, 20%, repr)").share_mismatch).toBe(false);
+    expect(resolvePublisherNameWarnings(receipt("MUSIC SUPER CIRCUS"), "Music Super Circus Publishing (E, 20%, repr)").share_mismatch).toBe(true);
+  });
+  it("keeps contradictory internal publisher identifiers", () => {
+    const reg = receipt("MUSIC SUPER CIRCUS");
+    reg.publishers[0].agreement = "13995144";
+    expect(resolvePublisherNameWarnings(reg, "Music Super Circus Extravaganza (E, 20%, repr)").share_mismatch).toBe(true);
+  });
+  it("clears a legacy name with the exact receipt IPI appended", () => {
+    const reg = { ...receipt("Filmlance International Ab", 16.66), mismatch_note: "FILMLANCE INTERNATIONAL 690366230 16.66% finns inte på verket i katalogen" };
+    reg.publishers[0].ipi = "690366230";
+    expect(resolvePublisherNameWarnings(reg, "Filmlance International (E, 16.66%, repr)").share_mismatch).toBe(false);
+  });
+  it("keeps mechanical differences and ambiguous receipt publishers", () => {
+    const reg = receipt();
+    reg.publishers[0].mech = 15;
+    expect(resolvePublisherNameWarnings(reg, "Music Super Circus Extravaganza (E, 20%, repr)").share_mismatch).toBe(true);
+    const ambiguous = receipt();
+    ambiguous.publishers.push({ ...ambiguous.publishers[0] });
+    expect(resolvePublisherNameWarnings(ambiguous, "Music Super Circus Extravaganza (E, 20%, repr)").share_mismatch).toBe(true);
+  });
+  it("leaves unrelated conflicts and ROW untouched", () => {
+    const reg = { ...receipt(), mismatch_note: `${receipt().mismatch_note}; IPI-konflikt` };
+    expect(resolvePublisherNameWarnings(reg, "Music Super Circus Extravaganza (E, 20%, row:15%, repr)").mismatch_note).toBe("IPI-konflikt");
+  });
+});
+
 describe("STIM middle names", () => {
   const receipt = (name: string, perf = 33.34, ipi = "285562339"): WorkRegistration => ({
     ...registration,

@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Kontrollera inaktuella granskningsvarningar mot aktuell katalog; släck endast säkra namn-/andelsvarningar och bevara verkliga konflikter.
 - [x] MSCP: identifierat källor i importerade STIM-kvitton: 13995144 på 182 kvitton, 14016020 på Kryptan och tre Emilie's Song-kvitton från Nordic Drama Queens.
 - [x] MSCP: konflikten 13995144/14016020 släckt på 214 verk utan Nordic Drama Queens; kvar på 26 NDQ-verk. Spridningsfunktionen uppdaterad och driftsatt; tre regeltester godkända och Det blir ett rån/Kryptan verifierade inloggat. Originalkvitton och övriga konflikter orörda.
 
