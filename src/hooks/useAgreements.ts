@@ -75,6 +75,23 @@ export const useWorkAgreements = (workId?: string) => {
   });
 };
 
+// Shared by review and dashboard; page through every accessible explicit link.
+export const useWorkIdsWithAgreements = () => useQuery({
+  queryKey: ["agreement-works", "linked-work-ids"],
+  queryFn: async () => {
+    const ids = new Set<string>();
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase.from("agreement_works")
+        .select("id, work_id, agreements!inner(id)")
+        .order("id").range(from, from + 999);
+      if (error) throw error;
+      data.forEach((link) => ids.add(link.work_id));
+      if (data.length < 1000) break;
+    }
+    return ids;
+  },
+});
+
 export const useSetWorkAgreements = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -141,7 +158,10 @@ export const useCreateAgreement = () => {
       }
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["agreements"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agreements"] });
+      qc.invalidateQueries({ queryKey: ["agreement-works"] });
+    },
   });
 };
 
@@ -177,7 +197,10 @@ export const useDeleteAgreement = () => {
       const { error } = await supabase.from("agreements").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["agreements"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agreements"] });
+      qc.invalidateQueries({ queryKey: ["agreement-works"] });
+    },
   });
 };
 
