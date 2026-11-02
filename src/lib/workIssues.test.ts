@@ -23,3 +23,19 @@ describe("explicit publishing agreement links", () => {
     expect(detectIssues({ ...work, co_publishers: ["B-Reel Films AB"] }, names)).not.toContain("no_agreement");
   });
 });
+
+describe("per-issue review dismissals", () => {
+  const adamWork = {
+    id: "ikea-adam",
+    creators: "Adam Nordén (CA, 66.67%, row:50%, repr)",
+    project: null,
+    co_publishers: [],
+  };
+  const isDismissed = (section: string, id: string) => section === "issues_no_project" && id === adamWork.id;
+  it("dismisses only the approved missing-project warning while preserving another issue", () => {
+    expect(detectIssues(adamWork, new Set(), new Set(), isDismissed)).toEqual(["no_publisher"]);
+  });
+  it("keeps the missing-project warning on an unapproved work", () => {
+    expect(detectIssues({ ...adamWork, id: "other-adam-work" }, new Set(), new Set(), isDismissed)).toContain("no_project");
+  });
+});

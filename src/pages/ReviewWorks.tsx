@@ -69,7 +69,7 @@ const ReviewWorks = () => {
   const worksWithIssues = useMemo(() => {
     if (!works || !agreements || !linkedWorkIds) return [];
     return works
-      .map((w) => ({ work: w, issues: detectIssues(w, agreementClientNames, linkedWorkIds) }))
+      .map((w) => ({ work: w, issues: detectIssues(w, agreementClientNames, linkedWorkIds, isDismissed) }))
       .filter((w) => w.issues.length > 0 && !isDismissed("issues", w.work.id))
       .filter((w) => w.issues.some((i) => activeFilters.has(i)));
   }, [works, agreements, linkedWorkIds, agreementClientNames, activeFilters, isDismissed]);
@@ -79,7 +79,7 @@ const ReviewWorks = () => {
     const counts: Record<string, number> = {};
     works.forEach((w) => {
       if (isDismissed("issues", w.id)) return;
-      detectIssues(w, agreementClientNames, linkedWorkIds).forEach((i) => {
+      detectIssues(w, agreementClientNames, linkedWorkIds, isDismissed).forEach((i) => {
         counts[i] = (counts[i] || 0) + 1;
       });
     });

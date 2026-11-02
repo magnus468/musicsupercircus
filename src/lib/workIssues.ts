@@ -21,7 +21,8 @@ export const ISSUE_COLORS: Record<IssueType, string> = {
 export const detectIssues = (
   work: Pick<Work, "id" | "creators" | "project" | "co_publishers">,
   agreementClientNames: Set<string>,
-  linkedWorkIds: ReadonlySet<string> = new Set<string>()
+  linkedWorkIds: ReadonlySet<string> = new Set<string>(),
+  isDismissed: (section: string, key: string) => boolean = () => false
 ): IssueType[] => {
   const issues: IssueType[] = [];
   const parts = work.creators.split(/\),\s*/).map((p, i, arr) => (i < arr.length - 1 ? p + ")" : p));
@@ -77,5 +78,5 @@ export const detectIssues = (
     }
   }
 
-  return issues;
+  return issues.filter((issue) => !isDismissed(`issues_${issue}`, work.id));
 };

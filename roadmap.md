@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Släck bara Saknar projekt för de 36 angivna Adam Nordén-verken med beständiga varningstypsspecifika undantag; verifiera att andra verk och varningar behålls.
 - [x] Falska avtalsvarningar rättade med gemensam paginerad kontroll av befintliga avtalskopplingar för granskning och startsidan; åtta tester godkända, Andrev in the forest saknas nu i problemlistan vid inloggad kontroll. Övriga varningar och katalogdata bevarade.
 - [x] Kontrollerat granskningskategorier och STIM-varningar: 54 ytterligare inaktuella kvittovarningar (52 verk) löses mot aktuell katalog; 210 ej dolda andelsvarningar kvar i listan. 37 tester godkända och listan verifierad inloggat. Originalkvitton, ROW och verkliga/oklara konflikter oförändrade; varningar räknas om efter verkredigering.
 - [x] MSCP: identifierat källor i importerade STIM-kvitton: 13995144 på 182 kvitton, 14016020 på Kryptan och tre Emilie's Song-kvitton från Nordic Drama Queens.
