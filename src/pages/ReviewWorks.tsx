@@ -4,7 +4,7 @@ import { usePartyNumberConflicts } from "@/hooks/usePartyNumberConflicts";
 import { useReviewSectionScroll } from "@/hooks/useReviewSectionScroll";
 import { useWorks, useDeleteWork, type Work } from "@/hooks/useWorks";
 import { useClients } from "@/hooks/useClients";
-import { useAgreements } from "@/hooks/useAgreements";
+import { useAgreements, useWorkIdsWithAgreements } from "@/hooks/useAgreements";
 import { useUnmatchedSettlementWorks, useMatchSettlementWork } from "@/hooks/useSettlements";
 import MatchWorkDialog from "@/components/settlements/MatchWorkDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -40,6 +40,7 @@ const ReviewWorks = () => {
   const { data: works, isLoading } = useWorks();
   const { data: clients } = useClients();
   const { data: agreements } = useAgreements();
+  const { data: linkedWorkIds, isLoading: linksLoading } = useWorkIdsWithAgreements();
   const { data: unmatchedWorks, isLoading: unmatchedLoading } = useUnmatchedSettlementWorks();
   const deleteWork = useDeleteWork();
   const matchWork = useMatchSettlementWork();
@@ -66,24 +67,24 @@ const ReviewWorks = () => {
   }, [clients]);
 
   const worksWithIssues = useMemo(() => {
-    if (!works) return [];
+    if (!works || !agreements || !linkedWorkIds) return [];
     return works
-      .map((w) => ({ work: w, issues: detectIssues(w, agreementClientNames) }))
+      .map((w) => ({ work: w, issues: detectIssues(w, agreementClientNames, linkedWorkIds) }))
       .filter((w) => w.issues.length > 0 && !isDismissed("issues", w.work.id))
       .filter((w) => w.issues.some((i) => activeFilters.has(i)));
-  }, [works, agreementClientNames, activeFilters, isDismissed]);
+  }, [works, agreements, linkedWorkIds, agreementClientNames, activeFilters, isDismissed]);
 
   const issueCounts = useMemo(() => {
-    if (!works) return {} as Record<IssueType, number>;
+    if (!works || !agreements || !linkedWorkIds) return {} as Record<IssueType, number>;
     const counts: Record<string, number> = {};
     works.forEach((w) => {
       if (isDismissed("issues", w.id)) return;
-      detectIssues(w, agreementClientNames).forEach((i) => {
+      detectIssues(w, agreementClientNames, linkedWorkIds).forEach((i) => {
         counts[i] = (counts[i] || 0) + 1;
       });
     });
     return counts as Record<IssueType, number>;
-  }, [works, agreementClientNames, isDismissed]);
+  }, [works, agreements, linkedWorkIds, agreementClientNames, isDismissed]);
 
   const toggleFilter = useCallback((type: IssueType) => {
     setActiveFilters((prev) => {
@@ -121,7 +122,7 @@ const ReviewWorks = () => {
         <div className="flex items-center gap-2 text-sm">
           <AlertTriangle className="h-4 w-4 text-warning-foreground" />
           <span className="text-muted-foreground">
-            {isLoading ? "Laddar..." : `${worksWithIssues.length} verk med problem`}
+            {isLoading || linksLoading ? "Laddar..." : `${worksWithIssues.length} verk med problem`}
             {!isLoading && works && ` (av ${works.length} totalt)`}
           </span>
         </div>
@@ -202,7 +203,7 @@ const ReviewWorks = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {!isLoading && worksWithIssues.length === 0 && (
+              {!isLoading && !linksLoading && worksWithIssues.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     🎉 Inga verk med problem hittades!

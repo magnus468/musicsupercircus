@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorks } from "@/hooks/useWorks";
-import { useAgreements } from "@/hooks/useAgreements";
+import { useAgreements, useWorkIdsWithAgreements } from "@/hooks/useAgreements";
 import { useUnmatchedSettlementWorks } from "@/hooks/useSettlements";
 import { useWorkRegistrations } from "@/hooks/useWorkRegistrations";
 import { detectIssues } from "@/lib/workIssues";
@@ -33,6 +33,7 @@ interface Task {
 const Dashboard = () => {
   const { data: works } = useWorks();
   const { data: agreements } = useAgreements();
+  const { data: linkedWorkIds } = useWorkIdsWithAgreements();
   const { data: unmatchedWorks } = useUnmatchedSettlementWorks();
   const { data: regs } = useWorkRegistrations();
   const { isDismissed, isLoading: dismissalsLoading } = useReviewDismissals();
@@ -74,9 +75,9 @@ const Dashboard = () => {
   }, [agreements]);
 
   const workIssueCount = useMemo(() => {
-    if (!works || !agreements || dismissalsLoading) return null;
-    return countVisibleReviewItems(works.filter((w) => detectIssues(w, agreementClientNames).length > 0), "issues", (w) => w.id, isDismissed);
-  }, [works, agreements, agreementClientNames, isDismissed, dismissalsLoading]);
+    if (!works || !agreements || !linkedWorkIds || dismissalsLoading) return null;
+    return countVisibleReviewItems(works.filter((w) => detectIssues(w, agreementClientNames, linkedWorkIds).length > 0), "issues", (w) => w.id, isDismissed);
+  }, [works, agreements, linkedWorkIds, agreementClientNames, isDismissed, dismissalsLoading]);
 
   const duplicateCount = useMemo(() => {
     if (!works || dismissalsLoading) return null;

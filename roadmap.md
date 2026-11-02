@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Rätta falska avtalsvarningar för B-Reel-kopplade verk i granskning och startsidans antal; bevara andra varningar och verifiera med tester samt inloggad granskning.
 - [x] Kontrollerat granskningskategorier och STIM-varningar: 54 ytterligare inaktuella kvittovarningar (52 verk) löses mot aktuell katalog; 210 ej dolda andelsvarningar kvar i listan. 37 tester godkända och listan verifierad inloggat. Originalkvitton, ROW och verkliga/oklara konflikter oförändrade; varningar räknas om efter verkredigering.
 - [x] MSCP: identifierat källor i importerade STIM-kvitton: 13995144 på 182 kvitton, 14016020 på Kryptan och tre Emilie's Song-kvitton från Nordic Drama Queens.
 - [x] MSCP: konflikten 13995144/14016020 släckt på 214 verk utan Nordic Drama Queens; kvar på 26 NDQ-verk. Spridningsfunktionen uppdaterad och driftsatt; tre regeltester godkända och Det blir ett rån/Kryptan verifierade inloggat. Originalkvitton och övriga konflikter orörda.
