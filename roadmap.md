@@ -17,3 +17,5 @@
 - [ ] Flik 2 (41 sifferskillnader) och flik 3 (179 namnlarm): beslut saknas ännu i Excel
 - [ ] MSCP med Nordic Drama Queens: granskning behålls i väntan på förklaring till avtalsnr 14016020.
 - [ ] Verklistan i Google-arket: Magnus för in återstående rättningar (Verklistan_rattningar_v1.xlsx); låset är borttaget och arket gäller alltid vid synk.
+
+- [ ] Inspelningsrättigheter: omslag ska alltid hämtas från Dropbox (release-mappen). Genomsökning av Dropbox-mappen pågår (mappstruktur kartlagd, omslagsmapping kvar) — hitta omslags-jpg per release, lägg in som omslagslänk i inspelningarna och säk att nattsynken inte tappar dem.
