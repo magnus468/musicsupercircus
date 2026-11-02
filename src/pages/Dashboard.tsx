@@ -76,7 +76,7 @@ const Dashboard = () => {
 
   const workIssueCount = useMemo(() => {
     if (!works || !agreements || !linkedWorkIds || dismissalsLoading) return null;
-    return countVisibleReviewItems(works.filter((w) => detectIssues(w, agreementClientNames, linkedWorkIds).length > 0), "issues", (w) => w.id, isDismissed);
+    return countVisibleReviewItems(works.filter((w) => detectIssues(w, agreementClientNames, linkedWorkIds, isDismissed).length > 0), "issues", (w) => w.id, isDismissed);
   }, [works, agreements, linkedWorkIds, agreementClientNames, isDismissed, dismissalsLoading]);
 
   const duplicateCount = useMemo(() => {
