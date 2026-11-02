@@ -63,7 +63,10 @@ export const useUpdateWork = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["works"] }),
+    onSuccess: () => Promise.all([
+      qc.invalidateQueries({ queryKey: ["works"] }),
+      qc.invalidateQueries({ queryKey: ["work_registrations"] }),
+    ]),
   });
 };
 

@@ -91,6 +91,10 @@ export const resolvePublisherNameWarnings = (registration: WorkRegistration, cre
     }
     const matches = parties.filter((party) => normalizePublisherName(party[1]) === identity);
     if (matches.length !== 1) return true;
+    if (receiptParties.filter((party) => normalizePublisherName(party.name) === identity ||
+      (normalizePublisherName(party.name) === "music super circus" &&
+        (identity === "music super circus extravaganza" ? party.ipi === "624193850" || party.agreement === "3753498" :
+          identity === "music super circus publishing" && (party.ipi === "1284061462" || ["13995144", "14016020"].includes(party.agreement ?? ""))))).length > 1) return true;
     const expected = Number((warning[2] ?? warning[3]).replace(",", "."));
     if (receipt && (Math.abs(Number(receipt.perf) - expected) > 0.00001 ||
       (receipt.mech != null && Math.abs(Number(receipt.mech) - expected) > 0.00001))) return true;
