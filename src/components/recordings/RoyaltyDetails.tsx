@@ -1,0 +1,9 @@
+import { Link } from "react-router-dom";
+import type { RoyaltyDetail } from "@/lib/royaltyLifecycle";
+const sek = (n: number) => n.toLocaleString("sv-SE", { style: "currency", currency: "SEK" });
+export default function RoyaltyDetails({ details }: { details: RoyaltyDetail[] }) {
+  return <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2">Release / källa</th><th className="p-2 text-right">Intäkter</th><th className="p-2 text-right">Recoup</th><th className="p-2 text-right">Netto</th></tr></thead><tbody>
+    {details.map((d, i) => <tr className="border-t" key={`${d.statement_id}-${d.album_key}-${i}`}><td className="p-2"><Link className="text-primary underline" to={`/recordings/album/${encodeURIComponent(d.album_key)}`}>{d.album}</Link><div className="text-xs text-muted-foreground">{d.source} · {d.period_label}</div><div className="text-xs text-muted-foreground">{d.original_amount.toLocaleString("sv-SE", { maximumFractionDigits: 2 })} {d.currency} · {d.rate == null ? "Växelkurs saknas" : `Kurs ${d.rate.toLocaleString("sv-SE")}`}</div></td><td className="p-2 text-right tabular-nums whitespace-nowrap">{sek(d.income_sek)}</td><td className="p-2 text-right tabular-nums whitespace-nowrap">{sek(-d.recoup_sek)}</td><td className="p-2 text-right tabular-nums whitespace-nowrap">{sek(d.income_sek - d.recoup_sek)}</td></tr>)}
+    {details.length === 0 && <tr><td colSpan={4} className="p-3 text-muted-foreground">Inget sparat releaseunderlag för denna avräkning.</td></tr>}
+  </tbody></table></div>;
+}
