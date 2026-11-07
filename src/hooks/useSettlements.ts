@@ -186,8 +186,8 @@ export const useUnmatchedSettlementWorks = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_unmatched_settlement_works");
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.rpc("get_unmatched_settlement_works").abortSignal(signal);
       if (error) throw error;
       return data as unknown as UnmatchedSettlementWork[];
     },
@@ -224,10 +224,16 @@ export const useMatchSettlementWork = () => {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["unmatched-settlement-works"] });
+    onSuccess: async (_, { oldTitle }) => {
+      // Stop an older response from putting the saved title back into the list.
+      await qc.cancelQueries({ queryKey: ["unmatched-settlement-works"] });
+      qc.setQueryData<UnmatchedSettlementWork[]>(["unmatched-settlement-works"], (works) =>
+        works?.filter((work) => work.work_title.trim().toLowerCase() !== oldTitle.trim().toLowerCase())
+      );
+      void qc.invalidateQueries({ queryKey: ["unmatched-settlement-works"] });
       qc.invalidateQueries({ queryKey: ["settlement-stats"] });
       qc.invalidateQueries({ queryKey: ["work-settlements"] });
+      qc.invalidateQueries({ queryKey: ["settlements"] });
     },
   });
 };
