@@ -34,7 +34,7 @@ describe("settlement match list refresh", () => {
     await act(async () => {
       await result.current.match.mutateAsync({ oldTitle: " original TITLE ", newTitle: "Catalog title" });
     });
-    expect(result.current.list.data).toEqual([rows[1]]);
+    await waitFor(() => expect(result.current.list.data).toEqual([rows[1]]));
     expect(result.current.list.isFetching).toBe(true);
     expect(client.getQueryData(key)).toEqual([rows[1]]);
     client.clear();
@@ -72,7 +72,7 @@ describe("settlement match list refresh", () => {
       finishOldRead?.({ data: rows, error: null });
     });
     expect(oldSignal?.aborted).toBe(true);
-    expect(result.current.list.data).toEqual([rows[1]]);
+    await waitFor(() => expect(result.current.list.data).toEqual([rows[1]]));
     client.clear();
   });
 });
