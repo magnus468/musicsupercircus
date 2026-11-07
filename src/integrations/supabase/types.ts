@@ -728,20 +728,26 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string
+          detail_snapshot: Json | null
           expenses_sek: number
           fees: Json
+          finalized_at: string | null
           id: string
           income_downloads_sek: number
           income_streams_sek: number
           minimum_payout: number
           opening_balance: number
           outstanding_balance: number
+          paid_at: string | null
           payable_excl_vat: number
           payable_incl_vat: number
+          payee_snapshot: Json | null
+          payment_reference: string | null
           period_end: string
           period_label: string
           period_start: string
           recipient: string
+          sent_at: string | null
           statement_date: string
           vat_rate: number
           vat_sek: number
@@ -749,20 +755,26 @@ export type Database = {
         Insert: {
           client_id?: string | null
           created_at?: string
+          detail_snapshot?: Json | null
           expenses_sek?: number
           fees?: Json
+          finalized_at?: string | null
           id?: string
           income_downloads_sek?: number
           income_streams_sek?: number
           minimum_payout?: number
           opening_balance?: number
           outstanding_balance?: number
+          paid_at?: string | null
           payable_excl_vat?: number
           payable_incl_vat?: number
+          payee_snapshot?: Json | null
+          payment_reference?: string | null
           period_end: string
           period_label: string
           period_start: string
           recipient: string
+          sent_at?: string | null
           statement_date?: string
           vat_rate?: number
           vat_sek?: number
@@ -770,20 +782,26 @@ export type Database = {
         Update: {
           client_id?: string | null
           created_at?: string
+          detail_snapshot?: Json | null
           expenses_sek?: number
           fees?: Json
+          finalized_at?: string | null
           id?: string
           income_downloads_sek?: number
           income_streams_sek?: number
           minimum_payout?: number
           opening_balance?: number
           outstanding_balance?: number
+          paid_at?: string | null
           payable_excl_vat?: number
           payable_incl_vat?: number
+          payee_snapshot?: Json | null
+          payment_reference?: string | null
           period_end?: string
           period_label?: string
           period_start?: string
           recipient?: string
+          sent_at?: string | null
           statement_date?: string
           vat_rate?: number
           vat_sek?: number
@@ -1253,6 +1271,10 @@ export type Database = {
         Args: { p_end: string; p_start: string }
         Returns: Json
       }
+      get_royalty_period_details: {
+        Args: { p_end: string; p_start: string }
+        Returns: Json
+      }
       get_settlement_stats:
         | { Args: never; Returns: Json }
         | { Args: { p_distribution_key?: string }; Returns: Json }
@@ -1276,6 +1298,7 @@ export type Database = {
         Args: { a: string; p: string; s: string }
         Returns: string
       }
+      royalty_pdf_unlocked: { Args: { p_name: string }; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

@@ -176,6 +176,20 @@
       "when": 1794047953952,
       "tag": "0024_match_settlement_work_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794065281204,
+      "tag": "0025_royalty_statement_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794065427974,
+      "tag": "0026_protect_archived_royalty_pdfs",
+      "breakpoints": true
     }
   ]
 }

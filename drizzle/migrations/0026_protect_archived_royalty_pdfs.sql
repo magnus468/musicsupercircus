@@ -1,0 +1,6 @@
+CREATE OR REPLACE FUNCTION public.royalty_pdf_unlocked(p_name text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$ SELECT NOT EXISTS (SELECT 1 FROM royalty_statements s WHERE s.finalized_at IS NOT NULL AND p_name = s.period_label || '/' || s.id::text || '.pdf') $$;
+REVOKE ALL ON FUNCTION public.royalty_pdf_unlocked(text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.royalty_pdf_unlocked(text) TO authenticated,service_role;
+ALTER POLICY "Staff update royalty PDFs" ON storage.objects USING (bucket_id='royalty-statements' AND public.is_staff(auth.uid()) AND public.royalty_pdf_unlocked(name)) WITH CHECK (bucket_id='royalty-statements' AND public.is_staff(auth.uid()) AND public.royalty_pdf_unlocked(name));
+ALTER POLICY "Staff delete royalty PDFs" ON storage.objects USING (bucket_id='royalty-statements' AND public.is_staff(auth.uid()) AND public.royalty_pdf_unlocked(name));
+ALTER POLICY "Staff upload royalty PDFs" ON storage.objects WITH CHECK (bucket_id='royalty-statements' AND public.is_staff(auth.uid()) AND public.royalty_pdf_unlocked(name));
