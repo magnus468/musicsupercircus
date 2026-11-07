@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Omatchade avräkningsverk: tydlig bekräftelse efter verkval, synliga sparfel och verifierad beständig koppling.
+- [x] Omatchade avräkningsverk: OK-knapp efter verkval, synliga sparfel och bibehållet val för återförsök; tre tester godkända. Befintliga Sthlm rekviem/Hjerson-kopplingar sparade och Hjerson verifierad efter omladdning; knappen kontrollerad på mobil.
 - [x] Saknar projekt släckt för de 36 angivna Adam Nordén-verken med beständiga varningstypsspecifika undantag; tio tester godkända och samtliga 36 verifierade inloggat. Advokaten behåller projektvarning; verkdata och andra varningar orörda.
 - [x] Falska avtalsvarningar rättade med gemensam paginerad kontroll av befintliga avtalskopplingar för granskning och startsidan; åtta tester godkända, Andrev in the forest saknas nu i problemlistan vid inloggad kontroll. Övriga varningar och katalogdata bevarade.
 - [x] Kontrollerat granskningskategorier och STIM-varningar: 54 ytterligare inaktuella kvittovarningar (52 verk) löses mot aktuell katalog; 210 ej dolda andelsvarningar kvar i listan. 37 tester godkända och listan verifierad inloggat. Originalkvitton, ROW och verkliga/oklara konflikter oförändrade; varningar räknas om efter verkredigering.
