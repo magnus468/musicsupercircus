@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Fri sökning vid avräkningsmatchning: kombinera titelord och upphovsperson; verifiera blandad sökning.
 - [x] Omatchade avräkningar: sparade kopplingar tas direkt ur delad lista; äldre hämtningar avbryts. Sex tester godkända och inloggad webbläsarkontroll med simulerad sparning/långsam hämtning bekräftar direkt borttagning utan ändring av verkliga avräkningar.
 - [x] Omatchade avräkningsverk: OK-knapp efter verkval, synliga sparfel och bibehållet val för återförsök; tre tester godkända. Befintliga Sthlm rekviem/Hjerson-kopplingar sparade och Hjerson verifierad efter omladdning; knappen kontrollerad på mobil.
 - [x] Saknar projekt släckt för de 36 angivna Adam Nordén-verken med beständiga varningstypsspecifika undantag; tio tester godkända och samtliga 36 verifierade inloggat. Advokaten behåller projektvarning; verkdata och andra varningar orörda.
