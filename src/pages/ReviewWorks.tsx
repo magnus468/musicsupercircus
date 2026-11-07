@@ -256,6 +256,7 @@ const ReviewWorks = () => {
                       <TableHead>Kompositör</TableHead>
                       <TableHead className="text-right">Totalt belopp</TableHead>
                       <TableHead className="text-right">Rader</TableHead>
+                      <TableHead className="w-12" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -267,6 +268,22 @@ const ReviewWorks = () => {
                           {fmt(Number(uw.total_amount))}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">{uw.row_count}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Ta bort från listan (behöver inte matchas)"
+                            aria-label={`Ta bort ${uw.work_title} från listan`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!confirm(`Ta bort "${uw.work_title}" från omatchade? Intäkterna finns kvar i avräkningarna.`)) return;
+                              dismiss("unmatched_settlements", uw.work_title);
+                              toast.success("Borttagen från omatchade");
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
