@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Check, Loader2 } from "lucide-react";
+import { buildMatchWorkSearch } from "@/lib/matchWorkSearch";
 
 interface MatchWorkDialogProps {
   open: boolean;
@@ -25,12 +26,10 @@ const useSearchWorks = (search: string, enabled: boolean) => {
     enabled: enabled && search.trim().length >= 1,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const term = search.trim();
-      const s = `%${term}%`;
       const { data, error } = await supabase
         .from("works")
         .select("id, title, creators, project")
-        .or(`title.ilike.${s},creators.ilike.${s},project.ilike.${s}`)
+        .or(buildMatchWorkSearch(search))
         .order("title")
         .limit(50);
       if (error) throw error;
@@ -97,7 +96,7 @@ const MatchWorkDialog = ({
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Sök bland registrerade verk..."
+            placeholder="Sök titel eller upphovsperson..."
             value={search}
             disabled={busy}
             onChange={(e) => { setSearch(e.target.value); setSelectedWork(null); setSaveError(null); }}
