@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Förtydliga royaltyvyn: MSC:s egen andel visas separat från klientroyalties med release-/källunderlag; klientkortets roll förtydligad. Fem tester och inloggad visningskontroll godkända; andelar och sparade avräkningar orörda.
+- [ ] Rätta äldre MSC-avräkning som pekar på Embark; inväntar besked om vilket MSC-bolag som ska vara dokumentets mottagare, alternativt att testavräkningen ska tas bort.
 - [x] Jämför Reprtoir med våra inspelningsrättigheter utifrån Magnus skärminspelningar och presentera prioriterade förslag.
 - [x] Royaltysaldo och release-/källunderlag, sparade mottagaruppgifter, låsning och separata skickad-/betalningsstatusar införda; inloggade saldo- och underlagsvyer samt skyddsregler testade. Äldre avräkningar utan snapshots måste skapas om före låsning; inga verkliga avräkningar markerade skickade/betalda.
 - [x] Namnbytet Johan Hugo Harrysson → Harry Harrysson känns igen i kvittogranskning och kommande kataloguppdateringar; namnbytet ensamt ger ingen varning, verkliga andels- och IPI-konflikter bevaras.

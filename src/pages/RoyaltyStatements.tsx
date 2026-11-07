@@ -14,6 +14,7 @@ import RoyaltyStatementView from "@/components/recordings/RoyaltyStatementView";
 import { computeRoyalty as compute, unpaidRoyalty, royaltyStatus, type SavedRoyalty, type RoyaltyDetail } from "@/lib/royaltyLifecycle";
 import RoyaltyDetails from "@/components/recordings/RoyaltyDetails";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { isOwnRecordingShare } from "@/lib/royaltyRecipient";
 
 const sek = (v: number) => v.toLocaleString("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 2 });
 // Svensk decimal: komma = decimal, mellanslag = tusental
@@ -98,6 +99,9 @@ const RoyaltyStatements = () => {
     }).sort((a, b) => b.income - a.income);
   }, [period, saved, payees, label]);
 
+  const clientRows = rows.filter(r => !isOwnRecordingShare(r.name));
+  const ownRows = rows.filter(r => isOwnRecordingShare(r.name));
+
   const [viewing, setViewing] = useState<Saved | null>(null);
   const viewData = useMemo(() => {
     if (!viewing) return null;
@@ -137,8 +141,25 @@ const RoyaltyStatements = () => {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={setTab}><TabsList><TabsTrigger value="statements">Avräkningar</TabsTrigger><TabsTrigger value="balances">Mottagarsaldon</TabsTrigger></TabsList></Tabs>
-      {tab === "balances" && <div className="overflow-hidden rounded-lg border bg-card"><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr>{["Mottagare", "Ingående", "Intäkter", "Kostnader", "Utgående", "Obetalt inkl. moms", ""].map((h, i) => <th className="p-3 whitespace-nowrap" key={i}>{h}</th>)}</tr></thead><tbody>{rows.map(r => {
+      <Tabs value={tab} onValueChange={setTab}><TabsList><TabsTrigger value="statements">Klientavräkningar</TabsTrigger><TabsTrigger value="balances">Klientsaldon</TabsTrigger></TabsList></Tabs>
+      {ownRows.length > 0 && <section className="space-y-2" aria-label="Music Super Circus – egen andel">
+        <h2 className="text-base font-semibold">Music Super Circus – egen andel</h2>
+        <div className="overflow-hidden rounded-lg border bg-card"><div className="overflow-x-auto">
+          <table className="w-full text-sm"><thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr><th className="p-3">Period</th><th className="p-3 text-right">Intäkter</th><th className="p-3 text-right">Kostnader</th><th className="p-3 text-right">Netto</th><th className="p-3" /></tr></thead>
+            <tbody>{ownRows.map(r => {
+              const income = r.st ? r.st.income_downloads_sek + r.st.income_streams_sek : r.income;
+              const costs = r.st?.expenses_sek ?? (r.inc?.recoup ?? []).reduce((sum, fee) => sum + fee.amount, 0);
+              const linkedClient = clients.find(c => c.id === r.st?.client_id);
+              return <tr key={r.name} className="border-t"><td className="p-3 font-medium">{label}</td>{[income, costs, r2(income - costs)].map((n, i) => <td key={i} className="p-3 text-right tabular-nums whitespace-nowrap">{sek(n)}</td>)}<td className="p-3 text-right"><div className="flex flex-wrap justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setDetailRecipient(r.name)}><Eye className="mr-1 h-4 w-4" />Release / källa</Button>
+                {r.st && <Button variant="ghost" size="sm" onClick={() => { if (r.st) setViewing(r.st); }}><FileText className="mr-1 h-4 w-4" />Sparad avräkning</Button>}
+              </div>{linkedClient && !isOwnRecordingShare(clientName(linkedClient)) && <div className="mt-1 text-xs text-destructive">Sparad avräkning har mottagare {clientName(linkedClient)} – behöver rättas</div>}</td></tr>;
+            })}</tbody>
+          </table>
+        </div></div>
+      </section>}
+      <h2 className="text-base font-semibold">{tab === "balances" ? "Klienternas saldon" : "Royalties till klienter"}</h2>
+      {tab === "balances" && <div className="overflow-hidden rounded-lg border bg-card"><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr>{["Mottagare", "Ingående", "Intäkter", "Kostnader", "Utgående", "Obetalt inkl. moms", ""].map((h, i) => <th className="p-3 whitespace-nowrap" key={i}>{h}</th>)}</tr></thead><tbody>{clientRows.map(r => {
         const op = r.st?.opening_balance ?? opening(r.name);
         const costs = r.st?.expenses_sek ?? (r.inc?.recoup ?? []).reduce((sum, f) => sum + f.amount, 0);
         const income = r.st ? r.st.income_downloads_sek + r.st.income_streams_sek : r.income;
@@ -161,8 +182,8 @@ const RoyaltyStatements = () => {
           </thead>
           <tbody>
             {isLoading && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Räknar…</td></tr>}
-            {!isLoading && rows.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Inga intäkter i perioden.</td></tr>}
-            {rows.map((r) => {
+            {!isLoading && clientRows.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Inga klientroyalties i perioden.</td></tr>}
+            {clientRows.map((r) => {
               const c = clients.find((x) => x.id === (r.st?.client_id ?? r.payee?.client_id));
               return (
                 <tr key={r.name} className="border-t">
