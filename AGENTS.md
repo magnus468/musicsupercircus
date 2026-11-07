@@ -8,3 +8,4 @@
 - Issue-specific dismissals use review_dismissals sections prefixed with issues_ and the issue type, keyed by work ID; apply centrally so hiding one warning preserves other issues and dashboard parity without changing catalog data.
 - Review fragment navigation observes loading-related layout changes until user interaction, so task links land on the requested section without interrupting manual scrolling.
 - Party-number propagation evaluates agreement conflicts in the work's catalog and linked-receipt publisher context through a tested shared helper; keep receipt originals and IPI checks untouched so scoped exceptions cannot hide unrelated conflicts.
+- Manual settlement matching separates candidate selection from explicit confirmation; await persistence before closing and retain the selection on failure so users can retry.
