@@ -169,6 +169,13 @@
       "when": 1793486561800,
       "tag": "0023_create_crm_activities",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794047953952,
+      "tag": "0024_match_settlement_work_rpc",
+      "breakpoints": true
     }
   ]
 }
