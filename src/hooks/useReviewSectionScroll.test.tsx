@@ -28,7 +28,7 @@ it("aligns the selected section again after delayed content growth, but stops af
     const initial = scroll.mock.calls.length;
     act(() => resized());
     expect(scroll).toHaveBeenCalledTimes(initial + 1);
-    act(() => window.dispatchEvent(new Event("wheel")));
+    act(() => window.dispatchEvent(new Event("click")));
     act(() => resized());
     expect(scroll).toHaveBeenCalledTimes(initial + 1);
     expect(disconnect).toHaveBeenCalled();

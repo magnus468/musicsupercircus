@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useLayoutEffect, useRef } from "react";
+import { captureReviewRemovalPosition } from "@/lib/reviewRemovalPosition";
 
 /** Ärenden som manuellt tagits bort från Granska verk – visas aldrig igen. */
 export const useReviewDismissals = () => {
@@ -21,9 +23,15 @@ export const useReviewDismissals = () => {
     },
   });
   const set = data ?? new Set<string>();
+  const restorePosition = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    restorePosition.current?.();
+    restorePosition.current = null;
+  }, [data]);
   const isDismissed = (section: string, key: string) => set.has(`${section}:${key}`);
   const dismiss = async (section: string, key: string) => {
     if (!confirm("Ta bort från granskningslistan? Ärendet visas inte igen.")) return;
+    restorePosition.current = captureReviewRemovalPosition();
     qc.setQueryData(["review_dismissals"], new Set(set).add(`${section}:${key}`));
     const { data: u } = await supabase.auth.getUser();
     const { error } = await (supabase as any).from("review_dismissals")

@@ -111,7 +111,7 @@ const ReviewWorks = () => {
   };
 
   return (
-    <div ref={sectionRef} className="space-y-6">
+    <div ref={sectionRef} data-review-list className="space-y-6">
       <div id="registrations" className="scroll-mt-20"><RegistrationReview /></div>
       <div id="stim" className="scroll-mt-20"><StimReconciliation /></div>
       <div id="duplicates" className="scroll-mt-20"><DuplicateWorks /></div>
