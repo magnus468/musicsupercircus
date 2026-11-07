@@ -157,7 +157,7 @@ const RoyaltyStatements = () => {
         <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-            <tr><th className="p-3">Mottagare</th><th className="p-3">Klient</th><th className="p-3 text-right">Intäkter</th><th className="p-3 text-right">Att betala</th><th className="p-3"></th></tr>
+            <tr><th className="p-3">Royaltymottagare</th><th className="p-3">Mottagarens klientkort</th><th className="p-3 text-right">Intäkter</th><th className="p-3 text-right">Att betala</th><th className="p-3"></th></tr>
           </thead>
           <tbody>
             {isLoading && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Räknar…</td></tr>}
@@ -167,7 +167,7 @@ const RoyaltyStatements = () => {
               return (
                 <tr key={r.name} className="border-t">
                   <td className="p-3 font-medium">{r.name}</td>
-                  <td className="p-3 text-xs">{c ? clientName(c) : <span className="text-muted-foreground">Ej kopplad</span>}</td>
+                  <td className="p-3 text-xs">{c ? <Link to={`/clients/${c.id}`} className="text-primary underline">{clientName(c)}</Link> : <span className="text-muted-foreground">Klientkort inte valt</span>}</td>
                   <td className="p-3 text-right tabular-nums">{sek(r.st ? r.st.income_downloads_sek + r.st.income_streams_sek : r.income)}</td>
                   <td className="p-3 text-right tabular-nums">{r.st ? sek(Number(r.st.payable_incl_vat)) : "–"}</td>
                   <td className="p-3 text-right whitespace-nowrap">
@@ -238,7 +238,7 @@ const CreateDialog = ({ recipient, downloads, streams, recoup, opening, payee, c
   const res = compute(opening, dl, str, parsedFees, vatRate, min);
 
   const save = async () => {
-    if (!clientId) return toast.error("Koppla mottagaren till en klient");
+    if (!clientId) return toast.error("Välj royaltymottagarens klientkort");
     setSaving(true);
     try {
       const { error: pErr } = await supabase.from("royalty_payees").upsert({ recipient, client_id: clientId, vat_rate: vatRate, minimum_payout: min, updated_at: new Date().toISOString() });
@@ -267,9 +267,9 @@ const CreateDialog = ({ recipient, downloads, streams, recoup, opening, payee, c
         <DialogHeader><DialogTitle>Avräkning {label} – {recipient}</DialogTitle></DialogHeader>
         <div className="space-y-4 text-sm">
           <div className="grid gap-3 sm:grid-cols-3">
-            <label className="space-y-1 sm:col-span-3"><span className="text-xs text-muted-foreground">Klient (adress och org.nr hämtas härifrån)</span>
+            <label className="space-y-1 sm:col-span-3"><span className="text-xs text-muted-foreground">Royaltymottagarens klientkort (namn och adress på avräkningen)</span>
               <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger><SelectValue placeholder="Välj klient" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Välj mottagarens klientkort" /></SelectTrigger>
                 <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{clientName(c)}</SelectItem>)}</SelectContent>
               </Select>
             </label>
