@@ -89,7 +89,7 @@ const RoyaltyStatements = () => {
   };
 
   const rows = useMemo(() => {
-    const names = new Set([...(period?.recipients ?? []).map((r) => r.recipient), ...saved.filter((s) => s.period_label === label).map((s) => s.recipient)]);
+    const names = new Set([...(period?.recipients ?? []).map((r) => r.recipient), ...saved.filter((s) => s.period_label === label || (s.period_end < start && (s.outstanding_balance !== 0 || !s.paid_at))).map((s) => s.recipient)]);
     return [...names].map((name) => {
       const inc = period?.recipients.find((r) => r.recipient === name);
       const st = saved.find((s) => s.period_label === label && s.recipient === name);
@@ -178,7 +178,7 @@ const RoyaltyStatements = () => {
                         {!r.st.finalized_at && <Button variant="ghost" size="icon" title="Ta bort" onClick={() => { if (r.st) void remove(r.st); }}><Trash2 className="h-4 w-4" /></Button>}
                       </>
                     ) : (
-                      <Button size="sm" variant="outline" onClick={() => setEditing(r.name)}><FileText className="mr-1 h-4 w-4" />Skapa</Button>
+                      <Button size="sm" variant="outline" disabled={isLoading || !period || r.inc?.missing_rate || detailsLoading || !!detailsError} onClick={() => setEditing(r.name)}><FileText className="mr-1 h-4 w-4" />Skapa</Button>
                     )}
                   </td>
                 </tr>

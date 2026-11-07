@@ -74,6 +74,8 @@ const RecordingStatements = () => {
     qc.invalidateQueries({ queryKey: ["recording-statements"] });
     qc.invalidateQueries({ queryKey: ["recording-payouts"] });
     qc.invalidateQueries({ queryKey: ["album-recoup"] });
+    qc.invalidateQueries({ queryKey: ["royalty-period"] });
+    qc.invalidateQueries({ queryKey: ["royalty-details"] });
     toast.success("Växelkursen är sparad");
   };
 
@@ -187,6 +189,8 @@ const RecordingStatements = () => {
       toast.success(`${label}: ${usd(total)} importerat. ${linked} av ${rows.length} rader kopplade.`);
       qc.invalidateQueries({ queryKey: ["recording-statements"] });
       qc.invalidateQueries({ queryKey: ["recording-income"] });
+      qc.invalidateQueries({ queryKey: ["royalty-period"] });
+      qc.invalidateQueries({ queryKey: ["royalty-details"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Uppladdningen misslyckades");
     } finally {
@@ -204,6 +208,8 @@ const RecordingStatements = () => {
       setSelected(null);
       qc.invalidateQueries({ queryKey: ["recording-statements"] });
       qc.invalidateQueries({ queryKey: ["recording-income"] });
+      qc.invalidateQueries({ queryKey: ["royalty-period"] });
+      qc.invalidateQueries({ queryKey: ["royalty-details"] });
       toast.success("Avräkningen är borttagen");
     },
     onError: (e: Error) => toast.error(e.message),

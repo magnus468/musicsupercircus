@@ -170,7 +170,7 @@ const RecordingAlbum = () => {
       {editing && (
         <SplitEditorDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} trackTitle={editing.title}
           recordingId={editing.id} albumRecordingIds={trackIds} initial={editing.rows}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["recording-splits"] })} />
+          onSaved={() => { qc.invalidateQueries({ queryKey: ["recording-splits"] }); qc.invalidateQueries({ queryKey: ["royalty-period"] }); qc.invalidateQueries({ queryKey: ["royalty-details"] }); }} />
       )}
     </div>
   );

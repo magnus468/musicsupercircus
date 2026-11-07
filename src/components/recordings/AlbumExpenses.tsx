@@ -42,6 +42,8 @@ const AlbumExpenses = ({ albumKey, recipients, sheetNote }: Props) => {
     qc.invalidateQueries({ queryKey: ["recording-expenses", albumKey] });
     qc.invalidateQueries({ queryKey: ["album-recoup", albumKey] });
     qc.invalidateQueries({ queryKey: ["recording-payouts"] });
+    qc.invalidateQueries({ queryKey: ["royalty-period"] });
+    qc.invalidateQueries({ queryKey: ["royalty-details"] });
   };
 
   const add = useMutation({
