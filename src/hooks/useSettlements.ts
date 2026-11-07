@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { decodeSettlementPeriodKey, type SettlementPublisher } from "@/components/settlements/settlementPeriodGrouping";
+import { useReviewDismissals } from "@/hooks/useReviewDismissals";
+import { visibleUnmatchedWorks } from "@/lib/visibleUnmatchedWorks";
 
 export interface Settlement {
   id: string;
@@ -181,7 +183,8 @@ export interface UnmatchedSettlementWork {
 
 /** Fetch settlement work titles that don't match any work in the works table */
 export const useUnmatchedSettlementWorks = () => {
-  return useQuery<UnmatchedSettlementWork[]>({
+  const { isDismissed, isLoading: dismissalsLoading } = useReviewDismissals();
+  const query = useQuery<UnmatchedSettlementWork[]>({
     queryKey: ["unmatched-settlement-works"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -192,6 +195,11 @@ export const useUnmatchedSettlementWorks = () => {
       return data as unknown as UnmatchedSettlementWork[];
     },
   });
+  return {
+    ...query,
+    data: dismissalsLoading ? undefined : query.data && visibleUnmatchedWorks(query.data, isDismissed),
+    isLoading: query.isLoading || dismissalsLoading,
+  };
 };
 
 /** Fetch pre-aggregated stats from the database function */

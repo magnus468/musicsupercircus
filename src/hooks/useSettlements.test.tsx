@@ -6,6 +6,7 @@ import { useMatchSettlementWork, useUnmatchedSettlementWorks } from "./useSettle
 
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc } }));
+vi.mock("@/hooks/useReviewDismissals", () => ({ useReviewDismissals: () => ({ isDismissed: () => false, isLoading: false }) }));
 
 const key = ["unmatched-settlement-works"];
 const rows = [
