@@ -299,17 +299,10 @@ const ReviewWorks = () => {
           settlementTitle={matchTarget.title}
           totalAmount={matchTarget.amount}
           isMatching={matchWork.isPending}
-          onMatch={(newTitle) => {
-            matchWork.mutate(
-              { oldTitle: matchTarget.title, newTitle },
-              {
-                onSuccess: () => {
-                  toast.success(`"${matchTarget.title}" matchad till "${newTitle}"`);
-                  setMatchTarget(null);
-                },
-                onError: () => toast.error("Kunde inte matcha verket"),
-              }
-            );
+          onMatch={async (newTitle) => {
+            await matchWork.mutateAsync({ oldTitle: matchTarget.title, newTitle });
+            toast.success(`"${matchTarget.title}" matchad till "${newTitle}"`);
+            setMatchTarget(null);
           }}
         />
       )}
