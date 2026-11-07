@@ -1298,6 +1298,7 @@ export type Database = {
         Args: { a: string; p: string; s: string }
         Returns: string
       }
+      royalty_pdf_unlocked: { Args: { p_name: string }; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
