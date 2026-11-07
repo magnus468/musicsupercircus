@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Förtydliga royaltyvyn: Music Super Circus är utgivaren med egen intäktsandel, klienterna får sina royalties och intäktskällorna hålls synliga; ändra inte andelar eller sparade avräkningar.
 - [x] Jämför Reprtoir med våra inspelningsrättigheter utifrån Magnus skärminspelningar och presentera prioriterade förslag.
 - [x] Royaltysaldo och release-/källunderlag, sparade mottagaruppgifter, låsning och separata skickad-/betalningsstatusar införda; inloggade saldo- och underlagsvyer samt skyddsregler testade. Äldre avräkningar utan snapshots måste skapas om före låsning; inga verkliga avräkningar markerade skickade/betalda.
 - [x] Namnbytet Johan Hugo Harrysson → Harry Harrysson känns igen i kvittogranskning och kommande kataloguppdateringar; namnbytet ensamt ger ingen varning, verkliga andels- och IPI-konflikter bevaras.
