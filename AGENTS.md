@@ -2,6 +2,7 @@
 - Release-to-client royalty links live in `release_clients` (album_key + client_id + role), separate from payout splits — prepares payouts without changing split math.
 - The Google sheet always wins for creators/publishers on sync; the `sheet_locked` lock was retired at the user's request — sheet is the single source of truth.
 - Registration reads resolve stale case-insensitive party-name, alias and middle-name warnings centrally against linked catalog shares, using unique publisher and mutual unique creator matches; preserve ambiguous identities and unrelated or numerical conflicts so review counts and work details agree.
+- Confirmed creator name changes normalize identity for receipt review, party-number propagation and sheet matching without rewriting receipt originals or the sheet; keep share and identifier conflicts visible.
 - Recheck old publisher share warnings against current Norden and receipt performance/mechanical shares; generic MSC names require receipt identifiers, and catalog edits invalidate registration results to prevent stale warnings without modifying originals or ROW.
 - Dashboard review counts use the review list's dismissal keys and counting units; share a paginated party-conflict query so both views reflect the same records.
 - Missing-agreement review checks honor accessible explicit work-agreement links before publisher-name fallback; dashboard and review share a paginated link query to prevent false warnings from company aliases.

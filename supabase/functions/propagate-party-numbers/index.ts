@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireCaller } from "../_shared/requireCaller.ts";
 import { hasAgreementConflict } from "../_shared/partyAgreementConflict.ts";
+import { canonicalCreatorAlias } from "../_shared/creatorNameAlias.ts";
 
 // Sprider IPI-nummer (från klientkort och STIM-kvitton) och avtalsnummer (från STIM-kvitton)
 // till samtliga verk där parten förekommer. Konflikter flaggas, aldrig skrivs något över tyst.
@@ -9,7 +10,7 @@ import { hasAgreementConflict } from "../_shared/partyAgreementConflict.ts";
 const STOP = new Set(["ab", "the", "and", "of", "music", "publishing", "förlag", "forlag", "ltd", "inc"]);
 
 const tokens = (s: string) =>
-  s
+  canonicalCreatorAlias(s)
     .toLowerCase()
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -31,7 +32,7 @@ const nameMatches = (catalog: string, stimTokens: Set<string>) => {
   return sig.every((t) => stimTokens.has(t));
 };
 
-const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+const norm = (s: string) => canonicalCreatorAlias(s).trim().toLowerCase().replace(/\s+/g, " ");
 
 type Party = { name: string; role: string };
 

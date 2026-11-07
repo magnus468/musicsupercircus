@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireCaller } from "../_shared/requireCaller.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import { canonicalCreatorAlias } from "../_shared/creatorNameAlias.ts";
 
 const SPREADSHEET_ID = "1EZhIQmpQ9-cGEsULqH9zRREwomTYwYkTf2XoBUz3PiI";
 const RANGE = "'Verk _ Avräkning'!A4:F2000";
@@ -202,7 +203,7 @@ Deno.serve(async (req) => {
       const out = new Set<string>();
       const withoutParens = (creators ?? "").replace(/\([^)]*\)?/g, " ");
       for (const part of withoutParens.split(/[,/&]/)) {
-        for (const w of part.trim().split(/\s+/)) {
+        for (const w of canonicalCreatorAlias(part).trim().split(/\s+/)) {
           const t = w.toLowerCase().replace(/[^a-zåäöéèüæø]/g, "");
           if (t.length > 2 && !STOP_WORDS.includes(t)) out.add(t);
         }
