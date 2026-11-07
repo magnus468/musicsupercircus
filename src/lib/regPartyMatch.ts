@@ -20,6 +20,7 @@ export const normalizeCreatorName = (name: string) => {
   const normalized = tokens(name).join(" ");
   if (["adam norden", "adam isaac erik norden"].includes(normalized)) return "adam norden";
   if (["karzan mahmood", "karzan mahmood faqe hussein"].includes(normalized)) return "karzan mahmood";
+  if (["johan hugo harrysson", "harry harrysson"].includes(normalized)) return "harry harrysson";
   return normalized;
 };
 

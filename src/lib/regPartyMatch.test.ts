@@ -140,6 +140,29 @@ describe("Adam Nordén aliases", () => {
   });
 });
 
+describe("Harry Harrysson name change", () => {
+  const receipt = (name: string, ipi = "123"): WorkRegistration => ({
+    ...registration,
+    creators: [{ name, role: "CA", ipi, perf: 33.33, mech: 33.33 }],
+    mismatch_note: `${name}: STIM 33.33% / andel saknas i katalogen`,
+  });
+  it.each([
+    ["Harry Harrysson", "Johan Hugo Harrysson"],
+    ["Johan Hugo Harrysson", "HARRY HARRYSSON"],
+  ])("recognizes %s and %s without a name-only warning", (catalog, stim) => {
+    expect(creatorNamesMatch(catalog, stim)).toBe(true);
+    expect(resolveCreatorNameWarnings(receipt(stim), `${catalog} (CA, 33.33%, repr)`).share_mismatch).toBe(false);
+    expect(lookupRegInfo(catalog, [receipt(stim)], false).ipi).toBe("123");
+  });
+  it("preserves different shares, unrelated identities and identifier conflicts", () => {
+    expect(resolveCreatorNameWarnings(receipt("Johan Hugo Harrysson"), "Harry Harrysson (CA, 50%, repr)").share_mismatch).toBe(true);
+    expect(creatorNamesMatch("Harry Harrysson", "Johan Harrysson")).toBe(false);
+    expect(lookupRegInfo("Harry Harrysson", [receipt("Harry Harrysson"), receipt("Johan Hugo Harrysson", "456")], false).ipi).toBeNull();
+    const reg = receipt("Johan Hugo Harrysson");
+    expect(resolveCreatorNameWarnings({ ...reg, mismatch_note: `${reg.mismatch_note}; IPI-konflikt` }, "Harry Harrysson (CA, 33.33%, repr)").mismatch_note).toBe("IPI-konflikt");
+  });
+});
+
 describe("Karzan Mahmood aliases", () => {
   it("recognizes Karzan Mahmood Faqe Hussein as Karzan Mahmood", () => {
     expect(normalizeCreatorName("Karzan Mahmood Faqe Hussein")).toBe(normalizeCreatorName("Karzan Mahmood"));
