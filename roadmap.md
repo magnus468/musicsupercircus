@@ -20,3 +20,4 @@
 - [ ] Verklistan i Google-arket: Magnus för in återstående rättningar (Verklistan_rattningar_v1.xlsx); låset är borttaget och arket gäller alltid vid synk.
 
 - [ ] Inspelningsrättigheter: omslag ska alltid hämtas från Dropbox (release-mappen). Genomsökning av Dropbox-mappen pågår (mappstruktur kartlagd, omslagsmapping kvar) — hitta omslags-jpg per release, lägg in som omslagslänk i inspelningarna och säk att nattsynken inte tappar dem.
+- [x] Fix: saving a settlement-to-work match timed out (moved to faster server save)
