@@ -1,6 +1,6 @@
 # Roadmap
 - [x] Jämför Reprtoir med våra inspelningsrättigheter utifrån Magnus skärminspelningar och presentera prioriterade förslag.
-- [ ] Lägg in royaltysaldo och spårbart underlag per mottagare/release samt låsta avräkningar med separat skickad- och betalningsstatus.
+- [x] Royaltysaldo och release-/källunderlag, sparade mottagaruppgifter, låsning och separata skickad-/betalningsstatusar införda; inloggade saldo- och underlagsvyer samt skyddsregler testade. Äldre avräkningar utan snapshots måste skapas om före låsning; inga verkliga avräkningar markerade skickade/betalda.
 - [x] Namnbytet Johan Hugo Harrysson → Harry Harrysson känns igen i kvittogranskning och kommande kataloguppdateringar; namnbytet ensamt ger ingen varning, verkliga andels- och IPI-konflikter bevaras.
 - [x] Behåll platsen när en post tas bort från granskningslistan; sex tester godkända och inloggad kontroll vid 876 × 717 visar närmaste kvarvarande rad på exakt samma höjd, utan att ändra verkliga avräkningar.
 - [x] 48 återlämnade Joel Danell/Sven Wunder-verk dolda från omatchade avräkningar och startsidans antal; historik och andra rättighetshavare bevarade. Fyra tester godkända; inloggat verifierat att Alla Prima/Bamboo and Rocks är borta och Black Iris finns kvar (274 synliga rader).
