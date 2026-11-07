@@ -217,21 +217,12 @@ export const useMatchSettlementWork = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ oldTitle, newTitle }: { oldTitle: string; newTitle: string }) => {
-      // Update existing settlement rows
-      const { error: updateErr } = await supabase
-        .from("settlements")
-        .update({ work_title: newTitle })
-        .ilike("work_title", oldTitle.trim());
-      if (updateErr) throw updateErr;
-
-      // Save mapping for future imports (upsert to avoid duplicates)
-      const { error: mapErr } = await supabase
-        .from("settlement_title_mappings")
-        .upsert(
-          { settlement_title: oldTitle.trim(), work_title: newTitle },
-          { onConflict: "settlement_title" }
-        );
-      if (mapErr) throw mapErr;
+      // Server-side update via indexed title lookup (client-side ilike timed out on large tables)
+      const { error } = await supabase.rpc("match_settlement_work", {
+        p_old_title: oldTitle,
+        p_new_title: newTitle,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["unmatched-settlement-works"] });

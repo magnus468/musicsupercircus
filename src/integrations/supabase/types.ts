@@ -1267,6 +1267,10 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      match_settlement_work: {
+        Args: { p_new_title: string; p_old_title: string }
+        Returns: number
+      }
       norm_title: { Args: { t: string }; Returns: string }
       recording_album_key: {
         Args: { a: string; p: string; s: string }
