@@ -14,3 +14,4 @@
 - Unmatched settlement dismissals are applied in the shared hook using review_dismissals section unmatched_settlements and the original settlement title, keeping dashboard counts and review rows aligned without deleting income.
 - Review dismissals anchor a surviving neighbouring row and transfer focus without scrolling; fragment alignment stops on control interaction so removing an item preserves the user's place.
 - Recording royalty statements snapshot payee and release/source details on creation; database triggers keep financial snapshots immutable and protect locked statements, while sent/payment metadata remain separate. Reuse stored PDFs without overwriting to preserve issued documents.
+- Classify the recording ledger's own-share recipient through the tested royaltyRecipient helper for presentation only; keep internal earnings separate from client payout views without rewriting splits or historical statements.
