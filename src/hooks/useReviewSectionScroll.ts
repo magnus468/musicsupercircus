@@ -26,7 +26,7 @@ export function useReviewSectionScroll() {
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-    const events = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    const events = ["wheel", "touchstart", "pointerdown", "keydown", "click", "focusin"] as const;
     events.forEach((event) => window.addEventListener(event, stop, { passive: true }));
     observer.observe(root);
     align();
